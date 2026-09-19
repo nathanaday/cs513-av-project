@@ -14,8 +14,8 @@ This project proposes a risk-aware autonomous driving system that sets its cauti
 
 ## Task Breakdown
 
-1. Install CARLA 0.9.16 on all machines. Pin environments so runs reproduce across machines. Get the baseline driver (CARLA `BehaviorAgent`) driving a fixed route. Build the evaluator that logs violations, risk events, and travel time. This is the basic driving system.
-2. Build the sensor degradation model, which reduces what the driver detects in rain, fog, and sun glare. Confirm that degraded conditions raise the risk event rate of the basic driving system. This is the go or no-go test for the project.
+1. Install CARLA 0.9.16 on all machines. Pin environments so runs reproduce across machines. Get the baseline driver (CARLA `BehaviorAgent`) driving a fixed route. Build the evaluator that logs violations, risk events, and travel time. 
+2. Build the sensor degradation model, which reduces what the driver detects in rain, fog, and sun glare. Confirm that degraded conditions raise the risk event rate of the basic driving system.
 3. Build the test tracks and scenarios. Measure the cost of each action (unprotected left turn, lane change, passing a stopped vehicle) and the multiplier of each condition. Use calibration tracks that are separate from the test tracks.
 4. Build the route planner. It predicts route risk from sun angle, forecast weather, and known construction zones, and selects the quickest route within the risk budget.
 5. Build the real-time adaptation. Estimate current conditions, switch the driving profile, and re-plan the route. Add hysteresis so the profile does not oscillate. Handle edge cases such as an obstruction that appears during a maneuver.
