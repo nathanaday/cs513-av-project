@@ -6,7 +6,7 @@ C4 Autonomous Driving
 
 ## Team Members
 
-Yonsoo Kim, Nathan Aday, Tomohiko Uemura, Rachel Lin, Jeslyn Yang, Illy Hoang
+Nathan Aday, Illy Hoang, Yonsoo Kim, Rachel Lin, Tomohiko Uemura, Jeslyn Yang
 
 ## Abstract
 
