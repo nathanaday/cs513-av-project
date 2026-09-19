@@ -1,0 +1,9 @@
+{
+  "schema": "claude-atlas.vault.v3",
+  "id": "88694b7f-289a-46bf-8afc-e8aa1730bd84",
+  "kind": "knowledge",
+  "name": "cps-project-kb",
+  "mode": "generic",
+  "created": "2026-09-16",
+  "scope": "The CSCI 513 group project at USC: the project idea and its versions, design brainstorms, the pre-proposal, course guidance that concerns only the project, and sources the team reads for the project. Not the course lectures, readings, or assignments; those belong in cps-course."
+}
