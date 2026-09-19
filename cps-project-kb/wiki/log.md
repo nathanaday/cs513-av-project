@@ -13,6 +13,12 @@ tags:
 
 Newest completed operations appear first. claude-atlas writes this page.
 
+## 2026-09-18 — markdown-20260919-012155-d326
+
+record the move and rename to cps-project-kb: the knowledge base now holds the group project only; course material belongs in cps-course (via cs513-project)
+
+- Updated: [[overview|Vault Overview]], [[index|Wiki Index]], [[hot|Hot Cache]]
+
 ## 2026-09-18 — ingest-20260918-215258-effa
 
 file the version two design brainstorm: Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan; update Project Idea v2 - Demand Against Capability and cs513-project; clear the inbox (via cs513-project)

@@ -13,11 +13,16 @@ tags:
 This vault compounds source-backed knowledge over time. This page holds the
 stable, high-level picture; it changes less often than [[hot|the hot cache]].
 
-## Categories
+## Scope
 
-The knowledge base serves CSCI 513 at USC and holds two categories of pages. Keep them apart.
+This knowledge base, `cps-project-kb`, holds the CSCI 513 group project at USC, [[cs513-project]]. It lives inside the project repository, in the folder `cps-project-kb/`, and its operations commit into that repository.
 
-- **Course**: the course and its material, such as lectures, readings, and assignments. No pages yet.
-- **Group project**: the team project [[cs513-project]]. Every page in this category carries the tag `project/cs513-project` and starts with a line that names the category. The category includes course documents that only concern the project, such as the project registration instructions.
+- It holds the project idea and its versions, the design brainstorms, the pre-proposal, course documents that only concern the project (such as the project registration instructions), and sources the team reads for the project.
+- It does not hold the course lectures, readings, or assignments. Those belong in the separate knowledge base `cps-course`.
 
-The owner of the knowledge base set this split in conversation on 2026-09-18.
+## History
+
+- 2026-09-16: created as `cyber-physical-systems` in `~/kbs`, for both the course and the project.
+- 2026-09-18: the owner made it specific to the project. It was renamed to `cps-project-kb` and moved into the project repository. No course material had been ingested. The git history from before the move is in `~/kbs/cps-project-kb-history.bundle`.
+
+Every page carries the tag `project/cs513-project`. The tag dates from the time when the knowledge base also had a course category. It stays, so the pages remain easy to find if they are ever merged into a larger knowledge base.
