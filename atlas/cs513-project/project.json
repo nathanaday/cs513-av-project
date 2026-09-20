@@ -1,5 +1,5 @@
 {
-  "schema": "claude-atlas.project.v4",
+  "schema": "atlas-obsidian.project.v4",
   "id": "eabc5d9f-29eb-4404-bfbf-62366ad1d1a7",
   "name": "cs513-project",
   "description": "The CSCI 513 group project at USC: the project idea and its versions, design brainstorms, the pre-proposal, course guidance that concerns only the project, and sources the team reads for the project. Not the course lectures, readings, or assignments; those belong in cps-course.",
