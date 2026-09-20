@@ -4,7 +4,7 @@ title: "Project Idea v2 - Demand Against Capability"
 status: developing
 assessment: provisional
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-20
 aliases:
   - Brainstorm version two
   - Project Idea v2
@@ -18,7 +18,7 @@ tags:
 
 Category: group project. This page belongs to [[cs513-project]], not to the course material.
 
-This page records brainstorm version two of the project idea. It comes from conversations on 2026-09-18 between Nathan Aday and Claude, and from a message that Nathan shared with the group. The group has not agreed on it. The formal pre-proposal comes after more group discussion. Version one is [[CS513 Project Proposal Draft]].
+This page records brainstorm version two of the project idea. It comes from conversations on 2026-09-18 between Nathan Aday and Claude, and from a message that Nathan shared with the group. The group has not agreed on it. A draft of the formal pre-proposal now exists: [[CS513 Pre-Proposal Draft - Demand Against Capability]]. Version one is [[CS513 Project Proposal Draft]].
 
 ## Definition
 
@@ -74,6 +74,14 @@ The full record is [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Pl
 - **Baseline driver.** The CARLA `BehaviorAgent`. Its `Cautious`, `Normal`, and `Aggressive` profiles are the profile switch. The edge weights of its `GlobalRoutePlanner` are the trip planner hook. Four interfaces make the stacks pluggable: `Router`, `ProfilePolicy`, `WorldView`, `Evaluator`.
 - **First test.** Confirm in week one that the sensor model makes rain and glare raise the event rate of Stack A. If it does not, the project has no effect to study.
 
+## In the pre-proposal draft
+
+[[CS513 Pre-Proposal Draft - Demand Against Capability]] turns the working design into the one-page form and a schedule from Sep 21 to Dec 10. It keeps the three systems, the `BehaviorAgent` baseline, the sensor model with its go or no-go test, the calibration tracks, and the profile switch with hysteresis. Differences from the working design:
+
+- The draft says the planner "selects the quickest route within the risk budget". The working design minimizes `time + λ × penalty`. The group has not chosen between a constraint and a weighted sum.
+- The draft keeps the online monitors and the falsification campaign from version one, as task 6.
+- The draft does not give the score formula, the risk event thresholds, or a role for a VLM or VLA.
+
 ## Earlier proposals, not part of the working design
 
 Claude proposed these in the first conversation. The working design does not use them so far.
@@ -81,12 +89,13 @@ Claude proposed these in the first conversation. The working design does not use
 - Other resources to budget: time slack against an arrival deadline; human attention, such as remote-assist calls or L3 takeover requests; EV energy, judged a weak fit.
 - A VLM in a behavior layer at about 1 Hz that revises the difficulty estimate. Its latency is acceptable at that rate.
 - The CPS question "what happens to closed-loop safety when a slow layer is late or wrong?", a runtime assurance problem (Simplex architecture).
-- Carried over from version one: the latency-faithful loop, STL monitors, the falsification campaign, logging, and the dashboard. The working design mentions STL violations as a measured outcome and falsification as a search for scenarios where the full planner does worse than a baseline.
+- Carried over from version one: the latency-faithful loop, STL monitors, the falsification campaign, logging, and the dashboard. The working design mentions STL violations as a measured outcome and falsification as a search for scenarios where the full planner does worse than a baseline. The pre-proposal draft keeps the monitors, the campaign, and the dashboard.
 - World models: no cheap place found. CARLA-trained driving VLMs need a strong NVIDIA GPU, which conflicts with the Apple Silicon requirement in version one.
 
 ## Open questions
 
-- Does the group accept the working design, and risk as the budgeted resource?
+- Does the group accept the working design, and risk as the budgeted resource? The draft is written on it, but no source says the group approved either.
+- Is the budget a constraint on the route or a weight in its cost?
 - Does the sensor model produce a measurable effect? This is the go or no-go test.
 - Are the CARLA statements correct for version 0.9.16? See the notes in [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]].
 - How does the project show weather that a route can avoid, when CARLA weather is global? The options are a temporal forecast or rain zones in the sensor model only.
@@ -98,9 +107,11 @@ Claude proposed these in the first conversation. The working design does not use
 
 - [[cs513-project]]: the project.
 - [[CS513 Project Proposal Draft]]: version one, the compute-budget idea.
+- [[CS513 Pre-Proposal Draft - Demand Against Capability]]: the draft pre-proposal for this version.
 - [[CSCI 513 Project Registration Instructions]]: what the formal pre-proposal must contain.
 
 ## Sources
 
 - [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]]: the verbatim record of the design rounds. Authority: synthetic.
+- [[CS513 Pre-Proposal Draft - Demand Against Capability]]: the team's draft. Authority: primary.
 - The first conversation on 2026-09-18, including the message Nathan shared with the group. No captured source.

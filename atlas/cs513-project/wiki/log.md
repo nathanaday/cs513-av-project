@@ -13,6 +13,14 @@ tags:
 
 Newest completed operations appear first. claude-atlas writes this page.
 
+## 2026-09-20 — ingest-20260920-214919-754b
+
+file the pre-proposal draft (Demand Against Capability); record the brainstorm note as a duplicate of Nathan's notes; update the project, v2 concept, index, and hot cache; clear the inbox
+
+- Created: [[CS513 Pre-Proposal Draft - Demand Against Capability]]
+- Updated: [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]], [[Project Idea v2 - Demand Against Capability]], [[cs513-project]], [[index|Wiki Index]], [[hot|Hot Cache]]
+- Sources: src-fc28a8e2eaf6b90f0c2f, src-ff5df781a22b34c48c0a, src-8ca84d55ad29d23a4202
+
 ## 2026-09-20 — capture-20260920-214631-294c
 
 capture CS513 Project Brainstorm.md, pre-proposal-draft.md

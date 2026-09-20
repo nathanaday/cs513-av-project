@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T21:46:31Z",
+  "generated_at": "2026-09-20T21:49:30Z",
   "schema": "atlas-obsidian.source-ledger.v1",
   "sources": {
     "src-68493c3fa8a0290bfda1": {
@@ -29,7 +29,7 @@
       "captured_at": "2026-09-18",
       "content_kind": "markdown",
       "content_sha256": "1e64340d27d2ab1edaa32ddb1dd38f0000736aaf7a33e99be585b3078d8cab6f",
-      "ingested_at": "2026-09-18",
+      "ingested_at": "2026-09-20",
       "notes": "Group project category. Verbatim conversation record; proposals, not group decisions. CARLA details unverified.",
       "origin": {
         "kind": "file",
@@ -70,29 +70,39 @@
       }
     },
     "src-fc28a8e2eaf6b90f0c2f": {
-      "authority": "unknown",
+      "authority": "primary",
       "captured_at": "2026-09-20",
       "content_kind": "markdown",
       "content_sha256": "75c2d8991cc77da7a4d55f0fd1870448036ca2bcfd8edc87f98956951f71c50f",
+      "ingested_at": "2026-09-20",
+      "notes": "Group project category. Team's draft one-page pre-proposal. Original stays at docs/prepreposal/pre-proposal-draft.md (also .tex and .pdf). Not shown to be approved or submitted.",
       "origin": {
         "kind": "file",
         "locator": ".raw/captured/75c2d8991cc77da7a4d55f0fd1870448036ca2bcfd8edc87f98956951f71c50f.md"
       },
-      "pages": [],
-      "review_status": "unreviewed",
-      "title": "pre-proposal-draft"
+      "pages": [
+        "wiki/concepts/Project Idea v2 - Demand Against Capability.md",
+        "wiki/entities/cs513-project.md",
+        "wiki/sources/CS513 Pre-Proposal Draft - Demand Against Capability.md"
+      ],
+      "review_status": "active",
+      "title": "CS513 Pre-Proposal Draft - Demand Against Capability"
     },
     "src-ff5df781a22b34c48c0a": {
-      "authority": "unknown",
+      "authority": "primary",
       "captured_at": "2026-09-20",
       "content_kind": "markdown",
       "content_sha256": "5595d9df06187e9d6523819c6de47e56a9faf1b9119faf0b52f4f28de58787e1",
+      "ingested_at": "2026-09-20",
+      "notes": "Nathan's own notes. Text matches his notes inside the v2 brainstorm source; no separate page.",
       "origin": {
         "kind": "file",
         "locator": ".raw/captured/5595d9df06187e9d6523819c6de47e56a9faf1b9119faf0b52f4f28de58787e1.md"
       },
-      "pages": [],
-      "review_status": "unreviewed",
+      "pages": [
+        "wiki/sources/Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan.md"
+      ],
+      "review_status": "active",
       "title": "CS513 Project Brainstorm"
     }
   }

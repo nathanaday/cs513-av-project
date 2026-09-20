@@ -3,7 +3,7 @@ type: source
 title: "Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan"
 status: developing
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-20
 tags:
   - source
   - project/cs513-project
@@ -21,7 +21,7 @@ Category: group project. This page belongs to [[cs513-project]], not to the cour
 
 ## Summary
 
-A verbatim record of two brainstorm rounds on 2026-09-18 between Nathan Aday and Claude. The file in the project repository is `docs/brainstorm-v2-penalty-eval-driver-plan.md`. Each round has Nathan's notes, then Claude's response. The rounds turn [[Project Idea v2 - Demand Against Capability]] into a working design: a penalty system, an evaluation score, and a baseline driver in CARLA.
+A verbatim record of two brainstorm rounds on 2026-09-18 between Nathan Aday and Claude. The file was first kept in the project repository as `docs/brainstorm-v2-penalty-eval-driver-plan.md`. On 2026-09-20 it moved to the knowledge base inbox, and the captured copy is now the record. Each round has Nathan's notes, then Claude's response. The rounds turn [[Project Idea v2 - Demand Against Capability]] into a working design: a penalty system, an evaluation score, and a baseline driver in CARLA. The team's draft of the pre-proposal, [[CS513 Pre-Proposal Draft - Demand Against Capability]], follows this design.
 
 Authority: synthetic. The design statements are proposals from a conversation. The group has not agreed on them. Claude wrote the CARLA details from memory of the 0.9.x Python API, and nobody has checked them against the 0.9.16 install.
 
@@ -124,3 +124,4 @@ Drop snow, wind, and heat. The source says CARLA has no snow, wind only moves fo
 - Every threshold in the source (1.5 s, 4 m/s², 1 m, 5 s, α = 0.5, 3 to 5 seeds) is a starting value that Claude proposed. None comes from a measurement or a cited standard.
 - The statements about CARLA behavior (global weather, no snow, `BehaviorAgent` internals, `GlobalRoutePlanner` edge weights, `scenario_runner` criteria) have no source in the knowledge base. Check them against CARLA 0.9.16 before the group relies on them.
 - The source replaces the always-Heavy baseline of [[CS513 Project Proposal Draft]] with Stack A and an always-cautious driver.
+- Nathan's notes from both rounds also exist as a separate note file, `CS513 Project Brainstorm.md` (source id `src-ff5df781a22b34c48c0a`), captured on 2026-09-20. Its text matches Nathan's notes in this source: the Round 1 outline, and the Round 2 safety score concepts, driving models, and table. It differs only in heading levels. It holds no text that this source lacks, so it has no page of its own.

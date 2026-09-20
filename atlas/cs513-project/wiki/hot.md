@@ -3,7 +3,7 @@ type: meta
 title: Hot Cache
 status: developing
 created: 2026-09-16
-updated: 2026-09-18
+updated: 2026-09-20
 tags:
   - meta
   - hot-cache
@@ -13,7 +13,7 @@ tags:
 
 ## Last Updated
 
-2026-09-18. The knowledge base was renamed to `cps-project-kb` and moved into the project repository. It now holds the group project [[cs513-project]] only.
+2026-09-20. Ingested the pre-proposal draft and cleared the inbox. This knowledge base holds the group project [[cs513-project]] only.
 
 ## Key Recent Facts
 
@@ -24,15 +24,19 @@ tags:
 - Baseline driver: the CARLA `BehaviorAgent`. A parametric sensor model is required, because the agent reads ground truth.
 - Go or no-go test: the sensor model must make rain and glare raise the event rate of Stack A.
 - The CARLA statements in the design are from memory. Check them against 0.9.16.
-- A pre-proposal draft exists in the repository: `docs/pre-proposal-draft.md`, with a LaTeX copy and a one-page PDF. Title: "Demand Against Capability: Risk-Budgeted Route Planning and Adaptive Behavior for Autonomous Driving". Cluster: C4 Autonomous Driving. It is not ingested yet.
-- The course asks for one page: title, cluster, team members, abstract of 5 to 6 lines, key milestones. ([[CSCI 513 Project Registration Instructions]]) The version one draft lists the pitch for Sep 21.
+- Pre-proposal draft: [[CS513 Pre-Proposal Draft - Demand Against Capability]]. Cluster C4 Autonomous Driving, six team members, six tasks, schedule to the Dec 10 report. The originals stay in `docs/prepreposal/` (Markdown, LaTeX, PDF). The PDF is one page. The pitch is due Sep 21.
+- The draft differs from the working design in the budget: it selects the quickest route within the risk budget, where the design minimizes `time + λ × penalty`. It also keeps the falsification campaign from version one.
+- The draft abstract is about eight lines. The course asks for 5 to 6. ([[CSCI 513 Project Registration Instructions]])
 
 ## Recent Changes
 
-- Rewrote [[overview]] and [[index]] for the project-only scope.
+- Filed the pre-proposal draft, and updated [[cs513-project]], [[Project Idea v2 - Demand Against Capability]], and [[index]].
+- The inbox note "CS513 Project Brainstorm" has the same text as Nathan's notes in the v2 brainstorm source. It is captured and adds no page.
+- The v2 brainstorm file reappeared in the inbox. It was already ingested, so no new page.
 
 ## Active Threads
 
 - Discuss the working design and the pre-proposal draft with the group.
-- Ingest the pre-proposal when the group agrees on it.
+- Decide the budget form: a constraint or a weighted cost.
+- Shorten the abstract to the course limit, and name a lead for each milestone.
 - Find sources for difficulty-aware routing for the literature survey.
