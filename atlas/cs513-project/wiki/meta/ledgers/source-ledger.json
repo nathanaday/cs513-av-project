@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-09-18T21:53:08Z",
-  "schema": "claude-atlas.source-ledger.v1",
+  "schema": "atlas-obsidian.source-ledger.v1",
   "sources": {
     "src-68493c3fa8a0290bfda1": {
       "authority": "primary",
