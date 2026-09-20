@@ -13,6 +13,13 @@ tags:
 
 Newest completed operations appear first. claude-atlas writes this page.
 
+## 2026-09-20 — markdown-20260920-235146-6f1b
+
+add entity pages for the Naive Driver, Risk-Aware Planned Driver, Risk Exposure Model, and Risk-Aware Planning Algorithm; link them from the project, concept, source, index, and hot pages
+
+- Created: [[Naive Driver]], [[Risk-Aware Planned Driver]], [[Risk Exposure Model]], [[Risk-Aware Planning Algorithm]]
+- Updated: [[Basic Phases]], [[Project Idea v2 - Demand Against Capability]], [[cs513-project]], [[index|Wiki Index]], [[hot|Hot Cache]]
+
 ## 2026-09-20 — ingest-20260920-234541-18bc
 
 file Basic Phases (phased plan, stretch goal); update the project page, v2 concept, index, and hot cache; clear the inbox copy

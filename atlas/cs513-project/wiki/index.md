@@ -29,4 +29,8 @@ This knowledge base holds the CSCI 513 group project only. Course material belon
 
 ## Entities
 
-- [[cs513-project]]: the group project, with its idea versions, phases, dates, and submission gaps.
+- [[cs513-project]]: the group project, with its idea versions, components, phases, dates, and submission gaps.
+- [[Naive Driver]]: the baseline CARLA driver. It optimizes ETA only. Stack A.
+- [[Risk-Aware Planned Driver]]: the driver that follows a route from the planning algorithm. Stack B.
+- [[Risk Exposure Model]]: the scoring of a drive and the risk types it covers. Also called the penalty model.
+- [[Risk-Aware Planning Algorithm]]: the optimization that finds the route from ETA and risk exposure.

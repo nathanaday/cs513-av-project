@@ -23,6 +23,8 @@ Category: group project. This page belongs to [[cs513-project]], not to the cour
 
 Nathan Aday's plan for version two of the project idea, [[Project Idea v2 - Demand Against Capability]]. It gives a base concept and five phases. Phases 1 to 4 are the immediate goals. Phase 5, real-time risk recompute, is a stretch goal.
 
+Project components in this document: the [[Naive Driver]], the [[Risk-Aware Planned Driver]], the [[Risk Exposure Model]], and the [[Risk-Aware Planning Algorithm]].
+
 The document says it has no AI-generated content and is fully human written, with AI agents used for collaboration and proofreading. (Callout at the top)
 
 The original stays in the project at `ideas/Basic Phases.md`, where the group reads it. `ideas/Basic Phases.pdf` has the same text. This knowledge base holds a captured copy of the Markdown file.
@@ -33,19 +35,19 @@ Authority: primary. The document has open `#TODO` items, so it is a working draf
 
 ### Base concept
 
-- A self-driving vehicle can get from A to B quickly and without breaking hard rules, but it has no sense of risk aversion.
+- A self-driving vehicle can get from A to B quickly and without breaking hard rules, but it has no sense of risk aversion. (The [[Naive Driver]])
 - Skilled human drivers sometimes give up ETA for a safer drive when conditions are difficult.
-- Proposal: a risk-aware planner that trades from an ETA budget for added safety. It drives slower in degraded visibility, and it re-routes to avoid crowded areas.
+- Proposal: a risk-aware planner that trades from an ETA budget for added safety. It drives slower in degraded visibility, and it re-routes to avoid crowded areas. (The [[Risk-Aware Planning Algorithm]] and the [[Risk-Aware Planned Driver]])
 - The study compares a risk-aware drive with a naive driver. The scores are risk exposure, ETA, and the number of collision incidents.
 
 ### The five phases
 
 | Phase | Goal | Kind |
 | :---- | :---- | :---- |
-| 1. CARLA with base driver and Scenario Runner | Get a basic driver working as the baseline. Run a scenario drive. Measure data and report a drive summary. | Immediate |
-| 2. Design the penalty model | Build all the eval modules that produce a penalty score versus time graph for a scenario drive. | Immediate |
-| 3. Build the risk-aware planner | A planner that finds the optimal route from risk exposure and ETA. It outputs navigation waypoints. | Immediate |
-| 4. Build the sim scenarios | The test set. Run each scenario with the naive driver and the risk-aware planner. | Immediate |
+| 1. CARLA with base driver and Scenario Runner | Get a basic driver working as the baseline ([[Naive Driver]]). Run a scenario drive. Measure data and report a drive summary. | Immediate |
+| 2. Design the penalty model | Build all the eval modules that produce a penalty score versus time graph for a scenario drive ([[Risk Exposure Model]]). | Immediate |
+| 3. Build the risk-aware planner | A planner that finds the optimal route from risk exposure and ETA. It outputs navigation waypoints ([[Risk-Aware Planning Algorithm]]). | Immediate |
+| 4. Build the sim scenarios | The test set. Run each scenario with the naive driver and the risk-aware planner ([[Risk-Aware Planned Driver]]). | Immediate |
 | 5. Real-time risk recompute | Recompute the route with the algorithm from phase 3 while the drive runs. | Stretch |
 
 ### Phase 1
@@ -54,6 +56,8 @@ Authority: primary. The document has open `#TODO` items, so it is a working draf
 - Run a scenario drive and get comfortable with measuring data and reporting the summary.
 
 ### Phase 2: penalty model
+
+See [[Risk Exposure Model]] for the modules as a page of their own.
 
 - Program the scenario runner so the basic drive routes from A to B in a test world. The drive includes a bit of each penalty situation: weather, low sun, pedestrians, wet roads.
 - The penalty model scores and penalizes the drive on events. It measures speed, pedestrian proximity, turns, weather exposure, and more.
@@ -70,6 +74,8 @@ Authority: primary. The document has open `#TODO` items, so it is a working draf
 - Two `#TODO` items: split the penalty model into specific modules with definitions, as in the table; and find out whether a well-known module, library, or theory already scores the safety of a drive.
 
 ### Phase 3: planner
+
+See [[Risk-Aware Planning Algorithm]].
 
 - The planner needs these world variables. The team may build them in the simulation layer and assume what statistics the planner can access.
 

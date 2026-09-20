@@ -30,6 +30,15 @@ The vehicle compares the **demand** of the driving situation with its own **capa
 
 Nathan's message to the group states the mechanism: "instead of the compute path/model switching, it just switches its threshold for certain decisions and in many ways that's much easier and more elegant."
 
+## Project components
+
+Four parts of the project have a page each. They are stubs that collect what the sources say.
+
+- [[Naive Driver]]: the baseline CARLA driver. It optimizes ETA only.
+- [[Risk-Aware Planned Driver]]: the driver that follows a route from the planning algorithm.
+- [[Risk Exposure Model]]: the scoring of a drive, with the risk types it covers.
+- [[Risk-Aware Planning Algorithm]]: the optimization that finds the route from ETA and risk exposure.
+
 ## Why version one changed
 
 Version one budgets compute: it switches between a Nano and a Heavy perception path. The group lead rejected that story for these reasons, stated in the conversation:
@@ -64,10 +73,10 @@ Nathan places the idea in the domain of difficulty-aware routing. His example: A
 
 The full record is [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]]. All of it is a proposal. Summary:
 
-- **Three stacks.** A: a basic driver on the quickest path. B: A plus an upfront planner that reduces penalties over the trip. C: B plus real-time recalculation. An always-cautious driver is a fourth baseline. It shows whether the planner is smart or only slow.
+- **Three stacks.** A: a basic driver on the quickest path ([[Naive Driver]]). B: A plus an upfront planner that reduces penalties over the trip ([[Risk-Aware Planned Driver]]). C: B plus real-time recalculation. An always-cautious driver is a fourth baseline. It shows whether the planner is smart or only slow.
 - **Violations and penalties.** A violation (collision, red light) fails the run. A penalty accumulates. Nathan set this split.
-- **Penalty formula.** Penalty = demand × capability multiplier. An action costs `d × m`. One penalty point is one expected risk event. `d` and `m` come from calibration runs of Stack A, on tracks that are separate from the test tracks.
-- **Budget.** The budgeted resource is risk. The planner minimizes `time + λ × penalty`, and each λ is equal to one risk budget. A sweep of λ gives a curve of time against risk for each stack.
+- **Penalty formula.** Penalty = demand × capability multiplier. An action costs `d × m`. One penalty point is one expected risk event. `d` and `m` come from calibration runs of Stack A, on tracks that are separate from the test tracks. See [[Risk Exposure Model]].
+- **Budget.** The budgeted resource is risk. The planner minimizes `time + λ × penalty`, and each λ is equal to one risk budget. A sweep of λ gives a curve of time against risk for each stack. See [[Risk-Aware Planning Algorithm]].
 - **Score.** Predicted penalty (the planner's model) stays apart from measured risk events (the evaluator's count from ground truth). `Total = α × ETA + (1 − α) × Safety`, and a failed run scores 0. Fix α before the runs and show a sweep.
 - **Conditions kept.** Sun glare, one visibility scale for rain and fog, night. Actions kept: unprotected left, lane change, pass a stopped vehicle.
 - **Sensor model.** A parametric model degrades what the driver sees, as a function of visibility and sun angle against heading. It is required, because the baseline driver reads ground truth and weather does not affect it.
@@ -84,7 +93,7 @@ The full record is [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Pl
 
 ## Phases and the stretch goal
 
-[[Basic Phases]] gives five phases. Phases 1 to 4 are the immediate goals: a CARLA base driver, a penalty model, a risk-aware planner, and the test scenarios that compare the naive driver with the risk-aware planner. Phase 5, real-time risk recompute, is a stretch goal. In terms of the working design, phases 1 to 4 are Stack A against Stack B, and phase 5 is Stack C.
+[[Basic Phases]] gives five phases. Phases 1 to 4 are the immediate goals: a CARLA base driver ([[Naive Driver]]), a penalty model ([[Risk Exposure Model]]), a risk-aware planner ([[Risk-Aware Planning Algorithm]]), and the test scenarios that compare the naive driver with the risk-aware driver ([[Risk-Aware Planned Driver]]). Phase 5, real-time risk recompute, is a stretch goal. In terms of the working design, phases 1 to 4 are Stack A against Stack B, and phase 5 is Stack C.
 
 The document and the earlier sources differ on these points:
 
@@ -125,6 +134,7 @@ Claude proposed these in the first conversation. The working design does not use
 - [[CS513 Pre-Proposal Draft - Demand Against Capability]]: the draft pre-proposal for this version.
 - [[Basic Phases]]: the phased plan with the stretch goal.
 - [[CSCI 513 Project Registration Instructions]]: what the formal pre-proposal must contain.
+- [[Naive Driver]], [[Risk-Aware Planned Driver]], [[Risk Exposure Model]], [[Risk-Aware Planning Algorithm]]: the project components.
 
 ## Sources
 

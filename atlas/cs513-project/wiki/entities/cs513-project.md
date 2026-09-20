@@ -38,16 +38,27 @@ The working design of version two is in [[Brainstorm v2 - Penalty, Eval Score, a
 
 The repository holds the draft in `docs/prepreposal/` as Markdown, LaTeX, and PDF.
 
+## Components
+
+Four parts of version two have a page each. The pages are stubs that collect what the sources say, and they mark where the sources disagree.
+
+| Component | What it is |
+| :---- | :---- |
+| [[Naive Driver]] | The baseline CARLA driver. It optimizes ETA only. |
+| [[Risk-Aware Planned Driver]] | The driver that follows a route from the planning algorithm. |
+| [[Risk Exposure Model]] | The scoring of a drive, with the risk types it covers: pedestrian proximity, visibility, and wet surface in the first pass. |
+| [[Risk-Aware Planning Algorithm]] | The optimization that finds the route from ETA and risk exposure. Not designed yet. |
+
 ## Work phases
 
 From [[Basic Phases]], which the group reads at `ideas/Basic Phases.md`.
 
 | Phase | Goal | Kind |
 | :---- | :---- | :---- |
-| 1 | CARLA with a base driver and Scenario Runner | Immediate |
-| 2 | Penalty model and the eval modules | Immediate |
-| 3 | Risk-aware planner | Immediate |
-| 4 | Sim scenarios, and the naive against risk-aware comparison | Immediate |
+| 1 | CARLA with a base driver ([[Naive Driver]]) and Scenario Runner | Immediate |
+| 2 | Penalty model and the eval modules ([[Risk Exposure Model]]) | Immediate |
+| 3 | Risk-aware planner ([[Risk-Aware Planning Algorithm]]) | Immediate |
+| 4 | Sim scenarios, and the naive against risk-aware comparison ([[Risk-Aware Planned Driver]]) | Immediate |
 | 5 | Real-time risk recompute | Stretch |
 
 The pre-proposal draft treats real-time adaptation as a core task with a milestone in Oct 19 to Nov 1. [[Basic Phases]] makes it a stretch goal. See [[Project Idea v2 - Demand Against Capability]].
@@ -97,12 +108,12 @@ Synthesis from a comparison of the sources. [[CSCI 513 Project Registration Inst
 - Is the "project pitch" of Sep 21 the same submission as the one-page registration? No source in the knowledge base says so.
 - Does the group accept the version two working design and the draft built on it? See [[Project Idea v2 - Demand Against Capability]] for the open questions of version two.
 - Is real-time recompute a core goal, as in the pre-proposal draft, or a stretch goal, as in [[Basic Phases]]?
-- Is the risk budget a constraint on the route, a weight in its cost, or an ETA budget?
+- Is the risk budget a constraint on the route, a weight in its cost, or an ETA budget? See [[Risk-Aware Planning Algorithm]].
 - Does the abstract shrink to the 5 to 6 lines that the course asks for?
 - Who leads each milestone?
 - Does the group confirm CARLA? The pre-proposal draft names CARLA 0.9.16. Version one required Apple Silicon support, camera rendering, and scripted scenarios. ([[CS513 Project Proposal Draft]], Resources Required)
 - Which STL monitoring library and falsification tool?
-- Which papers go in the literature survey? Version one needs at least 3. The pre-proposal draft does not mention a survey. [[Basic Phases]] asks for an existing library or theory that scores the safety of a drive.
+- Which papers go in the literature survey? Version one needs at least 3. The pre-proposal draft does not mention a survey. [[Basic Phases]] asks for an existing library or theory that scores the safety of a drive. See [[Risk Exposure Model]].
 
 ## Relationships
 
