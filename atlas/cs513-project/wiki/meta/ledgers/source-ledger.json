@@ -1,0 +1,73 @@
+{
+  "generated_at": "2026-09-18T21:53:08Z",
+  "schema": "claude-atlas.source-ledger.v1",
+  "sources": {
+    "src-68493c3fa8a0290bfda1": {
+      "authority": "primary",
+      "captured_at": "2026-09-18",
+      "content_kind": "markdown",
+      "content_sha256": "a9bd17d4f339c7803c806d4ddd2abe7b5ae780b7f67635b136cb1b15c273402b",
+      "ingested_at": "2026-09-18",
+      "notes": "Group project category. Working brainstorm draft; statements are plans, not decisions.",
+      "origin": {
+        "kind": "file",
+        "locator": ".raw/captured/a9bd17d4f339c7803c806d4ddd2abe7b5ae780b7f67635b136cb1b15c273402b.md"
+      },
+      "pages": [
+        "wiki/entities/cs513-project.md",
+        "wiki/sources/CS513 Project Proposal Draft.md"
+      ],
+      "review_status": "active",
+      "title": "CS513 Project Proposal Draft",
+      "via": {
+        "id": "eabc5d9f-29eb-4404-bfbf-62366ad1d1a7",
+        "name": "cs513-project"
+      }
+    },
+    "src-8ca84d55ad29d23a4202": {
+      "authority": "synthetic",
+      "captured_at": "2026-09-18",
+      "content_kind": "markdown",
+      "content_sha256": "1e64340d27d2ab1edaa32ddb1dd38f0000736aaf7a33e99be585b3078d8cab6f",
+      "ingested_at": "2026-09-18",
+      "notes": "Group project category. Verbatim conversation record; proposals, not group decisions. CARLA details unverified.",
+      "origin": {
+        "kind": "file",
+        "locator": ".raw/captured/1e64340d27d2ab1edaa32ddb1dd38f0000736aaf7a33e99be585b3078d8cab6f.md"
+      },
+      "pages": [
+        "wiki/concepts/Project Idea v2 - Demand Against Capability.md",
+        "wiki/entities/cs513-project.md",
+        "wiki/sources/Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan.md"
+      ],
+      "review_status": "active",
+      "title": "Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan",
+      "via": {
+        "id": "eabc5d9f-29eb-4404-bfbf-62366ad1d1a7",
+        "name": "cs513-project"
+      }
+    },
+    "src-d67656f76fbd834e75da": {
+      "authority": "official",
+      "captured_at": "2026-09-18",
+      "content_kind": "other",
+      "content_sha256": "900ef217c97113d6a825225307624ea29d2b5378aeb86338328368cfac9d16c7",
+      "ingested_at": "2026-09-18",
+      "notes": "Group project category. Course guidance on the project registration page.",
+      "origin": {
+        "kind": "file",
+        "locator": ".raw/captured/900ef217c97113d6a825225307624ea29d2b5378aeb86338328368cfac9d16c7.docx"
+      },
+      "pages": [
+        "wiki/entities/cs513-project.md",
+        "wiki/sources/CSCI 513 Project Registration Instructions.md"
+      ],
+      "review_status": "active",
+      "title": "CSCI 513 Project Registration Instructions",
+      "via": {
+        "id": "eabc5d9f-29eb-4404-bfbf-62366ad1d1a7",
+        "name": "cs513-project"
+      }
+    }
+  }
+}
