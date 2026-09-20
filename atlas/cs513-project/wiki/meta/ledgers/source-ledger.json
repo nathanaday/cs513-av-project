@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T21:53:08Z",
+  "generated_at": "2026-09-20T21:46:31Z",
   "schema": "atlas-obsidian.source-ledger.v1",
   "sources": {
     "src-68493c3fa8a0290bfda1": {
@@ -68,6 +68,32 @@
         "id": "eabc5d9f-29eb-4404-bfbf-62366ad1d1a7",
         "name": "cs513-project"
       }
+    },
+    "src-fc28a8e2eaf6b90f0c2f": {
+      "authority": "unknown",
+      "captured_at": "2026-09-20",
+      "content_kind": "markdown",
+      "content_sha256": "75c2d8991cc77da7a4d55f0fd1870448036ca2bcfd8edc87f98956951f71c50f",
+      "origin": {
+        "kind": "file",
+        "locator": ".raw/captured/75c2d8991cc77da7a4d55f0fd1870448036ca2bcfd8edc87f98956951f71c50f.md"
+      },
+      "pages": [],
+      "review_status": "unreviewed",
+      "title": "pre-proposal-draft"
+    },
+    "src-ff5df781a22b34c48c0a": {
+      "authority": "unknown",
+      "captured_at": "2026-09-20",
+      "content_kind": "markdown",
+      "content_sha256": "5595d9df06187e9d6523819c6de47e56a9faf1b9119faf0b52f4f28de58787e1",
+      "origin": {
+        "kind": "file",
+        "locator": ".raw/captured/5595d9df06187e9d6523819c6de47e56a9faf1b9119faf0b52f4f28de58787e1.md"
+      },
+      "pages": [],
+      "review_status": "unreviewed",
+      "title": "CS513 Project Brainstorm"
     }
   }
 }

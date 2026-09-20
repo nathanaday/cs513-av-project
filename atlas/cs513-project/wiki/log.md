@@ -3,7 +3,7 @@ type: meta
 title: Wiki Log
 status: evergreen
 created: 2026-09-16
-updated: 2026-09-18
+updated: 2026-09-20
 tags:
   - meta
   - log
@@ -12,6 +12,13 @@ tags:
 # Wiki Log
 
 Newest completed operations appear first. claude-atlas writes this page.
+
+## 2026-09-20 — capture-20260920-214631-294c
+
+capture CS513 Project Brainstorm.md, pre-proposal-draft.md
+
+- Created: `.raw/captured/5595d9df06187e9d6523819c6de47e56a9faf1b9119faf0b52f4f28de58787e1.md`, `.raw/captured/75c2d8991cc77da7a4d55f0fd1870448036ca2bcfd8edc87f98956951f71c50f.md`
+- Sources: src-ff5df781a22b34c48c0a, src-fc28a8e2eaf6b90f0c2f
 
 ## 2026-09-18 — markdown-20260919-012155-d326
 
