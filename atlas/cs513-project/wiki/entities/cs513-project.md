@@ -27,10 +27,10 @@ Team: Yonsoo Kim, Nathan Aday, Tomohiko Uemura, Rachel Lin, Jeslyn Yang, Illy Ho
 
 ## Idea versions
 
-| Version | Idea | State | Page |
-| :---- | :---- | :---- | :---- |
-| v1 | Budget compute: a scheduler switches between a Nano and a Heavy perception path. | Probably not pursued. The compute-budget story does not transfer to real self-driving systems. | [[CS513 Project Proposal Draft]] |
-| v2 | Demand against capability: the vehicle compares situation difficulty with its own capability and switches to a more risk-averse decision profile when capability drops. Includes difficulty-aware routing and several planning layers. | Working design, and a draft pre-proposal built on it. Not agreed by the group. | [[Project Idea v2 - Demand Against Capability]] |
+| Version | Idea                                                                                                                                                                                                                                   | State                                                                                          | Page                                            |
+| :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------- | :---------------------------------------------- |
+| v1      | Budget compute: a scheduler switches between a Nano and a Heavy perception path.                                                                                                                                                       | Probably not pursued. The compute-budget story does not transfer to real self-driving systems. | [[CS513 Project Proposal Draft]]                |
+| v2      | Demand against capability: the vehicle compares situation difficulty with its own capability and switches to a more risk-averse decision profile when capability drops. Includes difficulty-aware routing and several planning layers. | Working design, and a draft pre-proposal built on it. Not agreed by the group.                 | [[Project Idea v2 - Demand Against Capability]] |
 
 The working design of version two is in [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]]: three driving stacks (A, B, C) on the CARLA `BehaviorAgent`, a penalty system in units of expected risk events, a risk budget, and a score that joins trip time and measured risk events. The draft pre-proposal follows it. The draft says the planner selects the quickest route within the risk budget. The working design minimizes `time + λ × penalty`. ([[CS513 Pre-Proposal Draft - Demand Against Capability]], Notes)
 
