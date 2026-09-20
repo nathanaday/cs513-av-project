@@ -13,6 +13,13 @@ tags:
 
 Newest completed operations appear first. claude-atlas writes this page.
 
+## 2026-09-20 — capture-20260920-234340-77bf
+
+capture Basic Phases.md
+
+- Created: `.raw/captured/d34cdb3ead72260a5d8adbe404c9921b0be62a4a89152d5aba0c958ee4d801c4.md`
+- Sources: src-26c9a50defb89b0215ac
+
 ## 2026-09-20 — ingest-20260920-214919-754b
 
 file the pre-proposal draft (Demand Against Capability); record the brainstorm note as a duplicate of Nathan's notes; update the project, v2 concept, index, and hot cache; clear the inbox

@@ -1,7 +1,20 @@
 {
-  "generated_at": "2026-09-20T21:49:30Z",
+  "generated_at": "2026-09-20T23:43:40Z",
   "schema": "atlas-obsidian.source-ledger.v1",
   "sources": {
+    "src-26c9a50defb89b0215ac": {
+      "authority": "unknown",
+      "captured_at": "2026-09-20",
+      "content_kind": "markdown",
+      "content_sha256": "d34cdb3ead72260a5d8adbe404c9921b0be62a4a89152d5aba0c958ee4d801c4",
+      "origin": {
+        "kind": "file",
+        "locator": ".raw/captured/d34cdb3ead72260a5d8adbe404c9921b0be62a4a89152d5aba0c958ee4d801c4.md"
+      },
+      "pages": [],
+      "review_status": "unreviewed",
+      "title": "Basic Phases"
+    },
     "src-68493c3fa8a0290bfda1": {
       "authority": "primary",
       "captured_at": "2026-09-18",
