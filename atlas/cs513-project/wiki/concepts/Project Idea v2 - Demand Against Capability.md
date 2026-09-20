@@ -18,7 +18,7 @@ tags:
 
 Category: group project. This page belongs to [[cs513-project]], not to the course material.
 
-This page records brainstorm version two of the project idea. It comes from conversations on 2026-09-18 between Nathan Aday and Claude, and from a message that Nathan shared with the group. The group has not agreed on it. A draft of the formal pre-proposal now exists: [[CS513 Pre-Proposal Draft - Demand Against Capability]]. Version one is [[CS513 Project Proposal Draft]].
+This page records brainstorm version two of the project idea. It comes from conversations on 2026-09-18 between Nathan Aday and Claude, and from a message that Nathan shared with the group. The group has not agreed on it. A draft of the formal pre-proposal now exists: [[CS513 Pre-Proposal Draft - Demand Against Capability]]. Nathan's document [[Basic Phases]] sets the phases and separates the immediate goals from a stretch goal. Version one is [[CS513 Project Proposal Draft]].
 
 ## Definition
 
@@ -82,6 +82,20 @@ The full record is [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Pl
 - The draft keeps the online monitors and the falsification campaign from version one, as task 6.
 - The draft does not give the score formula, the risk event thresholds, or a role for a VLM or VLA.
 
+## Phases and the stretch goal
+
+[[Basic Phases]] gives five phases. Phases 1 to 4 are the immediate goals: a CARLA base driver, a penalty model, a risk-aware planner, and the test scenarios that compare the naive driver with the risk-aware planner. Phase 5, real-time risk recompute, is a stretch goal. In terms of the working design, phases 1 to 4 are Stack A against Stack B, and phase 5 is Stack C.
+
+The document and the earlier sources differ on these points:
+
+- **Scope of Stack C.** Stretch in [[Basic Phases]]. Core in the working design and in the pre-proposal draft, which schedules it for Oct 19 to Nov 1.
+- **Baselines.** [[Basic Phases]] compares two drivers. It has no always-cautious baseline.
+- **First-pass penalties.** [[Basic Phases]] scores exposure to pedestrians, poor visibility, and wet surfaces, scaled by speed. It holds off on left turns and obstruction sneaking. The pre-proposal draft measures action costs for left turns, lane changes, and passing a stopped vehicle in task 3.
+- **Budget wording.** [[Basic Phases]] says the planner trades from an ETA budget. The working design budgets risk.
+- **Sensor model.** [[Basic Phases]] does not mention one.
+
+The details are in the Notes of [[Basic Phases]]. No source in the knowledge base says which plan the group follows.
+
 ## Earlier proposals, not part of the working design
 
 Claude proposed these in the first conversation. The working design does not use them so far.
@@ -95,11 +109,12 @@ Claude proposed these in the first conversation. The working design does not use
 ## Open questions
 
 - Does the group accept the working design, and risk as the budgeted resource? The draft is written on it, but no source says the group approved either.
-- Is the budget a constraint on the route or a weight in its cost?
+- Is real-time recompute (Stack C) a core goal or a stretch goal?
+- Is the budget a constraint on the route, a weight in its cost, or an ETA budget?
 - Does the sensor model produce a measurable effect? This is the go or no-go test.
 - Are the CARLA statements correct for version 0.9.16? See the notes in [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]].
 - How does the project show weather that a route can avoid, when CARLA weather is global? The options are a temporal forecast or rain zones in the sensor model only.
-- Where do the risk event thresholds come from, and how does the group justify them?
+- Where do the risk event thresholds come from, and how does the group justify them? Is there an existing library or theory that scores the safety of a drive? ([[Basic Phases]] asks the second question.)
 - Does a VLM or VLA have a role?
 - Which papers support difficulty-aware routing and the left-turn example?
 
@@ -108,10 +123,12 @@ Claude proposed these in the first conversation. The working design does not use
 - [[cs513-project]]: the project.
 - [[CS513 Project Proposal Draft]]: version one, the compute-budget idea.
 - [[CS513 Pre-Proposal Draft - Demand Against Capability]]: the draft pre-proposal for this version.
+- [[Basic Phases]]: the phased plan with the stretch goal.
 - [[CSCI 513 Project Registration Instructions]]: what the formal pre-proposal must contain.
 
 ## Sources
 
 - [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]]: the verbatim record of the design rounds. Authority: synthetic.
 - [[CS513 Pre-Proposal Draft - Demand Against Capability]]: the team's draft. Authority: primary.
+- [[Basic Phases]]: Nathan's phased plan. Authority: primary.
 - The first conversation on 2026-09-18, including the message Nathan shared with the group. No captured source.

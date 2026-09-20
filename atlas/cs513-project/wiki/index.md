@@ -21,6 +21,7 @@ This knowledge base holds the CSCI 513 group project only. Course material belon
 - [[CS513 Project Proposal Draft]]: the team's brainstorm document, version one of the idea (compute budget). Probably not pursued.
 - [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]]: verbatim design rounds for version two. Penalty system, score, risk budget, and the CARLA baseline driver.
 - [[CS513 Pre-Proposal Draft - Demand Against Capability]]: the team's one-page pre-proposal draft for version two. Title, cluster C4, abstract, six tasks, and the schedule to Dec 10.
+- [[Basic Phases]]: Nathan's phased plan for version two. Four immediate phases, one stretch phase (real-time recompute), and the first-pass penalty models.
 
 ## Concepts
 
@@ -28,4 +29,4 @@ This knowledge base holds the CSCI 513 group project only. Course material belon
 
 ## Entities
 
-- [[cs513-project]]: the group project, with its idea versions, dates, and submission gaps.
+- [[cs513-project]]: the group project, with its idea versions, phases, dates, and submission gaps.

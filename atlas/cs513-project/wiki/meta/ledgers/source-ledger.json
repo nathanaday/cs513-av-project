@@ -1,18 +1,24 @@
 {
-  "generated_at": "2026-09-20T23:43:40Z",
+  "generated_at": "2026-09-20T23:45:45Z",
   "schema": "atlas-obsidian.source-ledger.v1",
   "sources": {
     "src-26c9a50defb89b0215ac": {
-      "authority": "unknown",
+      "authority": "primary",
       "captured_at": "2026-09-20",
       "content_kind": "markdown",
       "content_sha256": "d34cdb3ead72260a5d8adbe404c9921b0be62a4a89152d5aba0c958ee4d801c4",
+      "ingested_at": "2026-09-20",
+      "notes": "Group project category. Nathan's phased plan: immediate goals and a stretch goal. Original stays at ideas/Basic Phases.md (group reads it there); ideas/Basic Phases.pdf has the same text. Working draft with open TODOs.",
       "origin": {
         "kind": "file",
         "locator": ".raw/captured/d34cdb3ead72260a5d8adbe404c9921b0be62a4a89152d5aba0c958ee4d801c4.md"
       },
-      "pages": [],
-      "review_status": "unreviewed",
+      "pages": [
+        "wiki/concepts/Project Idea v2 - Demand Against Capability.md",
+        "wiki/entities/cs513-project.md",
+        "wiki/sources/Basic Phases.md"
+      ],
+      "review_status": "active",
       "title": "Basic Phases"
     },
     "src-68493c3fa8a0290bfda1": {

@@ -13,6 +13,15 @@ tags:
 
 Newest completed operations appear first. claude-atlas writes this page.
 
+## 2026-09-20 — ingest-20260920-234541-18bc
+
+file Basic Phases (phased plan, stretch goal); update the project page, v2 concept, index, and hot cache; clear the inbox copy
+
+- Created: [[Basic Phases]]
+- Updated: [[Project Idea v2 - Demand Against Capability]], [[cs513-project]], [[index|Wiki Index]], [[hot|Hot Cache]]
+- Removed: `inbox/Basic Phases.md`
+- Sources: src-26c9a50defb89b0215ac
+
 ## 2026-09-20 — capture-20260920-234340-77bf
 
 capture Basic Phases.md
