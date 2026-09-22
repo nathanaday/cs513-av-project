@@ -17,7 +17,7 @@ tags:
 
 ## Key Recent Facts
 
-- Course material belongs in the separate knowledge base `cps-course`, not here. See [[overview]].
+- Course material belongs in the separate knowledge base `cs513-course`, not here. See [[overview]].
 - Version one budgets compute ([[CS513 Project Proposal Draft]]). The group will probably not pursue it.
 - Version two is [[Project Idea v2 - Demand Against Capability]]. The working design is in [[Brainstorm v2 - Penalty, Eval Score, and Baseline Driver Plan]]. The group has not agreed on it.
 - Components, each a stub page: [[Naive Driver]] (ETA only, Stack A), [[Risk-Aware Planned Driver]] (Stack B), [[Risk Exposure Model]] (pedestrian proximity, visibility, and wet surface in the first pass), [[Risk-Aware Planning Algorithm]] (not designed yet).

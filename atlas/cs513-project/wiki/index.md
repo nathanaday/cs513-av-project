@@ -13,7 +13,7 @@ tags:
 
 Every page in this knowledge base is listed here. Completed operations keep it current.
 
-This knowledge base holds the CSCI 513 group project only. Course material belongs in the knowledge base `cps-course`. See [[overview]].
+This knowledge base holds the CSCI 513 group project only. Course material belongs in the knowledge base `cs513-course`. See [[overview]].
 
 ## Sources
 

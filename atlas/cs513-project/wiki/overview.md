@@ -18,7 +18,7 @@ stable, high-level picture; it changes less often than [[hot|the hot cache]].
 This knowledge base, `cps-project-kb`, holds the CSCI 513 group project at USC, [[cs513-project]]. It lives inside the project repository, in the folder `cps-project-kb/`, and its operations commit into that repository.
 
 - It holds the project idea and its versions, the design brainstorms, the pre-proposal, course documents that only concern the project (such as the project registration instructions), and sources the team reads for the project.
-- It does not hold the course lectures, readings, or assignments. Those belong in the separate knowledge base `cps-course`.
+- It does not hold the course lectures, readings, or assignments. Those belong in the separate knowledge base `cs513-course`.
 
 ## History
 
