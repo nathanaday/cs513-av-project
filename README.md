@@ -42,12 +42,14 @@ Planning. The pre-proposal is drafted and no implementation exists yet.
 
 ## Documentation
 
-- [Pre-proposal](docs/pre-proposal-draft.md), the one-page course submission. Also as [LaTeX](docs/pre-proposal-draft.tex) and [PDF](docs/pre-proposal-draft.pdf).
-- [Design brainstorm](docs/brainstorm-v2-penalty-eval-driver-plan.md): how the penalty system, the evaluation score, and the baseline driver work.
-- [Project knowledge base](cps-project-kb/), an Obsidian vault with the project's sources and notes. Start at [`wiki/index.md`](cps-project-kb/wiki/index.md).
+- [Pre-proposal draft](docs/prepreposal/pre-proposal-draft.md), the one-page course submission. Also as [LaTeX](docs/prepreposal/pre-proposal-draft.tex) and [PDF](docs/prepreposal/pre-proposal-draft.pdf). The submitted version is [pre-proposal-submission-1.pdf](docs/prepreposal/pre-proposal-submission-1.pdf).
+- [Basic Phases](docs/Basic%20Phases.md): the phased plan, with a stretch goal. Also as [PDF](docs/Basic%20Phases.pdf).
+- [Registration instructions](docs/CSCI%20513%20Project%20Registration%20Instructions.docx): the course handout for the one-page registration.
 - Background papers: [`papers/`](papers/)
 
-Earlier idea, not pursued: a scheduler that switched between a small and a large perception model to save compute. See `CPS-Project-Brainstorm.pptx` and the [version one draft](cps-project-kb/wiki/sources/CS513%20Project%20Proposal%20Draft.md).
+The project knowledge base is the Atlas vault, area CS513-Project. It holds the sources, the design brainstorm, and the pages on the planner, the penalty model, and the evaluation design.
+
+Earlier idea, not pursued: a scheduler that switched between a small and a large perception model to save compute. See `CPS-Project-Brainstorm.pptx` and the vault page "Earlier CS513 Project Ideas".
 
 External:
 
