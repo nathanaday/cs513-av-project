@@ -1,6 +1,6 @@
 """Drive one ego vehicle with BasicAgent on a headless CARLA server and print telemetry.
 
-Run from carla-work: scripts/carla-python client-runners/demo/test_headless_drive.py [--ticks N] [--every S]
+Run from carla-work: scripts/carla-python client-runners/demo/test_drive.py [--ticks N] [--every S]
 """
 
 import argparse
