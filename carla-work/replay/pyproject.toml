@@ -1,10 +1,11 @@
 [project]
 name = "carla-replay"
 version = "1.0.0"
-description = "Replay CARLA run files in the Rerun viewer."
+description = "Replay CARLA run files in the Rerun viewer, and publish them as captures."
 requires-python = "==3.12.*"
 dependencies = [
     "rerun-sdk==0.38.1",
+    "huggingface_hub==2.1.1",
 ]
 
 [tool.uv]
