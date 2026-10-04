@@ -98,6 +98,9 @@ class RunLog:
         self.kinds = {}
         self.present = set()
         self.lights = []
+        # Wine maps the macOS file system to drive Z:; a bare /Users/... would land on C:.
+        if os.name == "nt" and path.startswith("/"):
+            path = "Z:" + path.replace("/", "\\")
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         self.path = path
         self.file = gzip.open(path, "wt", encoding="utf-8", compresslevel=6)
