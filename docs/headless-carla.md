@@ -15,7 +15,7 @@ Install the wrapper first. Follow the [CARLA on Apple Silicon guide](https://git
 | CARLA | 0.9.16, Windows package (`CARLA_0.9.16.zip`) |
 | Wine wrapper | Sikarugir, engine `WS12WineSikarugir10.0_6`, wrapper at `~/Applications/Sikarugir/CARLA.app` |
 | Python in the wrapper | Windows Python 3.10.11, 64-bit |
-| macOS | 26.6.2 (tested here). The guide also reports successes on 26.2. macOS 15 is not tested. The guide reports one failure on 15.6 with 16 GB (a black window, heavy swap, the map never loads), and its cause is not known. |
+| macOS | 26.6.2 (tested here). The guide also reports successes on 26.2. macOS 15 is not tested. The guide reports one failure on 15.6 with 16 GB (a black window, heavy swap, and Town10 never appears), and its cause is not known. |
 
 You do not need to set launch flags in `Configure.app` (guide, Step 7). The server script in this repository passes its own flags.
 
