@@ -4,7 +4,7 @@ This recipe runs the CARLA 0.9.16 server with no window on an Apple Silicon Mac.
 
 Use it when your Mac cannot run the windowed simulator well. In the default mode the server needs about 6 GB of memory, so a 16 GB Mac should run it. The cost: in that mode, camera sensors do not work.
 
-Both the server and the Python client run inside a Wine wrapper. There is no native macOS build of either.
+Both the server and the Python client run inside a Wine wrapper.
 
 ## What you need
 
@@ -39,47 +39,63 @@ Check the install:
 scripts/carla-python -c "import carla, agents.navigation.basic_agent; print('ok')"
 ```
 
-## Start, check, and stop the server
+## Run the server
 
-Start the server with no window:
-
-```bash
-scripts/carla-server start
-```
-
-```
-starting CARLA (nullrhi) on port 2000; log: .../cs513-project/.carla/server.log
-up after 6s, server memory 2473 MB
-```
-
-The command returns when the server accepts connections on port 2000. If the port is still closed after 30 minutes, it exits with an error and leaves the server running. Set a shorter limit with `--timeout <seconds>`.
-
-The server then loads the map when the first client connects. Its memory grows to about 6 GB at that point.
-
-Check the server:
+Run the server with no window:
 
 ```bash
-scripts/carla-server status
+scripts/carla-server
 ```
 
+The command stays in the foreground and prints a status row every 10 seconds, plus an `EVENT` line when something changes:
+
 ```
-up: nullrhi, port 2000, server memory 5878 MB
+CARLA (nullrhi) on port 2000; log: .carla/server.log; Ctrl+C stops the server
+  uptime  state    memory MB    peak MB    cpu  clients
+    0:00  loading          -          -      -        -
+    0:05  EVENT up: port 2000 accepts connections
+    0:06  up            2457       2593   113%        0
+    0:08  EVENT client connected (1 connected)
+    0:11  EVENT client disconnected (0 connected)
+    0:17  up            5900       6414   125%        0
+^C
+    0:36  EVENT stopping the server
+stopped
 ```
 
-Stop the server:
+| Column | Meaning |
+|---|---|
+| `state` | `loading` until port 2000 accepts connections, then `up`. `down` if the port closes. |
+| `memory MB`, `peak MB` | The server's physical footprint now, and its highest value since the start. |
+| `cpu` | CPU use of the server process. 100% is one core. |
+| `clients` | Client scripts connected to the server. |
+
+Run your client scripts in a second terminal. Press Ctrl+C in the server terminal to stop the server. Closing the terminal or `kill` also stops it. The stop ends every Wine process of the wrapper, including client scripts that still run in other terminals. It takes about one second.
+
+The command also ends by itself when the server crashes or exits. It prints the crash message and the path of the crash report, stops all Wine processes, and exits with status 1.
+
+Options:
+
+| Option | Default | Effect |
+|---|---|---|
+| `--offscreen` | off | Render off-screen (see Modes). |
+| `--port N` | 2000 | RPC port of the server. |
+| `--every S` | 10 | Seconds between status rows. 0 prints only events. |
+
+Exit status: 130 after Ctrl+C, 143 after `kill`, 1 after a crash or an error.
+
+If the command itself was killed with `kill -9`, the server keeps running. End it with:
 
 ```bash
 scripts/carla-server stop
 ```
 
-`stop` ends every Wine process of the wrapper, including any client script that is still running. It takes about one second. A hung server can take up to 30 seconds.
-
 ### Modes
 
 | Mode | Command | Use it for |
 |---|---|---|
-| No rendering (default) | `scripts/carla-server start` | Telemetry, collisions, lane crossings, routes, agents. Any work that does not need images. |
-| Off-screen rendering | `scripts/carla-server start --offscreen` | Camera sensors. Needs about 15 GB for the server, so not on a 16 GB Mac. |
+| No rendering (default) | `scripts/carla-server` | Telemetry, collisions, lane crossings, routes, agents. Any work that does not need images. |
+| Off-screen rendering | `scripts/carla-server --offscreen` | Camera sensors. Needs about 15 GB for the server, so not on a 16 GB Mac. |
 
 The default mode runs the server with `-nullrhi`. The server draws nothing, so it needs no graphics memory and compiles no shaders. **A client that spawns a camera sensor in this mode crashes the server** (see Troubleshooting).
 
@@ -161,7 +177,7 @@ Measured on 2026-10-04 on a MacBook Pro M4 Pro (Mac16,7), 48 GB, macOS 26.6.2, w
 
 The cause of the slow starts (14 s and 13 s) is not known.
 
-Server memory is the physical footprint from `footprint -p <pid>`, the number that `carla-server` prints. The number that `start` prints is too early to judge by: the server keeps growing after the port opens. In the default mode it grows when the first client loads the map. In the off-screen mode it grows from about 3 GB to 15 GB within 6 to 10 seconds after the port opens, with no client. Run `scripts/carla-server status` after the first drive to see the settled number. Do not use the RSS from `ps` or Activity Monitor's default column: it leaves out graphics memory and showed 2.9 GB for the off-screen server.
+Server memory is the physical footprint from `footprint -p <pid>`, the number that `carla-server` prints. The first row after the port opens is too early to judge by: the server keeps growing. In the default mode it grows to about 5.9 GB within about 10 seconds after the port opens, with no client. In the off-screen mode it grows from about 3 GB to 15 GB within 6 to 10 seconds after the port opens, with no client. Use the `peak MB` column to judge the fit on your Mac. Do not use the RSS from `ps` or Activity Monitor's default column: it leaves out graphics memory and showed 2.9 GB for the off-screen server.
 
 **On a 16 GB Mac:** the default mode leaves about 10 GB for macOS and your other programs, so it should fit. The off-screen mode does not fit. No cohort member has confirmed a 16 GB run yet. If you do, add your numbers here.
 
@@ -171,18 +187,18 @@ Each entry gives the symptom, the cause, and the fix. Check the server log at `.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `carla-server start` prints `port 2000 is already open`. Or every client call times out although port 2000 is open. | An old server still runs. Closing `CARLA.app` can leave `CarlaUE4-Win64-Shipping.exe` and `wineserver` alive. | `scripts/carla-server stop`, then `scripts/carla-server start`. |
-| `carla-server status` says `loading` long after start, and the port stays closed. | The server hung. | `scripts/carla-server stop` (up to 30 s for a hung server), then `start`. |
-| A Windows dialog "Fatal error!" appears. The client fails with `time-out of ...ms while waiting for the simulator`. | A client spawned a camera sensor (`sensor.camera.*`) while the server ran with no rendering. The server crashes with `EXCEPTION_ACCESS_VIOLATION`. | Click OK. Run `scripts/carla-server stop`. Remove the camera from your script, or start with `--offscreen` on a Mac with enough memory. UE4 writes crash reports to `drive_c/users/Sikarugir/AppData/Local/CarlaUE4/Saved/Crashes/` inside the wrapper. |
-| After a client died, other clients hang, and `world.wait_for_tick()` times out. | The client died while synchronous mode was on, for example from `kill -9` or a closed terminal. The server waits for ticks that never come. `headless_drive.py` still runs, because it ticks the world itself. | Restart the server: `scripts/carla-server stop`, then `start`. |
+| `carla-server` prints `a CARLA server already runs`. Or every client call times out although port 2000 is open. | An old server still runs, in another terminal or left behind. Closing `CARLA.app` can leave `CarlaUE4-Win64-Shipping.exe` and `wineserver` alive. | Press Ctrl+C in the terminal that runs it, or run `scripts/carla-server stop`. Then run `scripts/carla-server` again. |
+| The rows say `loading` long after the start. | The server hung. | Press Ctrl+C (up to 30 s for a hung server), then run `scripts/carla-server` again. |
+| `carla-server` prints `EVENT crash: Unhandled Exception: EXCEPTION_ACCESS_VIOLATION` and exits. The client fails with `time-out of ...ms while waiting for the simulator`. | A client started a camera sensor (`sensor.camera.*` with `listen`) while the server ran with no rendering. | Remove the camera from your script, or run with `--offscreen` on a Mac with enough memory. The command prints the path of the UE4 crash report. |
+| After a client died, other clients hang, and `world.wait_for_tick()` times out. | The client died while synchronous mode was on, for example from `kill -9` or a closed terminal. The server waits for ticks that never come. `headless_drive.py` still runs, because it ticks the world itself. | Restart the server: Ctrl+C, then `scripts/carla-server`. |
 | A client script ends at once and prints nothing. The world does not change. | numpy 2.x crashes on import under this Wine build. | `scripts/carla-python -m pip install -r requirements-carla.txt`. It pins `numpy==1.26.4`. |
 | `wine` run from a terminal exits with status 136 and prints nothing. | Its Wine sync settings do not match the running `wineserver`, which uses `WINEMSYNC=1` and `WINEESYNC=1`. | Run Python through `scripts/carla-python`, never through a bare `wine`. |
 | `ModuleNotFoundError: No module named 'agents'` | The agents package ships with CARLA in `PythonAPI/carla`, not in the `carla` wheel. Python ran without it on the path. | Run the script through `scripts/carla-python`. |
-| `error: time-out of 60000ms while waiting for the simulator` right after start. | The server still loads the map, or compiles shaders on the first off-screen launch. | Wait. Run `scripts/carla-server status` until it says `up`. Raise the client limit with `--timeout`. |
-| The Mac slows down, and `sysctl vm.swapusage` shows swap that grows. The server hangs or quits. | Memory pressure. The off-screen server alone needs about 15 GB. | Use the default mode. Quit other programs. Check `scripts/carla-server status` for the server memory. |
+| `error: time-out of 60000ms while waiting for the simulator` right after start. | The server still loads the map, or compiles shaders on the first off-screen launch. | Wait until the server rows say `up`. Raise the client limit with `--timeout`. |
+| The Mac slows down, and `sysctl vm.swapusage` shows swap that grows. The server hangs or quits. | Memory pressure. The off-screen server alone needs about 15 GB. | Use the default mode. Quit other programs. Check the `peak MB` column of the server rows. |
 | `warning: client 0.9.16 != server <version>` | The `carla` package and the server are different versions. API calls can fail or behave differently. | Install CARLA 0.9.16 in the wrapper and run the pinned install above. |
 | `carla-server: no wrapper at ... (set CARLA_APP)` | The wrapper is not at `~/Applications/Sikarugir/CARLA.app`. | `export CARLA_APP=/path/to/CARLA.app`. |
-| `wineserver` fails with `Library not loaded: @rpath/libinotify.0.dylib`. | Wine ran through `nohup` or another protected macOS binary, which strips the `DYLD_*` variables. | Start the server with `scripts/carla-server start`, not your own `nohup` command. |
+| `wineserver` fails with `Library not loaded: @rpath/libinotify.0.dylib`. | Wine ran through `nohup` or another protected macOS binary, which strips the `DYLD_*` variables. | Run the server with `scripts/carla-server`, not your own `nohup` command. |
 
 ## Files
 
@@ -190,6 +206,6 @@ Each entry gives the symptom, the cause, and the fix. Check the server log at `.
 |---|---|
 | `scripts/carla-env.sh` | The Wine environment of the wrapper. The other two scripts source it. |
 | `scripts/carla-python` | Runs the wrapper's Python. Copied from [carla-mac-os](https://github.com/nathanaday/carla-mac-os) at `8606c8f`. |
-| `scripts/carla-server` | Starts, checks, and stops the headless server. |
+| `scripts/carla-server` | Runs the headless server in the foreground and prints its status. |
 | `scripts/headless_drive.py` | Drives one car and prints telemetry and events. |
 | `requirements-carla.txt` | The pinned client packages. |
