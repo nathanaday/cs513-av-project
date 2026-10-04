@@ -15,7 +15,7 @@ Install the wrapper first. Follow the [CARLA on Apple Silicon guide](https://git
 | CARLA | 0.9.16, Windows package (`CARLA_0.9.16.zip`) |
 | Wine wrapper | Sikarugir, engine `WS12WineSikarugir10.0_6`, wrapper at `~/Applications/Sikarugir/CARLA.app` |
 | Python in the wrapper | Windows Python 3.10.11, 64-bit |
-| macOS | 26 |
+| macOS | 26.6.2 (tested). Other 26.x releases are expected to work. 15 and earlier are not supported. |
 
 You do not need to set launch flags in `Configure.app` (guide, Step 7). The server script in this repository passes its own flags.
 
@@ -153,13 +153,13 @@ Measured on 2026-10-04 on a MacBook Pro M4 Pro (Mac16,7), 48 GB, macOS 26.6.2, w
 
 | | No rendering (default) | Off-screen rendering |
 |---|---|---|
-| Start until port 2000 is open | 6 to 7 s | 6 s, with shaders already compiled |
-| Server memory when the port opens | 2.5 GB | 15 GB |
-| Server memory, peak during the drive | 6.4 GB | 15 GB, of which about 12 GB is graphics memory |
+| Start until port 2000 is open | 6 to 7 s; 14 s for the first launch of the day | 6 to 7 s, with shaders already compiled |
+| Server memory when the port opens | 2.5 GB | about 3 GB |
+| Server memory, settled and during the drive | 5.9 GB settled, 6.4 GB peak | 15 GB, of which about 12 GB is graphics memory |
 | Simulated time per wall second | 19.9 | 4.0 |
 | Camera sensor | Crashes the server | Works |
 
-Server memory is the physical footprint from `footprint -p <pid>`, the number that `carla-server` prints. Do not use the RSS from `ps` or Activity Monitor's default column: it leaves out graphics memory and showed 2.9 GB for the off-screen server.
+Server memory is the physical footprint from `footprint -p <pid>`, the number that `carla-server` prints. The number that `start` prints is too early to judge by: the server keeps growing after the port opens. In the default mode it grows when the first client loads the map. In the off-screen mode it grows from about 3 GB to 15 GB in the 10 seconds after the port opens, with no client. Run `scripts/carla-server status` after the first drive to see the settled number. Do not use the RSS from `ps` or Activity Monitor's default column: it leaves out graphics memory and showed 2.9 GB for the off-screen server.
 
 **On a 16 GB Mac:** the default mode leaves about 10 GB for macOS and your other programs, so it should fit. The off-screen mode does not fit. No cohort member has confirmed a 16 GB run yet. If you do, add your numbers here.
 
