@@ -1,6 +1,0 @@
-# CARLA Python client, installed into the wrapper's Windows Python 3.10.11.
-# Install: scripts/carla-python -m pip install -r requirements-carla.txt
-carla==0.9.16
-numpy==1.26.4
-networkx==3.4.2
-shapely==2.1.2
