@@ -23,7 +23,7 @@ If your wrapper is somewhere else, set `CARLA_APP` to its path before you run th
 
 ## Install the client
 
-From the root of this repository:
+Run every command in this recipe from the `carla-work` folder of this repository:
 
 ```bash
 scripts/carla-python -m pip install -r requirements-carla.txt
@@ -79,6 +79,7 @@ Options:
 | Option | Default | Effect |
 |---|---|---|
 | `--offscreen` | off | Render off-screen (see Modes). |
+| `--window` | off | Open the normal simulator window (see Modes). Not with `--offscreen`. |
 | `--port N` | 2000 | RPC port of the server. |
 | `--every S` | 10 | Seconds between status rows. 0 prints only events. |
 
@@ -96,17 +97,20 @@ scripts/carla-server stop
 |---|---|---|
 | No rendering (default) | `scripts/carla-server` | Telemetry, collisions, lane crossings, routes, agents. Any work that does not need images. |
 | Off-screen rendering | `scripts/carla-server --offscreen` | Camera sensors. Needs about 15 GB for the server, so not on a 16 GB Mac. |
+| Window | `scripts/carla-server --window` | Watching the simulation. Cameras work. Needs about 15 GB for the server, like the off-screen mode. |
 
 The default mode runs the server with `-nullrhi`. The server draws nothing, so it needs no graphics memory and compiles no shaders. **A client that spawns a camera sensor in this mode crashes the server** (see Troubleshooting).
 
 The off-screen mode runs `-RenderOffScreen -quality-level=Low` through Apple's D3DMetal. Cameras work. On the first launch, D3DMetal compiles shaders; on a Mac with little memory that can take 20 to 30 minutes.
+
+The window mode runs `-windowed -ResX=1280 -ResY=720 -quality-level=Low` through D3DMetal. It opens the simulator window, as `CARLA.app` does, and ignores the launch flags in `Configure.app`. Closing the window ends the command with status 0.
 
 ## Drive a car
 
 With the server up:
 
 ```bash
-scripts/carla-python scripts/headless_drive.py --every 5
+scripts/carla-python client-runners/demo/test_headless_drive.py --every 5
 ```
 
 The script turns on synchronous mode, spawns a Tesla Model 3 at spawn point 0, and drives it with CARLA's `BasicAgent` to a destination. It prints one telemetry line every 5 simulated seconds, each event when it happens, and a summary:
@@ -190,7 +194,7 @@ Each entry gives the symptom, the cause, and the fix. Check the server log at `.
 | `carla-server` prints `a CARLA server already runs`. Or every client call times out although port 2000 is open. | An old server still runs, in another terminal or left behind. Closing `CARLA.app` can leave `CarlaUE4-Win64-Shipping.exe` and `wineserver` alive. | Press Ctrl+C in the terminal that runs it, or run `scripts/carla-server stop`. Then run `scripts/carla-server` again. |
 | The rows say `loading` long after the start. | The server hung. | Press Ctrl+C (up to 30 s for a hung server), then run `scripts/carla-server` again. |
 | `carla-server` prints `EVENT crash: Unhandled Exception: EXCEPTION_ACCESS_VIOLATION` and exits. The client fails with `time-out of ...ms while waiting for the simulator`. | A client started a camera sensor (`sensor.camera.*` with `listen`) while the server ran with no rendering. | Remove the camera from your script, or run with `--offscreen` on a Mac with enough memory. The command prints the path of the UE4 crash report. |
-| After a client died, other clients hang, and `world.wait_for_tick()` times out. | The client died while synchronous mode was on, for example from `kill -9` or a closed terminal. The server waits for ticks that never come. `headless_drive.py` still runs, because it ticks the world itself. | Restart the server: Ctrl+C, then `scripts/carla-server`. |
+| After a client died, other clients hang, and `world.wait_for_tick()` times out. | The client died while synchronous mode was on, for example from `kill -9` or a closed terminal. The server waits for ticks that never come. `test_headless_drive.py` still runs, because it ticks the world itself. | Restart the server: Ctrl+C, then `scripts/carla-server`. |
 | A client script ends at once and prints nothing. The world does not change. | numpy 2.x crashes on import under this Wine build. | `scripts/carla-python -m pip install -r requirements-carla.txt`. It pins `numpy==1.26.4`. |
 | `wine` run from a terminal exits with status 136 and prints nothing. | Its Wine sync settings do not match the running `wineserver`, which uses `WINEMSYNC=1` and `WINEESYNC=1`. | Run Python through `scripts/carla-python`, never through a bare `wine`. |
 | `ModuleNotFoundError: No module named 'agents'` | The agents package ships with CARLA in `PythonAPI/carla`, not in the `carla` wheel. Python ran without it on the path. | Run the script through `scripts/carla-python`. |
@@ -206,6 +210,6 @@ Each entry gives the symptom, the cause, and the fix. Check the server log at `.
 |---|---|
 | `scripts/carla-env.sh` | The Wine environment of the wrapper. The other two scripts source it. |
 | `scripts/carla-python` | Runs the wrapper's Python. Copied from [carla-mac-os](https://github.com/nathanaday/carla-mac-os) at `8606c8f`. |
-| `scripts/carla-server` | Runs the headless server in the foreground and prints its status. |
-| `scripts/headless_drive.py` | Drives one car and prints telemetry and events. |
+| `scripts/carla-server` | Runs the server in the foreground and prints its status. |
+| `client-runners/demo/test_headless_drive.py` | Drives one car and prints telemetry and events. |
 | `requirements-carla.txt` | The pinned client packages. |

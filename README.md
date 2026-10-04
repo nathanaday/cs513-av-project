@@ -16,7 +16,7 @@ We will compare three systems in the CARLA simulator: basic driving, upfront ris
 
 ## Status
 
-Early implementation. The pre-proposal is drafted. CARLA runs headless on the team's Macs ([recipe](docs/headless-carla.md)). The driving stacks do not exist yet.
+Early implementation. The pre-proposal is drafted. CARLA runs headless on the team's Macs ([recipe](carla-work/docs/headless-carla.md)). The driving stacks do not exist yet.
 
 ## Work plan
 
@@ -42,7 +42,7 @@ Early implementation. The pre-proposal is drafted. CARLA runs headless on the te
 
 ## Documentation
 
-- [Headless CARLA on Apple Silicon](docs/headless-carla.md): run the CARLA server with no window, drive a car from Python, and read its telemetry. Start here to set up a team machine.
+- [Headless CARLA on Apple Silicon](carla-work/docs/headless-carla.md): run the CARLA server with no window, drive a car from Python, and read its telemetry. Start here to set up a team machine.
 - [Pre-proposal draft](docs/prepreposal/pre-proposal-draft.md), the one-page course submission. Also as [LaTeX](docs/prepreposal/pre-proposal-draft.tex) and [PDF](docs/prepreposal/pre-proposal-draft.pdf). The submitted version is [pre-proposal-submission-1.pdf](docs/prepreposal/pre-proposal-submission-1.pdf).
 - [Basic Phases](docs/Basic%20Phases.md): the phased plan, with a stretch goal. Also as [PDF](docs/Basic%20Phases.pdf).
 - [Registration instructions](docs/CSCI%20513%20Project%20Registration%20Instructions.docx): the course handout for the one-page registration.

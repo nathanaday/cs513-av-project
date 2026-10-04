@@ -2,11 +2,12 @@
 # Run a headless CARLA server in the Sikarugir wrapper, in the foreground.
 #
 # Usage:
-#   scripts/carla-server [--offscreen] [--port N] [--every S]
+#   scripts/carla-server [--offscreen | --window] [--port N] [--every S]
 #   scripts/carla-server stop
 #
 # The server runs -nullrhi (no rendering; a camera sensor crashes the server)
-# unless --offscreen is given, which renders through D3DMetal with no window.
+# unless --offscreen renders through D3DMetal with no window, or --window
+# opens the normal 1280x720 window. Closing the window ends the command.
 # The command prints a status row every S seconds (default 10; 0 for none) and
 # an EVENT line when the server comes up, a client connects or disconnects,
 # or the server exits. Ctrl+C, kill, or closing the terminal stops the server.
@@ -23,7 +24,7 @@ CRASHES="$DRIVE_C/users/Sikarugir/AppData/Local/CarlaUE4/Saved/Crashes"
 BEGAN=$SECONDS
 
 usage() {
-  sed -n 2,13p "$0" | sed 's/^# \{0,1\}//' >&2
+  sed -n 2,14p "$0" | sed 's/^# \{0,1\}//' >&2
   exit 2
 }
 
@@ -117,7 +118,8 @@ serve() {
   local port=2000 every=10 mode=nullrhi
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --offscreen) mode=offscreen ;;
+      --offscreen) [[ "$mode" == nullrhi ]] || usage; mode=offscreen ;;
+      --window) [[ "$mode" == nullrhi ]] || usage; mode=window ;;
       --port) port="${2:-}"; shift ;;
       --every) every="${2:-}"; shift ;;
       *) usage ;;
@@ -142,12 +144,11 @@ serve() {
   fi
 
   local flags=(-carla-rpc-port="$port" -nosound)
-  if [[ "$mode" == offscreen ]]; then
-    use_d3dmetal
-    flags=(-RenderOffScreen -quality-level=Low "${flags[@]}")
-  else
-    flags=(-nullrhi "${flags[@]}")
-  fi
+  case "$mode" in
+    nullrhi) flags=(-nullrhi "${flags[@]}") ;;
+    offscreen) use_d3dmetal; flags=(-RenderOffScreen -quality-level=Low "${flags[@]}") ;;
+    window) use_d3dmetal; flags=(-windowed -ResX=1280 -ResY=720 -quality-level=Low "${flags[@]}") ;;
+  esac
 
   mkdir -p "$LOG_DIR"
   touch "$LAUNCHED"
@@ -181,6 +182,10 @@ serve() {
       finish 1
     done < <(new_crashes)
     if [[ -z "$(server_pids)" && $((SECONDS - BEGAN)) -ge 5 ]]; then
+      if [[ "$mode" == window ]]; then
+        event "the window was closed"
+        exit 0
+      fi
       event "the server exited"
       # The log holds little but MoltenVK device details; show the rest.
       grep -v -e '^\[mvk-info\]' -e $'^\t' -e '^msync:' "$LOG" | tail -n 15 || true
