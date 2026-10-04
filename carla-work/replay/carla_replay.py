@@ -3,7 +3,7 @@
 import argparse
 import gzip
 import json
-import math
+import os
 import sys
 import zlib
 from collections import defaultdict
@@ -235,12 +235,13 @@ def convert(records, ego_track=False):
         elif kind == "event":
             events.append(record)
 
-    rr.send_blueprint(blueprint(scene, ego_track))
     log_scene(scene)
     log_actors(actors, rows, gone, ego_id)
     log_lights(actors, light_states)
     log_signs(actors)
     log_events(events)
+    # After the data, so the viewer knows the timeline the layout names.
+    rr.send_blueprint(blueprint(scene, ego_track))
     return header, len(tick_t), len(actors)
 
 
@@ -260,6 +261,8 @@ def main():
     if args.rrd:
         rr.save(args.rrd)
     else:
+        # The spawned viewer shares this terminal; keep its info logs out of it.
+        os.environ.setdefault("RUST_LOG", "warn")
         rr.spawn()
     header, ticks, actors = convert(records, ego_track=args.follow)
     duration = ticks * (header.get("delta_s") or 0)
