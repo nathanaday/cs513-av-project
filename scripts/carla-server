@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# Start, stop, and check a headless CARLA server in the Sikarugir wrapper.
+#
+# Usage:
+#   scripts/carla-server start [--offscreen] [--port N] [--timeout S]
+#   scripts/carla-server stop
+#   scripts/carla-server status
+#
+# start runs -nullrhi (no rendering; a camera sensor crashes the server) unless
+# --offscreen is given, which renders through D3DMetal with no window.
+# It returns once the RPC port accepts connections. The log is .carla/server.log.
+
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "$ROOT/scripts/carla-env.sh"
+
+LOG_DIR="$ROOT/.carla"
+LOG="$LOG_DIR/server.log"
+
+usage() {
+  sed -n 2,11p "$0" | sed 's/^# \{0,1\}//' >&2
+  exit 2
+}
+
+server_pids() { pgrep -f 'CarlaUE4' || true; }
+wine_pids() { pgrep -x wineserver || true; }
+port_open() { nc -z 127.0.0.1 "$1" 2>/dev/null; }
+# Physical footprint, not RSS: RSS leaves out the Metal graphics memory of --offscreen.
+memory() {
+  local pid
+  pid="$(pgrep -f 'CarlaUE4-Win64-Shipping' | head -1)"
+  [[ -z "$pid" ]] && { echo "0 MB"; return; }
+  footprint -p "$pid" 2>/dev/null | sed -n 's/.*Footprint: \([0-9.]* [KMG]B\).*/\1/p' | head -1
+}
+
+# Sikarugir sets these when D3DMetal is checked in Configure.app.
+use_d3dmetal() {
+  local renderer="$APP/Contents/Frameworks/renderer/d3dmetal"
+  export CX_ROOT="$SS/wine"
+  export CX_D3DMETALPATH="$renderer"
+  export CX_APPLEGPTK_LIBD3DSHARED_PATH="$renderer/external/libd3dshared.dylib"
+  export CX_APPLEGPT_LIBD3DSHARED_PATH="$renderer/external/libd3dshared.dylib"
+  export WINEDLLPATH_D3DMETAL="$renderer/wine"
+  export WINEDLLPATH_PREPEND="$renderer/wine"
+}
+
+start() {
+  local port=2000 timeout=1800 mode=nullrhi
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --offscreen) mode=offscreen ;;
+      --port) port="$2"; shift ;;
+      --timeout) timeout="$2"; shift ;;
+      *) usage ;;
+    esac
+    shift
+  done
+
+  if port_open "$port"; then
+    echo "carla-server: port $port is already open; run 'scripts/carla-server stop' first" >&2
+    exit 1
+  fi
+  if [[ -n "$(server_pids)" ]]; then
+    echo "carla-server: a CARLA process is running but port $port is closed; run 'scripts/carla-server stop' first" >&2
+    exit 1
+  fi
+  if [[ -z "$CARLA_DIR" ]]; then
+    echo "carla-server: no CarlaUE4.exe under C:\\Program Files in $APP (carla-mac-os guide, Step 4)" >&2
+    exit 2
+  fi
+
+  local flags=(-carla-rpc-port="$port" -nosound)
+  if [[ "$mode" == offscreen ]]; then
+    use_d3dmetal
+    flags=(-RenderOffScreen -quality-level=Low "${flags[@]}")
+  else
+    flags=(-nullrhi "${flags[@]}")
+  fi
+
+  mkdir -p "$LOG_DIR"
+  echo "starting CARLA ($mode) on port $port; log: $LOG"
+  # A subshell, not nohup: macOS strips DYLD_* variables from protected binaries like nohup.
+  # The redirect covers the whole subshell, so no process holds the caller's stdout open.
+  (cd "$CARLA_DIR" && exec wine "$(to_windows "$CARLA_DIR/CarlaUE4.exe")" "${flags[@]}") \
+    < /dev/null > "$LOG" 2>&1 &
+
+  local began=$SECONDS elapsed
+  while true; do
+    elapsed=$((SECONDS - began))
+    if port_open "$port"; then
+      echo "up after ${elapsed}s, server memory $(memory)"
+      exit 0
+    fi
+    if [[ $elapsed -ge 5 && -z "$(server_pids)" ]]; then
+      echo "carla-server: the server exited after ${elapsed}s. Last lines of $LOG:" >&2
+      tail -n 15 "$LOG" >&2
+      exit 1
+    fi
+    if [[ $elapsed -ge $timeout ]]; then
+      echo "carla-server: port $port still closed after ${timeout}s; the server is still running." >&2
+      echo "Wait and run 'scripts/carla-server status', or run 'scripts/carla-server stop'." >&2
+      exit 1
+    fi
+    if [[ $elapsed -gt 0 && $((elapsed % 30)) -eq 0 ]]; then
+      echo "  loading: ${elapsed}s, server memory $(memory)"
+    fi
+    sleep 1
+  done
+}
+
+stop() {
+  if [[ -z "$(server_pids)$(wine_pids)" ]]; then
+    echo "no CARLA or Wine process is running"
+    return 0
+  fi
+  # wineserver -k ends every Wine process of the wrapper, including running clients.
+  wineserver -k 2>/dev/null || true
+  for _ in $(seq 1 30); do
+    [[ -z "$(server_pids)$(wine_pids)" ]] && break
+    sleep 1
+  done
+  if [[ -n "$(server_pids)$(wine_pids)" ]]; then
+    pkill -9 -f 'CarlaUE4' || true
+    pkill -9 -x wineserver || true
+    sleep 2
+  fi
+  if [[ -n "$(server_pids)$(wine_pids)" ]] || port_open 2000; then
+    echo "carla-server: processes remain after stop:" >&2
+    pgrep -fl 'CarlaUE4|wineserver' >&2 || true
+    exit 1
+  fi
+  echo "stopped"
+}
+
+status() {
+  local pids
+  pids="$(server_pids)"
+  if [[ -z "$pids" ]]; then
+    if [[ -n "$(wine_pids)" ]]; then
+      echo "down; Wine processes remain (a crash dialog may be open): run 'scripts/carla-server stop'"
+    else
+      echo "down"
+    fi
+    exit 1
+  fi
+  local cmd port mode
+  cmd="$(ps -o command= -p "$(echo $pids | awk '{print $NF}')")"
+  port="$(sed -n 's/.*-carla-rpc-port=\([0-9]*\).*/\1/p' <<< "$cmd")"
+  port="${port:-2000}"
+  mode=nullrhi
+  [[ "$cmd" == *RenderOffScreen* ]] && mode=offscreen
+  if port_open "$port"; then
+    echo "up: $mode, port $port, server memory $(memory)"
+    exit 0
+  fi
+  echo "loading: $mode, port $port closed, server memory $(memory)"
+  exit 1
+}
+
+case "${1:-}" in
+  start) shift; start "$@" ;;
+  stop) stop ;;
+  status) status ;;
+  *) usage ;;
+esac
