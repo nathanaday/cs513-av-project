@@ -168,6 +168,8 @@ Stop a drive with Ctrl+C. On every exit the script destroys its car and sensors 
 
 Exit status: 0 on arrival or at the tick limit, 1 on an error, 130 after Ctrl+C.
 
+To drive among traffic, record the run, and watch it afterwards, see [replay.md](replay.md).
+
 ## Measurements
 
 Measured on 2026-10-04 on a MacBook Pro M4 Pro (Mac16,7), 48 GB, macOS 26.6.2, with the drive above: Town10HD_Opt, 402 m at 30 km/h.
@@ -213,4 +215,5 @@ Each entry gives the symptom, the cause, and the fix. Check the server log at `.
 | `scripts/carla-python` | Runs the wrapper's Python. Copied from [carla-mac-os](https://github.com/nathanaday/carla-mac-os) at `8606c8f`. |
 | `scripts/carla-server` | Runs the server in the foreground and prints its status. |
 | `client-runners/demo/test_drive.py` | The installation check: drives one car and prints telemetry and events. |
+| `client-runners/demo/test_data_capture.py`, `scripts/carla-replay` | Record a run with traffic and replay it. See [replay.md](replay.md). |
 | `requirements-carla.txt` | The pinned client packages. |

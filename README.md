@@ -43,6 +43,7 @@ Early implementation. The pre-proposal is drafted. CARLA runs headless on the te
 ## Documentation
 
 - [Headless CARLA on Apple Silicon](carla-work/docs/headless-carla.md): run the CARLA server with no window, drive a car from Python, and read its telemetry. Start here to set up a team machine.
+- [Record and replay a CARLA run](carla-work/docs/replay.md): record a drive among traffic and pedestrians, then watch it in the Rerun viewer. The file format is in [run-format.md](carla-work/docs/run-format.md).
 - [Pre-proposal draft](docs/prepreposal/pre-proposal-draft.md), the one-page course submission. Also as [LaTeX](docs/prepreposal/pre-proposal-draft.tex) and [PDF](docs/prepreposal/pre-proposal-draft.pdf). The submitted version is [pre-proposal-submission-1.pdf](docs/prepreposal/pre-proposal-submission-1.pdf).
 - [Basic Phases](docs/Basic%20Phases.md): the phased plan, with a stretch goal. Also as [PDF](docs/Basic%20Phases.pdf).
 - [Registration instructions](docs/CSCI%20513%20Project%20Registration%20Instructions.docx): the course handout for the one-page registration.
