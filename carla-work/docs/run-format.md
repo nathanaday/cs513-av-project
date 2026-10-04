@@ -63,6 +63,7 @@ Written once per actor, at the first tick the actor exists. Actors with a `type_
 |---|---|
 | `id` | Actor id. |
 | `type_id` | Blueprint, for example `vehicle.tesla.model3`, `walker.pedestrian.0012`, `traffic.traffic_light`. |
+| `base_type` | For vehicles, the blueprint's class as CARLA gives it, such as `"car"`, `"van"`, `"truck"`, `"Bus"`, `"motorcycle"`, or `"bicycle"`. Compare it without case. Some blueprints leave it empty. Empty for other actors. |
 | `role_name` | `"hero"` for the ego, `"background"` for traffic from `test_data_capture.py`, else the blueprint's value. |
 | `tick` | The tick at which the actor was first seen. |
 | `pose` | Pose at that tick. For `traffic.*` actors, which do not move, this is their only pose. |

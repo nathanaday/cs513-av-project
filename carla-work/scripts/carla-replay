@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Replay a CARLA run file in the Rerun viewer, in native macOS Python.
+#
+# Usage:
+#   scripts/carla-replay RUN.jsonl.gz [--follow]     open the run in the Rerun viewer
+#   scripts/carla-replay RUN.jsonl.gz --rrd OUT.rrd  write a .rrd file instead
+#
+# --follow makes the 3D view follow the ego. The packages are pinned in replay/uv.lock;
+# uv installs them on the first run. The run format is docs/run-format.md.
+
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if ! command -v uv > /dev/null; then
+  echo "carla-replay: uv is not installed. Install it with 'brew install uv', then run this again." >&2
+  exit 2
+fi
+if [[ $# -eq 0 ]]; then
+  sed -n 2,9p "$0" | sed 's/^# \{0,1\}//' >&2
+  exit 2
+fi
+
+exec uv run --quiet --frozen --project "$ROOT/replay" python "$ROOT/replay/carla_replay.py" "$@"

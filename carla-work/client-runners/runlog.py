@@ -135,6 +135,7 @@ class RunLog:
         if kind.startswith(TRACKED + STATIC):
             self._write({"type": "actor", "id": actor_id, "type_id": kind,
                          "role_name": actor.attributes.get("role_name", ""),
+                         "base_type": actor.attributes.get("base_type", ""),
                          "tick": self.ticks, "pose": _pose(actor.get_transform()),
                          "box": {"center": _xyz(actor.bounding_box.location),
                                  "extent": _xyz(actor.bounding_box.extent)}})
