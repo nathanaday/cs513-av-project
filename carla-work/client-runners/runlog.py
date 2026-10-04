@@ -115,7 +115,8 @@ class RunLog:
             "delta_s": settings.fixed_delta_seconds,
             "synchronous": settings.synchronous_mode,
             "ego_id": self.ego_id,
-            "argv": list(argv or []),
+            # The script's file name only: its full path names the user's home folder.
+            "argv": [os.path.basename(a) if i == 0 else a for i, a in enumerate(argv or [])],
             "started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
         })
         self._write({"type": "scene", "lanes": _lanes(cmap), "junctions": _junctions(cmap),

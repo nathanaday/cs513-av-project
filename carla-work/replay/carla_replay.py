@@ -257,7 +257,7 @@ def main():
         print(f"carla-replay: {error}", file=sys.stderr)
         return 2
 
-    rr.init("carla-replay", recording_id=args.run)
+    rr.init("carla-replay", recording_id=os.path.basename(args.run))
     if args.rrd:
         rr.save(args.rrd)
     else:

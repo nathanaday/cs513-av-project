@@ -41,7 +41,7 @@ Values are rounded: positions and velocities to 3 decimals, angles to 2.
 | `delta_s` | Simulated seconds per tick. |
 | `synchronous` | Whether the world ran in synchronous mode. |
 | `ego_id` | Actor id of the ego vehicle, or `null`. |
-| `argv` | The command line of the script that recorded the run. |
+| `argv` | The command line of the script that recorded the run. The first item is the script's file name, with no folder. |
 | `started_utc` | When the recording started, ISO 8601. |
 
 ## `scene`
