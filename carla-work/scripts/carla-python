@@ -20,6 +20,8 @@ fi
 if [[ -n "$CARLA_DIR" ]]; then
   export PYTHONPATH="$(to_windows "$CARLA_DIR/PythonAPI/carla")${PYTHONPATH:+;$PYTHONPATH}"
 fi
+# Shared runner modules, such as runlog.
+export PYTHONPATH="$(to_windows "$(dirname "$0")/../client-runners");$PYTHONPATH"
 
 args=()
 for a in "$@"; do
