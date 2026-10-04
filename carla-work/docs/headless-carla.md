@@ -80,6 +80,7 @@ Options:
 |---|---|---|
 | `--offscreen` | off | Render off-screen (see Modes). |
 | `--window` | off | Open the normal simulator window (see Modes). Not with `--offscreen`. |
+| `--quality low\|epic` | `low` with `--offscreen`, `epic` with `--window` | Render quality. Only with `--offscreen` or `--window`. |
 | `--port N` | 2000 | RPC port of the server. |
 | `--every S` | 10 | Seconds between status rows. 0 prints only events. |
 
@@ -97,13 +98,13 @@ scripts/carla-server stop
 |---|---|---|
 | No rendering (default) | `scripts/carla-server` | Telemetry, collisions, lane crossings, routes, agents. Any work that does not need images. |
 | Off-screen rendering | `scripts/carla-server --offscreen` | Camera sensors. Needs about 15 GB for the server, so not on a 16 GB Mac. |
-| Window | `scripts/carla-server --window` | Watching the simulation. Cameras work. Needs about 15 GB for the server, like the off-screen mode. |
+| Window | `scripts/carla-server --window` | Watching the simulation. Cameras work. Needs about 15 GB for the server at `--quality low`, and more at the default `epic`. |
 
 The default mode runs the server with `-nullrhi`. The server draws nothing, so it needs no graphics memory and compiles no shaders. **A client that spawns a camera sensor in this mode crashes the server** (see Troubleshooting).
 
 The off-screen mode runs `-RenderOffScreen -quality-level=Low` through Apple's D3DMetal. Cameras work. On the first launch, D3DMetal compiles shaders; on a Mac with little memory that can take 20 to 30 minutes.
 
-The window mode runs `-windowed -ResX=1280 -ResY=720 -quality-level=Low` through D3DMetal. It opens the simulator window, as `CARLA.app` does, and ignores the launch flags in `Configure.app`. Closing the window ends the command with status 0.
+The window mode runs `-quality-level=Epic` through D3DMetal. It opens the same window as `CARLA.app` with no launch flags, at the same quality. It ignores the launch flags in `Configure.app`. If the window freezes or the Mac swaps, add `--quality low`. Closing the window ends the command with status 0.
 
 ## Drive a car
 

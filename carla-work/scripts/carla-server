@@ -2,12 +2,13 @@
 # Run a headless CARLA server in the Sikarugir wrapper, in the foreground.
 #
 # Usage:
-#   scripts/carla-server [--offscreen | --window] [--port N] [--every S]
+#   scripts/carla-server [--offscreen | --window] [--quality low|epic] [--port N] [--every S]
 #   scripts/carla-server stop
 #
 # The server runs -nullrhi (no rendering; a camera sensor crashes the server)
-# unless --offscreen renders through D3DMetal with no window, or --window
-# opens the normal 1280x720 window. Closing the window ends the command.
+# unless --offscreen renders through D3DMetal with no window, or --window opens
+# the window that CARLA.app opens. Closing the window ends the command.
+# --quality sets the render quality: low by default for --offscreen, epic for --window.
 # The command prints a status row every S seconds (default 10; 0 for none) and
 # an EVENT line when the server comes up, a client connects or disconnects,
 # or the server exits. Ctrl+C, kill, or closing the terminal stops the server.
@@ -24,7 +25,7 @@ CRASHES="$DRIVE_C/users/Sikarugir/AppData/Local/CarlaUE4/Saved/Crashes"
 BEGAN=$SECONDS
 
 usage() {
-  sed -n 2,14p "$0" | sed 's/^# \{0,1\}//' >&2
+  sed -n 2,15p "$0" | sed 's/^# \{0,1\}//' >&2
   exit 2
 }
 
@@ -115,11 +116,12 @@ finish() {
 }
 
 serve() {
-  local port=2000 every=10 mode=nullrhi
+  local port=2000 every=10 mode=nullrhi quality=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --offscreen) [[ "$mode" == nullrhi ]] || usage; mode=offscreen ;;
       --window) [[ "$mode" == nullrhi ]] || usage; mode=window ;;
+      --quality) quality="${2:-}"; shift ;;
       --port) port="${2:-}"; shift ;;
       --every) every="${2:-}"; shift ;;
       *) usage ;;
@@ -127,6 +129,14 @@ serve() {
     shift
   done
   [[ "$port" =~ ^[0-9]+$ && "$every" =~ ^[0-9]+$ ]] || usage
+  case "$mode:$quality" in
+    nullrhi:) ;;
+    offscreen:) quality=low ;;
+    window:) quality=epic ;;
+    nullrhi:*) echo "carla-server: --quality needs --offscreen or --window" >&2; exit 2 ;;
+    *:low|*:epic) ;;
+    *) usage ;;
+  esac
 
   if [[ -n "$(server_pids)" ]] || port_open "$port"; then
     echo "carla-server: a CARLA server already runs, maybe in another terminal." >&2
@@ -143,16 +153,18 @@ serve() {
     exit 2
   fi
 
-  local flags=(-carla-rpc-port="$port" -nosound)
+  local flags=(-carla-rpc-port="$port" -nosound) level
+  # CARLA's documented spelling of the level names.
+  [[ "$quality" == low ]] && level=Low || level=Epic
   case "$mode" in
     nullrhi) flags=(-nullrhi "${flags[@]}") ;;
-    offscreen) use_d3dmetal; flags=(-RenderOffScreen -quality-level=Low "${flags[@]}") ;;
-    window) use_d3dmetal; flags=(-windowed -ResX=1280 -ResY=720 -quality-level=Low "${flags[@]}") ;;
+    offscreen) use_d3dmetal; flags=(-RenderOffScreen -quality-level="$level" "${flags[@]}") ;;
+    window) use_d3dmetal; flags=(-quality-level="$level" "${flags[@]}") ;;
   esac
 
   mkdir -p "$LOG_DIR"
   touch "$LAUNCHED"
-  echo "CARLA ($mode) on port $port; log: ${LOG#"$ROOT"/}; Ctrl+C stops the server"
+  echo "CARLA ($mode${quality:+, $quality}) on port $port; log: ${LOG#"$ROOT"/}; Ctrl+C stops the server"
 
   trap 'echo; finish 130' INT
   trap 'echo; finish 143' TERM
