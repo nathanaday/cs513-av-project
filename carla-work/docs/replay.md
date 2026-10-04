@@ -2,6 +2,8 @@
 
 A headless server shows nothing on screen. This page records a run to a file, then plays the file back in the [Rerun](https://rerun.io) viewer: the roads, buildings, and parked cars, the ego, the traffic, and the pedestrians, all in motion, with a timeline you can drag.
 
+To see a run before you install anything, open the demo run in your browser: [town10-demo in the Rerun web viewer](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/cs513-carla-runs/resolve/main/town10-demo.rrd). The files are in the public dataset [nadayusc/cs513-carla-runs](https://huggingface.co/datasets/nadayusc/cs513-carla-runs) on Hugging Face.
+
 Run every command from the `carla-work` folder.
 
 ## What you need
@@ -88,7 +90,7 @@ To make the 3D view follow the ego, add `--follow`.
 scripts/carla-replay runs/demo.jsonl.gz --rrd demo.rrd
 ```
 
-A `.rrd` file opens in any Rerun viewer of version 0.38.1 or later: `rerun demo.rrd`, or drag the file into the [web viewer](https://www.rerun.io/viewer). The demo run is 3.2 MB as a run file and 9.0 MB as `.rrd`. Keep and share the run file. The `.rrd` file can always be made again from it.
+A `.rrd` file opens in any Rerun viewer of version 0.38.1 or later: `rerun demo.rrd`, or drag the file into the [web viewer](https://www.rerun.io/viewer). To share a run as a link, put the `.rrd` file at a public URL that allows cross-origin requests, such as a Hugging Face dataset, and open `https://app.rerun.io/version/0.38.1/?url=<file URL>`. The demo run is 3.2 MB as a run file and 9.0 MB as `.rrd`. Keep and share the run file. The `.rrd` file can always be made again from it.
 
 ## Rerun's usage data
 
