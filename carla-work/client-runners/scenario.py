@@ -41,8 +41,8 @@ class Scenario:
 
     weather: fields of carla.WeatherParameters over the ClearNoon preset, or a function of
         the ego's start transform that returns them. None leaves the world's weather as it is.
-    setup: called after every actor is spawned, with a Context. It may return a function
-        that undoes what it changed in the world.
+    setup: called after every actor is spawned, with a Context. For each change it makes to
+        the world, it registers the undo with context.on_exit before it makes the change.
     step: called after every tick, with the Context and the simulated seconds since the start.
     """
     name: Optional[str]
@@ -72,6 +72,24 @@ class Context:
     rng: random.Random
     settings: dict
     state: dict = dataclasses.field(default_factory=dict)
+    exits: list = dataclasses.field(default_factory=list)
+
+    def on_exit(self, undo):
+        """Run undo when the scenario ends, however it ends. The last registered runs first."""
+        self.exits.append(undo)
+
+
+def run_all(steps):
+    """Run every clean-up step, even after one fails, then raise the first error."""
+    first = None
+    for step in steps:
+        try:
+            step()
+        except Exception as error:
+            print(f"clean-up step failed: {error!r}", file=sys.stderr)
+            first = first or error
+    if first is not None:
+        raise first
 
 
 def parse_args(scenario):
@@ -151,9 +169,10 @@ def spawn_vehicles(client, world, tm, count, spawns, rng):
     return [r.actor_id for r in client.apply_batch_sync(batch, True) if not r.error]
 
 
-def spawn_walkers(world, count, rng):
+def spawn_walkers(world, count, rng, walkers, controllers):
+    """Spawn walkers with the walker AI into the given lists, so the caller can destroy
+    them even when a spawn fails partway."""
     library = world.get_blueprint_library()
-    walkers = []
     for _ in range(count * 2):
         if len(walkers) == count:
             break
@@ -166,13 +185,13 @@ def spawn_walkers(world, count, rng):
             walkers.append(walker)
     world.tick()
     controller = library.find("controller.ai.walker")
-    controllers = [world.spawn_actor(controller, carla.Transform(), attach_to=w) for w in walkers]
+    for w in walkers:
+        controllers.append(world.spawn_actor(controller, carla.Transform(), attach_to=w))
     world.tick()
     for c in controllers:
         c.start()
         c.go_to_location(world.get_random_location_from_navigation())
         c.set_max_speed(1.0 + rng.random())
-    return walkers, controllers
 
 
 def follow(spectator, vehicle):
@@ -243,7 +262,7 @@ def _run(scenario, args):
     rng = random.Random(args.seed)
     tm = None
     log = None
-    undo = None
+    context = None
     ego_actors, vehicles, walkers, controllers = [], [], [], []
     events = queue.Queue()
     stats = {"ticks": 0, "sim_s": 0.0, "distance_m": 0.0, "collision": 0, "lane_invasion": 0,
@@ -281,13 +300,13 @@ def _run(scenario, args):
         others = [s for s in spawns if s.location.distance(start.location) > 10.0]
         rng.shuffle(others)
         vehicles = spawn_vehicles(client, world, tm, args.vehicles, others, rng)
-        walkers, controllers = spawn_walkers(world, args.walkers, rng)
+        spawn_walkers(world, args.walkers, rng, walkers, controllers)
         agent = BasicAgent(ego, target_speed=args.speed)
         agent.set_destination(destination.location)
         route = [waypoint for waypoint, _ in agent.get_local_planner().get_plan()]
         context = Context(client, world, tm, ego, route, list(world.get_actors(vehicles)), walkers, rng, settings)
         if scenario.setup is not None:
-            undo = scenario.setup(context)
+            scenario.setup(context)
         step = (lambda sim_s: scenario.step(context, sim_s)) if scenario.step else None
         world.tick()
         stats["t0"] = world.get_snapshot().timestamp.elapsed_seconds
@@ -310,23 +329,22 @@ def _run(scenario, args):
         raise
     finally:
         wall = time.monotonic() - wall_start
+        steps = []
         if log:
-            log.close(reason, wall)
-        if undo is not None:
-            undo()
-        for c in controllers:
-            c.stop()
-        for actor in ego_actors:
-            if actor.type_id.startswith("sensor."):
-                actor.stop()
+            steps.append(lambda: log.close(reason, wall))
+        if context is not None:
+            steps.extend(reversed(context.exits))
+        steps.extend(c.stop for c in controllers)
+        steps.extend(a.stop for a in ego_actors if a.type_id.startswith("sensor."))
         ids = [c.id for c in controllers] + [w.id for w in walkers] + vehicles + [a.id for a in reversed(ego_actors)]
         if ids:
-            client.apply_batch_sync([carla.command.DestroyActor(i) for i in ids])
+            steps.append(lambda: client.apply_batch_sync([carla.command.DestroyActor(i) for i in ids]))
         if tm is not None:
-            tm.set_synchronous_mode(False)
+            steps.append(lambda: tm.set_synchronous_mode(False))
         if scenario.weather is not None:
-            world.set_weather(original_weather)
-        world.apply_settings(original)
+            steps.append(lambda: world.set_weather(original_weather))
+        steps.append(lambda: world.apply_settings(original))
+        run_all(steps)
 
     print(f"summary  sim {stats['sim_s']:.1f} s  wall {wall:.1f} s  ratio {stats['sim_s'] / wall:.2f}  "
           f"distance {stats['distance_m']:.0f} m  collisions {stats['collision']}  "

@@ -58,6 +58,9 @@ def setup(context):
     cmap = world.get_map()
     library = world.get_blueprint_library().filter("walker.pedestrian.*")
     jaywalkers = []
+    context.state["jaywalkers"] = jaywalkers
+    context.on_exit(lambda: context.client.apply_batch_sync(
+        [carla.command.DestroyActor(j["walker"].id) for j in jaywalkers]))
     for curb, across in curbs(cmap, context.route):
         length = crossing_length(cmap, curb, across)
         if length is None:
@@ -71,13 +74,7 @@ def setup(context):
         jaywalkers.append({"walker": walker, "across": across, "crossing": crossing,
                            "period": 2 * (crossing + PAUSE),
                            "delay": context.rng.uniform(0.0, 2 * (crossing + PAUSE)), "control": None})
-    context.state["jaywalkers"] = jaywalkers
     context.settings["jaywalkers"] = len(jaywalkers)
-
-    def undo():
-        context.client.apply_batch_sync([carla.command.DestroyActor(j["walker"].id) for j in jaywalkers])
-
-    return undo
 
 
 def step(context, sim_s):

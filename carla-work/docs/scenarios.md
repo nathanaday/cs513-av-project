@@ -126,10 +126,12 @@ The fields of `Scenario`, in `client-runners/scenario.py`:
 | `ticks` | 0 | The time limit in ticks of 0.05 s. 0 drives until the ego arrives. |
 | `spawn`, `seed` | 0, 0 | The ego's spawn point, and the seed for its destination and the traffic. |
 | `weather` | `None` | Fields of `carla.WeatherParameters`, set over the `ClearNoon` preset. Or a function that takes the ego's start transform and returns them, as in `low_sun.py`. `None` leaves the weather as it is. |
-| `setup` | `None` | A function called once after every actor is spawned, with a `Context`. If it changes the world or spawns actors, it must return a function that undoes the change. See `blackout.py`. |
+| `setup` | `None` | A function called once after every actor is spawned, with a `Context`. Before it changes the world or spawns an actor, it must register a function that undoes the change: `context.on_exit(undo)`. See `blackout.py`. |
 | `step` | `None` | A function called after every tick, with the `Context` and the simulated seconds since the start. See `jaywalker_swarm.py`. |
 
 The `Context` holds `client`, `world`, `tm` (Traffic Manager), `ego`, `route` (the ego's planned waypoints), `vehicles`, `walkers`, `rng`, `settings`, and `state`. Add each value that `setup` chooses to `settings`, so the header records it. Use `state` to pass data from `setup` to `step`.
+
+The runner calls every registered undo when the scenario ends, however it ends, the last one first. It then destroys the actors and restores the settings and the weather. If one clean-up step fails, the runner still runs the others, then reports the first error.
 
 Do not spawn a camera sensor: it crashes a `-nullrhi` server.
 
