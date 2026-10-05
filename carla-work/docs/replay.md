@@ -21,7 +21,7 @@ With the server up, in a second terminal:
 scripts/carla-python client-runners/demo/test_data_capture.py
 ```
 
-The script spawns 30 background vehicles under Traffic Manager and 30 pedestrians, then drives the ego with `BasicAgent` to a destination. It records every tick to `runs/<UTC time>.jsonl.gz`:
+The script spawns 30 background vehicles under Traffic Manager and 30 pedestrians, then drives the ego with `BasicAgent` to a destination. It records every tick to `runs/<UTC time>.jsonl.gz`. To record a drive in rain, low sun, heavy traffic, or another situation, run a demo scenario instead: see [scenarios.md](scenarios.md).
 
 ```
 ego vehicle.tesla.model3 id=271  spawn 0  vehicles 30  walkers 30
@@ -119,6 +119,8 @@ Logging adds about 7% to the wall time. The scene record and the per-tick record
 | File | Purpose |
 |---|---|
 | `client-runners/demo/test_data_capture.py` | Drives the ego among traffic and records the run. |
+| `client-runners/scenario.py` | The runner that `test_data_capture.py` and the scenarios share: spawn, drive, record, clean up. |
+| `client-runners/scenarios/` | The demo scenarios. See [scenarios.md](scenarios.md). |
 | `client-runners/runlog.py` | Writes a run file. Any client script can use it (see below). |
 | `docs/run-format.md` | The run file format. |
 | `scripts/carla-replay` | Opens a run file in the viewer, or writes `.rrd`. |
