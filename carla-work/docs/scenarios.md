@@ -72,7 +72,7 @@ With seed 0, two scenarios end behind the bus. For a drive that arrives, try ano
 
 ## Published captures
 
-Each scenario has a capture in the public dataset [nadayusc/carla-rerun-scenarios](https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios) (see [publishing.md](publishing.md)). Click a link to open the drive in the Rerun web viewer. The viewer does not show the weather; each capture's `capture.json` holds it. The seeds were chosen so that the ego arrives and the scenario's effect is clear. To record the same drive, run the scenario with its seed, for example `scripts/carla-python client-runners/scenarios/blackout.py --seed 5`. Later positions can drift from the published run.
+Each scenario has a capture in the public dataset [nadayusc/carla-rerun-scenarios](https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios) (see [publishing.md](publishing.md)). Click a link to open the drive in the Rerun web viewer. The viewer does not show the weather; each capture's `capture.json` holds it. The seeds were chosen so that the ego arrives and the scenario's effect is clear. To record a similar drive, run the scenario with its seed, for example `scripts/carla-python client-runners/scenarios/blackout.py --seed 5`. The same seed gives the same start, but not always the same drive: `blackout.py --seed 5` arrived in two of three runs and jammed at 90 m in the third.
 
 | Scenario | Seed | Capture | What happens |
 |---|---|---|---|
