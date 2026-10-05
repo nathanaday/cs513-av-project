@@ -40,10 +40,9 @@ class Scenario:
 
     weather: fields of carla.WeatherParameters over the ClearNoon preset, or a function of
         the ego's start transform that returns them. None leaves the world's weather as it is.
-    cross_factor: the share of pedestrians that cross the road anywhere, 0 to 1. None
-        leaves the server's value.
     setup: called after every actor is spawned, with a Context. It may return a function
         that undoes what it changed in the world.
+    step: called after every tick, with the Context and the simulated seconds since the start.
     """
     name: Optional[str]
     description: str
@@ -52,20 +51,24 @@ class Scenario:
     speed: float = 30.0
     ticks: int = 0
     weather: Union[dict, Callable, None] = None
-    cross_factor: Optional[float] = None
     setup: Optional[Callable] = None
+    step: Optional[Callable] = None
 
 
 @dataclasses.dataclass
 class Context:
+    """What setup and step can use. route is the ego's planned waypoints; state is free
+    storage that setup fills and step reads."""
     client: carla.Client
     world: carla.World
     tm: carla.TrafficManager
     ego: carla.Actor
+    route: list
     vehicles: list
     walkers: list
     rng: random.Random
     settings: dict
+    state: dict = dataclasses.field(default_factory=dict)
 
 
 def parse_args(scenario):
@@ -165,9 +168,7 @@ def spawn_walkers(world, count, rng):
     return walkers, controllers
 
 
-def drive(args, world, vehicle, destination, events, stats, log):
-    agent = BasicAgent(vehicle, target_speed=args.speed)
-    agent.set_destination(destination.location)
+def drive(args, world, agent, vehicle, events, stats, log, step):
     print(f"{'sim_s':>7} {'km/h':>6} {'x':>8} {'y':>8} {'thr':>5} {'brk':>5} {'steer':>6}")
 
     last = vehicle.get_location()
@@ -184,6 +185,8 @@ def drive(args, world, vehicle, destination, events, stats, log):
             log.tick(snapshot)
         stats["ticks"] += 1
         stats["sim_s"] = snapshot.timestamp.elapsed_seconds - stats["t0"]
+        if step:
+            step(stats["sim_s"])
 
         location = vehicle.get_location()
         stats["distance_m"] += location.distance(last)
@@ -246,9 +249,6 @@ def _run(scenario, args):
         if scenario.weather is not None:
             values = scenario.weather(start) if callable(scenario.weather) else scenario.weather
             world.set_weather(make_weather(world, values))
-        if scenario.cross_factor is not None:
-            world.set_pedestrians_cross_factor(scenario.cross_factor)
-            settings["cross_factor"] = scenario.cross_factor
 
         blueprint = world.get_blueprint_library().find("vehicle.tesla.model3")
         blueprint.set_attribute("role_name", "hero")
@@ -262,9 +262,13 @@ def _run(scenario, args):
         rng.shuffle(others)
         vehicles = spawn_vehicles(client, world, tm, args.vehicles, others, rng)
         walkers, controllers = spawn_walkers(world, args.walkers, rng)
+        agent = BasicAgent(ego, target_speed=args.speed)
+        agent.set_destination(destination.location)
+        route = [waypoint for waypoint, _ in agent.get_local_planner().get_plan()]
+        context = Context(client, world, tm, ego, route, list(world.get_actors(vehicles)), walkers, rng, settings)
         if scenario.setup is not None:
-            context = Context(client, world, tm, ego, list(world.get_actors(vehicles)), walkers, rng, settings)
             undo = scenario.setup(context)
+        step = (lambda sim_s: scenario.step(context, sim_s)) if scenario.step else None
         world.tick()
         stats["t0"] = world.get_snapshot().timestamp.elapsed_seconds
         if scenario.name:
@@ -276,7 +280,7 @@ def _run(scenario, args):
             log = RunLog(run_path(scenario, args), client, world, ego=ego, argv=sys.argv,
                          scenario=scenario.name, settings=settings)
             print(f"recording to {log.path}")
-        drive(args, world, ego, destination, events, stats, log)
+        drive(args, world, agent, ego, events, stats, log, step)
         reason = "arrived" if stats["arrived"] else "stopped"
     except KeyboardInterrupt:
         print("interrupted")
@@ -300,8 +304,6 @@ def _run(scenario, args):
             client.apply_batch_sync([carla.command.DestroyActor(i) for i in ids])
         if tm is not None:
             tm.set_synchronous_mode(False)
-        if scenario.cross_factor is not None:
-            world.set_pedestrians_cross_factor(0.0)
         if scenario.weather is not None:
             world.set_weather(original_weather)
         world.apply_settings(original)
