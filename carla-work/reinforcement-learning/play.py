@@ -50,15 +50,15 @@ def play_episode(args, env, agent, episode):
         print(f"recording to {log.path}")
     print(f"{'sim_s':>6} {'km/h':>6} {'q_left':>8} {'q_str':>8} {'q_right':>8}  {'action':<8} {'reward':>7} {'fps':>5}")
     steps, reward_sum, next_print = 0, 0.0, 0.0
-    wall_start = time.monotonic()
+    wall_start = time.perf_counter()
     reason = "error"
     try:
         while True:
-            wall = time.monotonic()
+            wall = time.perf_counter()
             qs = agent.q_values(state)
             action = int(np.argmax(qs))
             state, reward, terminated, truncated, info = env.step(action)
-            fps = 1.0 / max(time.monotonic() - wall, 1e-6)
+            fps = 1.0 / max(time.perf_counter() - wall, 1e-6)
             steps += 1
             reward_sum += reward
             if info["sim_s"] + 1e-9 >= next_print or terminated or truncated:
@@ -80,7 +80,7 @@ def play_episode(args, env, agent, episode):
         reason = "interrupted"
         raise
     finally:
-        wall = time.monotonic() - wall_start
+        wall = time.perf_counter() - wall_start
         env.on_tick = None
         if log:
             log.close(reason, wall)
