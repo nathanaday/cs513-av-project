@@ -122,7 +122,8 @@ Logging adds about 7% to the wall time. The scene record and the per-tick record
 | `client-runners/runlog.py` | Writes a run file. Any client script can use it (see below). |
 | `docs/run-format.md` | The run file format. |
 | `scripts/carla-replay` | Opens a run file in the viewer, or writes `.rrd`. |
-| `replay/` | The viewer's Python project: `carla_replay.py`, `pyproject.toml`, `uv.lock`. |
+| `scripts/carla-publish` | Publishes a run as a capture in the public dataset. See [publishing.md](publishing.md). |
+| `replay/` | The viewer's Python project: `carla_replay.py`, `carla_publish.py`, `pyproject.toml`, `uv.lock`. |
 
 ## Record your own script
 
