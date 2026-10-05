@@ -139,10 +139,13 @@ def make_weather(world, values):
     return weather
 
 
-def watch(world, vehicle, events):
+def watch(world, vehicle, events, actors):
+    """Attach the collision and lane invasion sensors, adding each to actors as it spawns."""
     library = world.get_blueprint_library()
     collision = world.spawn_actor(library.find("sensor.other.collision"), carla.Transform(), attach_to=vehicle)
+    actors.append(collision)
     invasion = world.spawn_actor(library.find("sensor.other.lane_invasion"), carla.Transform(), attach_to=vehicle)
+    actors.append(invasion)
 
     def on_collision(event):
         events.put(("collision", event.timestamp, event.other_actor.id, {
@@ -155,7 +158,6 @@ def watch(world, vehicle, events):
 
     collision.listen(on_collision)
     invasion.listen(on_invasion)
-    return [collision, invasion]
 
 
 def spawn_vehicles(client, world, tm, count, spawns, rng):
@@ -295,7 +297,7 @@ def _run(scenario, args):
         if ego is None:
             raise RuntimeError(f"spawn point {args.spawn} is occupied; try another --spawn")
         ego_actors.append(ego)
-        ego_actors.extend(watch(world, ego, events))
+        watch(world, ego, events, ego_actors)
 
         others = [s for s in spawns if s.location.distance(start.location) > 10.0]
         rng.shuffle(others)
@@ -306,7 +308,12 @@ def _run(scenario, args):
         route = [waypoint for waypoint, _ in agent.get_local_planner().get_plan()]
         context = Context(client, world, tm, ego, route, list(world.get_actors(vehicles)), walkers, rng, settings)
         if scenario.setup is not None:
-            scenario.setup(context)
+            returned = scenario.setup(context)
+            if returned is not None:
+                if callable(returned):
+                    context.on_exit(returned)
+                raise TypeError(f"{scenario.name}: setup returned a value; register undo steps "
+                                "with context.on_exit instead")
         step = (lambda sim_s: scenario.step(context, sim_s)) if scenario.step else None
         world.tick()
         stats["t0"] = world.get_snapshot().timestamp.elapsed_seconds
