@@ -66,7 +66,7 @@ Measured on 2026-10-05 with each scenario's default seed and spawn point (0 and 
 | `red-light-runners` | stopped at 180 s | Vehicles near a red light were stopped in 1,256 vehicle-ticks, against 14,006 in a run where they obey the lights. The ego hits the bus at 26.5 s. |
 | `blackout` | arrived at 50.9 s | Every light is `Off` at every tick. The ego touches the bus at 18 s and drives on. |
 | `jaywalker-swarm` | arrived at 52.3 s | 17 jaywalkers. 11.9% of pedestrian positions are on a driving lane outside a crosswalk. The ego hits a jaywalker at 15 s. |
-| `black-ice` | arrived at 60.2 s | The ego needs 6.5 m and 10.4 m to stop from 30 km/h, against 5.0 m on a dry road. It slides into a bus at 18 s. |
+| `black-ice` | arrived at 60.2 s | The ego slides into a bus at 18 s. Its one stop from 30 km/h with no collision takes 10.2 m, against 4.7 m and 6.3 m in the dry demo run (the distance from the first tick of falling speed to below 0.5 m/s). |
 
 With seed 0, two scenarios end behind the bus. For a drive that arrives, try another `--seed`.
 
