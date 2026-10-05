@@ -1,12 +1,16 @@
-"""Low sun ahead of the ego through haze: the ego starts driving into the glare. Default traffic."""
+"""Low sun ahead of the ego through haze: the ego starts on an open road, driving into the glare. Default traffic."""
 
 import sys
 
 from scenario import Scenario, run
 
 ALTITUDE = 5.0
-# Added to the ego's start yaw to put the sun ahead of it. Checked by eye in the window mode.
+# Added to the ego's start yaw to put the sun ahead of it. Checked with a camera in the window mode.
 AZIMUTH_OFFSET = 180.0
+# Spawn 18 faces west on a road where no building hides a sun this low; at spawn 0 the
+# buildings do. Seed 38 picks a destination whose route heads west for 192 of its 512 m.
+SPAWN = 18
+SEED = 38
 
 
 def weather(start):
@@ -20,7 +24,7 @@ def weather(start):
     }
 
 
-SCENARIO = Scenario("low-sun", __doc__, ticks=3600, weather=weather)
+SCENARIO = Scenario("low-sun", __doc__, ticks=3600, spawn=SPAWN, seed=SEED, weather=weather)
 
 if __name__ == "__main__":
     sys.exit(run(SCENARIO))

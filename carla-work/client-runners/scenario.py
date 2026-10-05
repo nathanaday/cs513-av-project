@@ -51,6 +51,8 @@ class Scenario:
     walkers: int = 30
     speed: float = 30.0
     ticks: int = 0
+    spawn: int = 0
+    seed: int = 0
     weather: Union[dict, Callable, None] = None
     setup: Optional[Callable] = None
     step: Optional[Callable] = None
@@ -81,8 +83,10 @@ def parse_args(scenario):
                         help=f"stop after N ticks; 0 drives until arrival (default {scenario.ticks})")
     parser.add_argument("--every", type=float, default=5.0, help="simulated seconds between telemetry lines")
     parser.add_argument("--speed", type=float, default=scenario.speed, help="target speed in km/h")
-    parser.add_argument("--spawn", type=int, default=0, help="index of the ego's spawn point")
-    parser.add_argument("--seed", type=int, default=0, help="seed for the destination and the traffic")
+    parser.add_argument("--spawn", type=int, default=scenario.spawn,
+                        help=f"index of the ego's spawn point (default {scenario.spawn})")
+    parser.add_argument("--seed", type=int, default=scenario.seed,
+                        help=f"seed for the destination and the traffic (default {scenario.seed})")
     parser.add_argument("--vehicles", type=int, default=scenario.vehicles,
                         help=f"background vehicles under Traffic Manager (default {scenario.vehicles})")
     parser.add_argument("--walkers", type=int, default=scenario.walkers,

@@ -43,7 +43,7 @@ On every exit the scenario restores what it changed in the world: the synchronou
 | File | Name | What it sets | Time limit |
 |---|---|---|---|
 | `heavy_rain.py` | `heavy-rain` | Rain 100, standing water 90, wetness 100, cloud 100, wind 100, fog 25. Noon sun. 30 vehicles, 30 pedestrians. | 180 s |
-| `low_sun.py` | `low-sun` | Sun 5° above the horizon, ahead of the ego at its start. Fog 15, more haze. 30 vehicles, 30 pedestrians. | 180 s |
+| `low_sun.py` | `low-sun` | Sun 5° above the horizon, ahead of the ego at its start. Fog 15, more haze. Spawn point 18, which faces west on an open road, and seed 38, whose route heads into the sun for 189 of its 500 m. 30 vehicles, 30 pedestrians. | 180 s |
 | `high_traffic.py` | `high-traffic` | 120 vehicles, 30 pedestrians. | 180 s |
 | `crowded_sidewalks.py` | `crowded-sidewalks` | 10 vehicles, 150 pedestrians. | 180 s |
 | `red_light_runners.py` | `red-light-runners` | 60 vehicles. Traffic Manager makes each one ignore traffic lights. The ego still stops at red. | 180 s |
@@ -55,12 +55,12 @@ On every exit the scenario restores what it changed in the world: the synchronou
 
 ## What the runs show
 
-Measured on 2026-10-05 with seed 0 and spawn point 0, in the default server mode:
+Measured on 2026-10-05 with each scenario's default seed and spawn point (0 and 0, except `low-sun`), in the default server mode, except `low-sun` in the window mode:
 
 | Scenario | End | What the run file shows |
 |---|---|---|
 | `heavy-rain` | stopped at 180 s | The ego hits a bus at 26.5 s and waits behind it. The same happens in a clear run with this seed. |
-| `low-sun` | stopped at 180 s | The same drive as `heavy-rain`. |
+| `low-sun` | arrived at 99.3 s | Spawn 18, seed 38 (its defaults). The sun is within 30° of the ego's heading for 189 m of the 500 m drive. |
 | `high-traffic` | arrived at 62.8 s | 120 vehicles. |
 | `crowded-sidewalks` | arrived at 52.3 s | 150 pedestrians. 0.4% of pedestrian positions are on a driving lane outside a crosswalk. |
 | `red-light-runners` | stopped at 180 s | Vehicles near a red light were stopped in 1,256 vehicle-ticks, against 14,006 in a run where they obey the lights. The ego hits the bus at 26.5 s. |
@@ -68,7 +68,7 @@ Measured on 2026-10-05 with seed 0 and spawn point 0, in the default server mode
 | `jaywalker-swarm` | arrived at 52.3 s | 17 jaywalkers. 11.9% of pedestrian positions are on a driving lane outside a crosswalk. The ego hits a jaywalker at 15 s. |
 | `black-ice` | arrived at 60.2 s | The ego needs 6.5 m and 10.4 m to stop from 30 km/h, against 5.0 m on a dry road. It slides into a bus at 18 s. |
 
-With seed 0, three scenarios end behind the bus. For a drive that arrives, try another `--seed`.
+With seed 0, two scenarios end behind the bus. For a drive that arrives, try another `--seed`.
 
 ## What shows in each server mode
 
@@ -81,7 +81,7 @@ The default server mode (`-nullrhi`) draws nothing. The weather and the sun chan
 | `red-light-runners`, `blackout` | The vehicles, and the state of every light at each tick. | Nothing more. |
 | `black-ice` | Longer stops, slides, and collisions. The friction is in the header's `settings`. | The wet road. |
 
-To see the weather, run the server with `scripts/carla-server --window --quality low` (see [headless-carla.md](headless-carla.md) for the memory each mode needs). The scenario moves the spectator to a point behind the ego on every tick, so the window shows the drive. To move the camera yourself, add `--no-follow`.
+To see the weather, run the server with `scripts/carla-server --window` (see [headless-carla.md](headless-carla.md) for the memory each mode needs). Use the default Epic quality for `low-sun`. At `--quality low` the server draws little of the haze and no bloom, so the low sun barely affects what you see. Camera frames from the same spot show the difference. The scenario moves the spectator to a point behind the ego on every tick, so the window shows the drive. To move the camera yourself, add `--no-follow`.
 
 ## The run header
 
@@ -124,6 +124,7 @@ The fields of `Scenario`, in `client-runners/scenario.py`:
 | `vehicles`, `walkers` | 30, 30 | Background vehicles and pedestrians. |
 | `speed` | 30 | Target speed of the ego in km/h. |
 | `ticks` | 0 | The time limit in ticks of 0.05 s. 0 drives until the ego arrives. |
+| `spawn`, `seed` | 0, 0 | The ego's spawn point, and the seed for its destination and the traffic. |
 | `weather` | `None` | Fields of `carla.WeatherParameters`, set over the `ClearNoon` preset. Or a function that takes the ego's start transform and returns them, as in `low_sun.py`. `None` leaves the weather as it is. |
 | `setup` | `None` | A function called once after every actor is spawned, with a `Context`. If it changes the world or spawns actors, it must return a function that undoes the change. See `blackout.py`. |
 | `step` | `None` | A function called after every tick, with the `Context` and the simulated seconds since the start. See `jaywalker_swarm.py`. |
