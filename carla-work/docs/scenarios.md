@@ -81,7 +81,7 @@ The default server mode (`-nullrhi`) draws nothing. The weather and the sun chan
 | `red-light-runners`, `blackout` | The vehicles, and the state of every light at each tick. | Nothing more. |
 | `black-ice` | Longer stops, slides, and collisions. The friction is in the header's `settings`. | The wet road. |
 
-To see the weather, run the server with `scripts/carla-server --window` (see [headless-carla.md](headless-carla.md) for the memory each mode needs).
+To see the weather, run the server with `scripts/carla-server --window --quality low` (see [headless-carla.md](headless-carla.md) for the memory each mode needs). The scenario moves the spectator to a point behind the ego on every tick, so the window shows the drive. To move the camera yourself, add `--no-follow`.
 
 ## The run header
 

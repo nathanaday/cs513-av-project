@@ -31,6 +31,7 @@ from runlog import WEATHER, RunLog
 
 DELTA = 0.05
 CONTACT_GAP = 1.0
+FOLLOW_BACK, FOLLOW_UP, FOLLOW_PITCH = 8.0, 3.0, -12.0
 RUNS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "runs")
 
 
@@ -90,6 +91,8 @@ def parse_args(scenario):
                         help="run file to write (default: runs/" + (f"{scenario.name}-" if scenario.name else "")
                         + "<UTC time>.jsonl.gz)")
     parser.add_argument("--no-log", action="store_true", help="record nothing, to compare wall time")
+    parser.add_argument("--no-follow", action="store_true",
+                        help="leave the spectator free; by default it follows behind the ego")
     parser.add_argument("--timeout", type=float, default=60.0, help="client timeout in seconds")
     return parser.parse_args()
 
@@ -168,7 +171,18 @@ def spawn_walkers(world, count, rng):
     return walkers, controllers
 
 
+def follow(spectator, vehicle):
+    transform = vehicle.get_transform()
+    forward = transform.get_forward_vector()
+    location = transform.location
+    spectator.set_transform(carla.Transform(
+        carla.Location(x=location.x - FOLLOW_BACK * forward.x, y=location.y - FOLLOW_BACK * forward.y,
+                       z=location.z + FOLLOW_UP),
+        carla.Rotation(pitch=FOLLOW_PITCH, yaw=transform.rotation.yaw)))
+
+
 def drive(args, world, agent, vehicle, events, stats, log, step):
+    spectator = None if args.no_follow else world.get_spectator()
     print(f"{'sim_s':>7} {'km/h':>6} {'x':>8} {'y':>8} {'thr':>5} {'brk':>5} {'steer':>6}")
 
     last = vehicle.get_location()
@@ -187,6 +201,8 @@ def drive(args, world, agent, vehicle, events, stats, log, step):
         stats["sim_s"] = snapshot.timestamp.elapsed_seconds - stats["t0"]
         if step:
             step(stats["sim_s"])
+        if spectator:
+            follow(spectator, vehicle)
 
         location = vehicle.get_location()
         stats["distance_m"] += location.distance(last)
