@@ -30,6 +30,8 @@ ID_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 ID_MAX = 64
 TITLE_MAX = 80
 DESCRIPTION_MIN = 40
+CATALOG_FIELDS = ("id", "title", "scenario", "map", "sim_seconds", "actors", "events",
+                  "rerun_version", "viewer_url", "contributor", "published_utc")
 # A folder path names the contributor's machine and often their user name.
 FOLDER_PATH = re.compile(r"^(?:[A-Za-z]:[\\/]|/|~|\\\\)|[\\/](?:Users|home)[\\/]")
 
@@ -94,6 +96,9 @@ def summarize(records):
             kinds["traffic_signs"] += 1
     events = Counter(r["kind"] for r in records if r["type"] == "event")
     return {
+        "scenario": header.get("scenario"),
+        "settings": header.get("settings"),
+        "weather": header.get("weather"),
         "map": header["map"],
         "carla_version": header["server_version"],
         "run_format_version": header["version"],
@@ -133,7 +138,7 @@ def read_catalog(api, repo):
 
 def dataset_card(repo, catalog):
     rows = "\n".join(
-        f"| [{e['title']}](captures/{e['id']}/capture.json) | `{e['id']}` | {e['map']} | "
+        f"| [{e['title']}](captures/{e['id']}/capture.json) | `{e['id']}` | {e.get('scenario') or '-'} | {e['map']} | "
         f"{e['sim_seconds']:.0f} s | {e['actors']['vehicles']} / {e['actors']['walkers']} | "
         f"[open in Rerun]({e['viewer_url']}) |"
         for e in sorted(catalog, key=lambda e: e["id"]))
@@ -159,9 +164,11 @@ Click **open in Rerun** in the table. The capture opens in the Rerun web viewer,
 
 ## Captures
 
-| Capture | Id | Map | Length | Vehicles / walkers | |
-|---|---|---|---|---|---|
+| Capture | Id | Scenario | Map | Length | Vehicles / walkers | |
+|---|---|---|---|---|---|---|
 {rows}
+
+The viewer shows where everything is, not the weather or the light. Each capture's `capture.json` holds the scenario that recorded it, the scenario's settings (such as the seed or the tire friction), and the weather at the start of the run.
 
 ## Layout
 
@@ -171,7 +178,8 @@ FORMAT.md                the run file format
 captures/<id>/
     run.jsonl.gz         the run file: every tick, in CARLA coordinates
     run.rrd              the same run for Rerun, built with the version in capture.json
-    capture.json         title, description, map, versions, counts, file hashes, viewer link
+    capture.json         title, description, scenario, settings, weather, map, versions,
+                         counts, file hashes, viewer link
 ```
 
 `run.jsonl.gz` is gzip-compressed JSON lines, described in [FORMAT.md](FORMAT.md). Read it with any language to use the data outside Rerun.
@@ -206,9 +214,8 @@ def build(args, records, catalog, contributor, rerun_version):
         json.dump(capture, f, indent=2)
         f.write("\n")
 
-    entry = {k: capture[k] for k in ("id", "title", "map", "sim_seconds", "actors", "events",
-                                     "rerun_version", "viewer_url", "contributor", "published_utc")}
-    catalog = [e for e in catalog if e["id"] != args.id] + [entry]
+    entry = {k: capture[k] for k in CATALOG_FIELDS}
+    catalog = [{k: e.get(k) for k in CATALOG_FIELDS} for e in catalog if e["id"] != args.id] + [entry]
     with open(os.path.join(capture_dir, "catalog.jsonl"), "w", encoding="utf-8") as f:
         for e in sorted(catalog, key=lambda e: e["id"]):
             f.write(json.dumps(e, separators=(",", ":")) + "\n")

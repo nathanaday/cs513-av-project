@@ -29,6 +29,7 @@ The license is CC BY 4.0. CARLA publishes its maps and assets under CC BY, so ca
 | `id` | The capture's name and folder: lowercase words joined by hyphens, at most 64 characters. |
 | `title` | One line, at most 80 characters. |
 | `description` | What happens in the run, for a reader who does not know the project. |
+| `scenario`, `settings`, `weather` | Copied from the run header (see [run-format.md](run-format.md)): the scenario that recorded the run, its settings (counts, speed, limit, seed, spawn point, and the scenario's own values), and the weather at the start. `null` for a run whose header has no such field. The viewer does not show the weather, so this is where a reader finds it. |
 | `map` | CARLA map, for example `Town10HD_Opt`. |
 | `carla_version` | Server version from the run header. |
 | `run_format_version` | Version of the run file format. |
@@ -47,7 +48,7 @@ The license is CC BY 4.0. CARLA publishes its maps and assets under CC BY, so ca
 
 ### `catalog.jsonl`
 
-One line per capture, sorted by id, with these fields of `capture.json`: `id`, `title`, `map`, `sim_seconds`, `actors`, `events`, `rerun_version`, `viewer_url`, `contributor`, `published_utc`.
+One line per capture, sorted by id, with these fields of `capture.json`: `id`, `title`, `scenario`, `map`, `sim_seconds`, `actors`, `events`, `rerun_version`, `viewer_url`, `contributor`, `published_utc`. A capture published before a field existed has `null` for it.
 
 ## The upload contract
 
