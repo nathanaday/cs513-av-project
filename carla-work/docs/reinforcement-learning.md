@@ -45,10 +45,10 @@ The output must be `2.5.1+cpu 1.26.4`.
 
 ## Train
 
-With the server up:
+With the server up, train for 3 episodes:
 
 ```bash
-scripts/carla-python reinforcement-learning/train.py
+scripts/carla-python reinforcement-learning/train.py --episodes 3
 ```
 
 ```
@@ -61,14 +61,14 @@ episode steps  reward epsilon     loss  sim_s wall_s  end
 saved Z:\Users\...\carla-work\reinforcement-learning\models\cnn-20261004-192715\final.pt
 ```
 
-`train.py` prints one line per episode:
+With no `--episodes`, it trains for 100 episodes, as the tutorial does. `train.py` prints one line per episode:
 
 | Column | Meaning |
 |---|---|
 | `steps` | Actions in the episode. One action lasts one tick of 0.05 s, or `--ticks-per-step` ticks. |
 | `reward` | The sum of the episode's rewards. |
 | `epsilon` | The probability of a random action in this episode. |
-| `loss` | The mean training loss of the episode. `-` until the replay memory holds `--min-replay-memory-size` transitions (1000, about 5 episodes). |
+| `loss` | The mean training loss of the episode. `-` until the replay memory holds `--min-replay-memory-size` transitions (1000). In the measured 100-episode run, training started in episode 15. |
 | `sim_s`, `wall_s` | Simulated and wall seconds of the episode. |
 | `end` | `time` when the episode reached `--seconds-per-episode`, or `collision` and the type of the other actor. |
 
@@ -101,7 +101,7 @@ The same seed gives the same spawn points and the same random actions. The physi
 Drive a trained model with its best action:
 
 ```bash
-scripts/carla-python reinforcement-learning/play.py reinforcement-learning/models/cnn-20261004-181500
+scripts/carla-python reinforcement-learning/play.py reinforcement-learning/models/cnn-20261004-192547
 ```
 
 The argument is a `.pt` file, or a run folder, which plays its `final.pt`.
@@ -118,7 +118,7 @@ recording to Z:\Users\...\carla-work\runs\rl-play-20261005-022651-ep1.jsonl.gz
 episode 1  steps 200  reward -200  sim 10.0 s  wall 3.3 s  time
 ```
 
-This model trained for 3 episodes. It picks `left` at every step and drives in a circle. The tutorial's author saw the same thing: an agent with little training prefers one action.
+This model trained for 3 episodes, with `--min-replay-memory-size 100` so that training started in episode 2. It picks `left` at every step and drives in a circle. The tutorial's author saw the same thing: an agent with little training prefers one action.
 
 Each line shows the Q-value of each action, the action the model picked, the sum of rewards so far, and the steps per wall second (`fps`) of the prediction and the tick.
 
@@ -133,20 +133,20 @@ Options:
 
 ## Speed
 
-Measured on 2026-10-04 on a MacBook Pro M4 Pro, 48 GB, with the server in `--window` mode at `epic` quality, the default `cnn` network at 160×120, and seed 0:
+Measured on 2026-10-04 on a MacBook Pro M4 Pro, 48 GB, with the server in `--window` mode at `epic` quality, the default `cnn` network at 160×120, and seed 0. The figures come from the run's `stats.csv` (`models/cnn-20261004-192824`):
 
 | | Value |
 |---|---|
-| 100 episodes, the tutorial's run | 13.9 minutes wall time, 346 simulated seconds |
-| Simulated seconds per wall second, before training starts | about 2.5 |
-| Simulated seconds per wall second, during training | 0.4 to 0.5 |
+| 100 episodes, the tutorial's run | 13.9 minutes wall time, 344 simulated seconds |
+| Simulated seconds per wall second, before training starts (episodes 1 to 14) | 2.0 |
+| Simulated seconds per wall second, during training (episodes 15 to 100) | 0.37; from 0.25 to 0.51 per episode |
 | One training minibatch on the CPU | about 150 ms |
 
 Training starts after about 15 episodes. Random steering crashes the car within 2 to 5 simulated seconds, so the replay memory needs that many episodes to hold 1000 transitions.
 
 In this run every episode ended in a collision. The minimum reward of each group of 10 episodes stayed below -200, so the run saved only `final.pt`. The tutorial's author trained the same 100 episodes in 17 minutes on a Titan RTX GPU.
 
-`--model xception` at 640×480 takes about 21 s per training minibatch. At that speed, 100 episodes would take about 40 hours.
+`--model xception` at 640×480 took 21 s and 31 s per training minibatch in two measurements on this Mac. At that speed, the 6900 steps of a 100-episode run would take 40 to 60 hours.
 
 ## Differences from the tutorial
 
@@ -155,7 +155,7 @@ In this run every episode ended in a collision. The minimum reward of each group
 | TensorFlow 1 Keras (`tf.get_default_graph`, `Adam(lr=)`) | PyTorch 2.5.1 for the CPU | The tutorial's code does not run on current TensorFlow. PyTorch runs in the wrapper's Windows Python, where the `carla` client must run. |
 | Wall-clock time: `time.sleep(4)` after spawn, 10 wall seconds per episode | Synchronous mode with a 0.05 s tick: 1 simulated second braked after spawn, 10 simulated seconds per episode | Episodes repeat with a seed, and the training time does not change what the car does. The repository's other runners also use synchronous mode. |
 | A training thread beside the driving loop | One training minibatch after each step, in the driving loop | The thread kept the frame rate up in asynchronous mode. In synchronous mode the world waits for the client. |
-| Untrained Xception at 640×480 | A three-layer CNN at 160×120 by default; `--model xception` keeps Xception | The tutorial's author reports that Xception is too large and that a 2 to 3 layer CNN does better. On the CPU, one Xception training step at 640×480 takes about 21 s. |
+| Untrained Xception at 640×480 | A three-layer CNN at 160×120 by default; `--model xception` keeps Xception | The tutorial's author reports that Xception is too large and that a 2 to 3 layer CNN does better. On the CPU, one Xception training step at 640×480 takes 21 to 31 s. |
 | `done` ends the Q-value target on a collision and on a timeout | Only a collision ends the target; a timeout still uses the next state | The timeout is not a state of the world, so the car's future rewards do not stop there. |
 | `step` returns `(observation, reward, done, None)` | `step` returns `(observation, reward, terminated, truncated, info)` | The current Gym API, which separates a collision from a timeout. |
 | Camera image in BGR | Camera image in RGB | The order that image libraries expect. |
