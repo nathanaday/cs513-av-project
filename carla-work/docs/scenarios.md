@@ -70,6 +70,21 @@ Measured on 2026-10-05 with each scenario's default seed and spawn point (0 and 
 
 With seed 0, two scenarios end behind the bus. For a drive that arrives, try another `--seed`.
 
+## Published captures
+
+Each scenario has a capture in the public dataset [nadayusc/carla-rerun-scenarios](https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios) (see [publishing.md](publishing.md)). Click a link to open the drive in the Rerun web viewer. The viewer does not show the weather; each capture's `capture.json` holds it. The seeds were chosen so that the ego arrives and the scenario's effect is clear. To record the same drive, run the scenario with its seed, for example `scripts/carla-python client-runners/scenarios/blackout.py --seed 5`. Later positions can drift from the published run.
+
+| Scenario | Seed | Capture | What happens |
+|---|---|---|---|
+| `heavy-rain` | 5 | [town10-heavy-rain](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-heavy-rain/run.rrd) | 419 m in 97 s, no collision. |
+| `low-sun` | 38 | [town10-low-sun](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-low-sun/run.rrd) | 500 m in 99 s from spawn point 18, the sun ahead for 189 m. |
+| `high-traffic` | 3 | [town10-high-traffic](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-high-traffic/run.rrd) | 315 m in 66 s among 120 vehicles; 53 s with 30. |
+| `crowded-sidewalks` | 2 | [town10-crowded-sidewalks](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-crowded-sidewalks/run.rrd) | 293 m in 50 s past 150 pedestrians. |
+| `red-light-runners` | 3 | [town10-red-light-runners](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-red-light-runners/run.rrd) | Near red lights, vehicles moved in 12,176 vehicle-ticks and stopped in 800, against 7,146 and 5,786 when they obey. One collision with a Mini at 42 s. |
+| `blackout` | 5 | [town10-blackout](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-blackout/run.rrd) | The 419 m route of `heavy-rain` in 54 s instead of 97 s: no light to stop at. |
+| `jaywalker-swarm` | 6 | [town10-jaywalker-swarm](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-jaywalker-swarm/run.rrd) | 343 m in 56 s; 13% of pedestrian positions on the road off crosswalks; the ego hits jaywalkers 4 times. |
+| `black-ice` | 3 | [town10-black-ice](https://app.rerun.io/version/0.38.1/?url=https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios/resolve/main/captures/town10-black-ice/run.rrd) | 319 m in 53 s with 11 lane crossings and an 11.8 m stop from 30 km/h, against 6 and 5.3 m with normal grip. |
+
 ## What shows in each server mode
 
 The default server mode (`-nullrhi`) draws nothing. The weather and the sun change only the image, and `BasicAgent` reads the true positions of the other actors, so they do not change the drive. A `heavy-rain` run and a clear run with the same seed drove the same path and hit the same bus at 26.5 s. The run file records the weather in its header, so a reader knows the conditions.
