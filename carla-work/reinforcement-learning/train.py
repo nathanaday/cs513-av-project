@@ -14,7 +14,7 @@ import time
 
 import numpy as np
 
-from car_env import ACTIONS, CarEnv, add_env_args, env_config
+from car_env import ACTIONS, CarEnv, add_env_args, env_config, wine_path
 from dqn_agent import DEFAULT_SIZE, MODELS, DQNAgent, DQNConfig
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
@@ -77,7 +77,7 @@ def main():
                        min_replay_memory_size=args.min_replay_memory_size, minibatch_size=args.minibatch_size,
                        training_batch_size=args.training_batch_size, update_target_every=args.update_target_every,
                        discount=args.discount, learning_rate=args.learning_rate)
-    run_dir = os.path.join(args.out, f"{args.model}-{datetime.datetime.now():%Y%m%d-%H%M%S}")
+    run_dir = os.path.join(wine_path(args.out), f"{args.model}-{datetime.datetime.now():%Y%m%d-%H%M%S}")
     os.makedirs(run_dir, exist_ok=True)
     agent = DQNAgent(args.model, width, height, config, seed=args.seed)
     epsilon = args.epsilon

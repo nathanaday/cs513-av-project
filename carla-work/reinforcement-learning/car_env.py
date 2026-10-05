@@ -46,6 +46,13 @@ class EnvConfig:
     seed: Optional[int] = None
 
 
+def wine_path(path):
+    """Wine maps the macOS file system to drive Z:; a bare /Users/... would land on C:."""
+    if sys.platform == "win32" and path.startswith("/"):
+        return "Z:" + path.replace("/", "\\")
+    return path
+
+
 def add_env_args(parser):
     """Add the EnvConfig options to an argparse parser."""
     d = EnvConfig()
@@ -80,6 +87,7 @@ class CarEnv:
 
     Actions: 0 steers left, 1 drives straight, 2 steers right, each at full throttle.
     The observation is the camera frame as an H x W x 3 RGB uint8 array.
+    on_tick, when set, is called with the world snapshot after every tick.
     """
 
     def __init__(self, config: EnvConfig):
@@ -117,6 +125,7 @@ class CarEnv:
         self.frame = None
         self.start_s = 0.0
         self.sim_s = 0.0
+        self.on_tick = None
 
     def reset(self):
         """Start an episode at a random free spawn point and return the first frame."""
@@ -201,7 +210,10 @@ class CarEnv:
 
     def _tick(self):
         frame = self.world.tick()
-        self.sim_s = self.world.get_snapshot().timestamp.elapsed_seconds
+        snapshot = self.world.get_snapshot()
+        self.sim_s = snapshot.timestamp.elapsed_seconds
+        if self.on_tick:
+            self.on_tick(snapshot)
         if self.spectator and self.vehicle:
             transform = self.vehicle.get_transform()
             forward, location = transform.get_forward_vector(), transform.location
