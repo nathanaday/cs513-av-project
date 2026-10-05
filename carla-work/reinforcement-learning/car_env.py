@@ -100,14 +100,6 @@ class CarEnv:
         if client_version != server_version:
             print(f"warning: client {client_version} != server {server_version}", file=sys.stderr)
 
-        self.original = self.world.get_settings()
-        settings = self.world.get_settings()
-        if settings.no_rendering_mode:
-            raise RuntimeError("the world does not render; a camera needs scripts/carla-server --offscreen or --window")
-        settings.synchronous_mode = True
-        settings.fixed_delta_seconds = DELTA
-        self.world.apply_settings(settings)
-
         library = self.world.get_blueprint_library()
         self.vehicle_bp = library.find("vehicle.tesla.model3")
         self.vehicle_bp.set_attribute("role_name", "hero")
@@ -126,6 +118,15 @@ class CarEnv:
         self.start_s = 0.0
         self.sim_s = 0.0
         self.on_tick = None
+
+        # Last, so that no step of __init__ can fail with the world left in synchronous mode.
+        self.original = self.world.get_settings()
+        settings = self.world.get_settings()
+        if settings.no_rendering_mode:
+            raise RuntimeError("the world does not render; a camera needs scripts/carla-server --offscreen or --window")
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = DELTA
+        self.world.apply_settings(settings)
 
     def reset(self):
         """Start an episode at a random free spawn point and return the first frame."""
