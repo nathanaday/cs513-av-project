@@ -9,10 +9,13 @@ The server must render (scripts/carla-server --offscreen or --window): the obser
 a camera frame, and a camera crashes the no-rendering server. See docs/reinforcement-learning.md.
 """
 
+import contextlib
 import dataclasses
 import queue
 import random
+import signal
 import sys
+import threading
 from typing import Optional
 
 import carla
@@ -44,6 +47,23 @@ class EnvConfig:
     fast_reward: float = 1.0
     follow: bool = True
     seed: Optional[int] = None
+
+
+@contextlib.contextmanager
+def held_interrupt():
+    """Hold Ctrl+C until the block ends. A Ctrl+C during a call to the server is raised
+    as the call returns, before its result can be recorded."""
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+    pending = []
+    previous = signal.signal(signal.SIGINT, lambda signum, frame: pending.append(signum))
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous)
+        if pending:
+            raise KeyboardInterrupt
 
 
 def wine_path(path):
@@ -126,7 +146,13 @@ class CarEnv:
             raise RuntimeError("the world does not render; a camera needs scripts/carla-server --offscreen or --window")
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = DELTA
-        self.world.apply_settings(settings)
+        try:
+            with held_interrupt():
+                self.world.apply_settings(settings)
+        except BaseException:
+            with held_interrupt():
+                self.world.apply_settings(self.original)
+            raise
 
     def reset(self):
         """Start an episode at a random free spawn point and return the first frame."""
@@ -134,16 +160,15 @@ class CarEnv:
         spawns = self.world.get_map().get_spawn_points()
         self.rng.shuffle(spawns)
         for transform in spawns:
-            self.vehicle = self.world.try_spawn_actor(self.vehicle_bp, transform)
-            if self.vehicle is not None:
+            vehicle = self._spawn(self.world.try_spawn_actor, self.vehicle_bp, transform)
+            if vehicle is not None:
                 break
         else:
             raise RuntimeError("every spawn point is occupied")
-        self.actors.append(self.vehicle)
+        self.vehicle = vehicle
 
         self.frames = queue.Queue()
-        camera = self.world.spawn_actor(self.camera_bp, carla.Transform(CAMERA_AT), attach_to=self.vehicle)
-        self.actors.append(camera)
+        camera = self._spawn(self.world.spawn_actor, self.camera_bp, carla.Transform(CAMERA_AT), attach_to=self.vehicle)
         camera.listen(self.frames.put)
 
         # The car drops onto the road at spawn. The tutorial slept 4 s of wall time;
@@ -153,8 +178,7 @@ class CarEnv:
             self._tick()
 
         self.collisions = []
-        collision = self.world.spawn_actor(self.collision_bp, carla.Transform(), attach_to=self.vehicle)
-        self.actors.append(collision)
+        collision = self._spawn(self.world.spawn_actor, self.collision_bp, carla.Transform(), attach_to=self.vehicle)
         collision.listen(self.collisions.append)
 
         self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
@@ -198,10 +222,11 @@ class CarEnv:
 
     def close(self):
         """Destroy the episode's actors and restore the world settings."""
-        try:
-            self._destroy()
-        finally:
-            self.world.apply_settings(self.original)
+        with held_interrupt():
+            try:
+                self._destroy()
+            finally:
+                self.world.apply_settings(self.original)
 
     def __enter__(self):
         return self
@@ -223,6 +248,14 @@ class CarEnv:
                                z=location.z + FOLLOW_UP),
                 carla.Rotation(pitch=FOLLOW_PITCH, yaw=transform.rotation.yaw)))
         return frame
+
+    def _spawn(self, spawn, *args, **kwargs):
+        """Spawn an actor and record it for _destroy, with Ctrl+C held between the two."""
+        with held_interrupt():
+            actor = spawn(*args, **kwargs)
+            if actor is not None:
+                self.actors.append(actor)
+        return actor
 
     def _destroy(self):
         for actor in self.actors:
