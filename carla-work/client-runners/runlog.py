@@ -22,6 +22,10 @@ VERSION = 1
 LANE_STEP = 2.0
 TRACKED = ("vehicle.", "walker.")
 STATIC = ("traffic.",)
+WEATHER = ("cloudiness", "precipitation", "precipitation_deposits", "wind_intensity",
+           "sun_azimuth_angle", "sun_altitude_angle", "fog_density", "fog_distance", "fog_falloff",
+           "wetness", "scattering_intensity", "mie_scattering_scale", "rayleigh_scattering_scale",
+           "dust_storm")
 
 
 def _r(value, digits=3):
@@ -40,6 +44,11 @@ def _pose(transform):
 def _box(bb):
     return {"center": _xyz(bb.location), "extent": _xyz(bb.extent),
             "rotation": [_r(bb.rotation.yaw, 2), _r(bb.rotation.pitch, 2), _r(bb.rotation.roll, 2)]}
+
+
+def _weather(world):
+    weather = world.get_weather()
+    return {name: _r(getattr(weather, name), 2) for name in WEATHER if hasattr(weather, name)}
 
 
 def _lanes(cmap):
@@ -90,7 +99,7 @@ def _objects(world):
 
 
 class RunLog:
-    def __init__(self, path, client, world, ego=None, argv=None):
+    def __init__(self, path, client, world, ego=None, argv=None, scenario=None, settings=None):
         self.world = world
         self.ego_id = ego.id if ego is not None else None
         self.ticks = 0
@@ -105,19 +114,22 @@ class RunLog:
         self.path = path
         self.file = gzip.open(path, "wt", encoding="utf-8", compresslevel=6)
 
-        settings = world.get_settings()
+        world_settings = world.get_settings()
         cmap = world.get_map()
         self._write({
             "type": "header", "format": FORMAT, "version": VERSION,
             "map": cmap.name.split("/")[-1],
             "client_version": client.get_client_version(),
             "server_version": client.get_server_version(),
-            "delta_s": settings.fixed_delta_seconds,
-            "synchronous": settings.synchronous_mode,
+            "delta_s": world_settings.fixed_delta_seconds,
+            "synchronous": world_settings.synchronous_mode,
             "ego_id": self.ego_id,
             # The script's file name only: its full path names the user's home folder.
             "argv": [os.path.basename(a) if i == 0 else a for i, a in enumerate(argv or [])],
             "started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+            "scenario": scenario,
+            "settings": settings or {},
+            "weather": _weather(world),
         })
         self._write({"type": "scene", "lanes": _lanes(cmap), "junctions": _junctions(cmap),
                      "crosswalks": _crosswalks(cmap), "objects": _objects(world)})

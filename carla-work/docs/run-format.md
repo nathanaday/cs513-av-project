@@ -43,6 +43,9 @@ Values are rounded: positions and velocities to 3 decimals, angles to 2.
 | `ego_id` | Actor id of the ego vehicle, or `null`. |
 | `argv` | The command line of the script that recorded the run. The first item is the script's file name, with no folder. |
 | `started_utc` | When the recording started, ISO 8601. |
+| `scenario` | Name of the scenario that recorded the run, such as `"heavy-rain"`, or `null` for a run not made by a scenario. See [scenarios.md](scenarios.md). |
+| `settings` | The scenario's settings for this run, after command-line options: `vehicles`, `walkers`, `speed` (km/h), `ticks` (the limit; 0 means none), `seed`, `spawn`, and values that one scenario adds, such as `tire_friction`. Empty when the recording script gives none. |
+| `weather` | The world's weather at the start of the run: every field of CARLA's `WeatherParameters`, such as `precipitation` (0 to 100), `fog_density` (0 to 100), `wetness` (0 to 100), `sun_altitude_angle` (degrees above the horizon), and `sun_azimuth_angle` (degrees). Rounded to 2 decimals. Files written before this field existed do not have it. |
 
 ## `scene`
 
