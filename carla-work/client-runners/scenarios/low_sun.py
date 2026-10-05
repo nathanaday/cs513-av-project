@@ -8,7 +8,8 @@ ALTITUDE = 5.0
 # Added to the ego's start yaw to put the sun ahead of it. Checked with a camera in the window mode.
 AZIMUTH_OFFSET = 180.0
 # Spawn 18 faces west on a road where no building hides a sun this low; at spawn 0 the
-# buildings do. Seed 38 picks a destination whose route heads west for 192 of its 512 m.
+# buildings do. Seed 38 picks a destination that keeps the sun within 30 degrees of the
+# heading for 189 of the 500 m driven.
 SPAWN = 18
 SEED = 38
 
