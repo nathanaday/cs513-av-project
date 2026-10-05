@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Check a CARLA run file against the upload contract and publish it as a capture
+# in the Hugging Face dataset nadayusc/carla-rerun-scenarios.
+#
+# Usage:
+#   scripts/carla-publish RUN.jsonl.gz --id ID --title TITLE --description TEXT [--replace]
+#   scripts/carla-publish ... --upload
+#
+# Without --upload it only checks the run and stages the files in .carla/publish/<id>.
+# --upload needs a login with Write permission: hf auth login. See docs/publishing.md.
+
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if ! command -v uv > /dev/null; then
+  echo "carla-publish: uv is not installed. Install it with 'brew install uv', then run this again." >&2
+  exit 2
+fi
+if [[ $# -eq 0 ]]; then
+  sed -n 2,10p "$0" | sed 's/^# \{0,1\}//' >&2
+  exit 2
+fi
+
+exec uv run --quiet --frozen --project "$ROOT/replay" python "$ROOT/replay/carla_publish.py" "$@"

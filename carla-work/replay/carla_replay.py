@@ -250,6 +250,7 @@ def main():
     parser.add_argument("run", help="run file (*.jsonl.gz)")
     parser.add_argument("--rrd", metavar="OUT", help="write a .rrd file instead of opening the viewer")
     parser.add_argument("--follow", action="store_true", help="the 3D view follows the ego")
+    parser.add_argument("--recording-id", help="Rerun recording id (default: the run file's name)")
     args = parser.parse_args()
     try:
         records = read_run(args.run)
@@ -257,7 +258,7 @@ def main():
         print(f"carla-replay: {error}", file=sys.stderr)
         return 2
 
-    rr.init("carla-replay", recording_id=os.path.basename(args.run))
+    rr.init("carla-replay", recording_id=args.recording_id or os.path.basename(args.run))
     if args.rrd:
         rr.save(args.rrd)
     else:
