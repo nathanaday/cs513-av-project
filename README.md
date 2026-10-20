@@ -49,6 +49,7 @@ Early implementation. The pre-proposal is drafted. CARLA runs headless on the te
 - [Publish a capture](carla-work/docs/publishing.md): share a recorded run in the public dataset [nadayusc/carla-rerun-scenarios](https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios), where anyone can open it in the Rerun web viewer.
 - [Pre-proposal draft](docs/prepreposal/pre-proposal-draft.md), the one-page course submission. Also as [LaTeX](docs/prepreposal/pre-proposal-draft.tex) and [PDF](docs/prepreposal/pre-proposal-draft.pdf). The submitted version is [pre-proposal-submission-1.pdf](docs/prepreposal/pre-proposal-submission-1.pdf).
 - [Basic Phases](docs/Basic%20Phases.md): the phased plan, with a stretch goal. Also as [PDF](docs/Basic%20Phases.pdf).
+- [Fair matching](docs/fair-matching/README.md): assign the six members to the World, Planner, and Runner teams from their ranked choices.
 - [Registration instructions](docs/CSCI%20513%20Project%20Registration%20Instructions.docx): the course handout for the one-page registration.
 - Background papers: [`papers/`](papers/)
 
