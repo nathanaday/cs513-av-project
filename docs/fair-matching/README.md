@@ -6,7 +6,7 @@ This script assigns the six team members to the three teams of the project plan:
 
 - **World** creates the risky scenarios from repeatable seeds. It delivers the Risk API and the Scenario API.
 - **Planner** creates the penalty model and the route-and-speed search. It delivers the Plan API.
-- **Runner** creates the naive and risk-aware drivers, runs them on the same scenarios, and measures the results. It delivers the driver engine, the eval engine, and the plots.
+- **Runner** creates the naive, always-cautious, and risk-aware drivers, runs them on the same scenarios, and measures the results. It delivers the driver engine, the eval engine, and the plots.
 
 ## The rule
 

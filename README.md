@@ -10,35 +10,26 @@ Team: Nathan Aday, Illy Hoang, Yonsoo Kim, Rachel Lin, Tomohiko Uemura, Jeslyn Y
 
 A careful human driver does not drive the same way everywhere. They slow down in fog, avoid a hard left turn when the sun is in their eyes, and pick an easier route when the weather is bad. Most simulated driving agents do none of this: they take the quickest route and drive it the same way in all conditions.
 
-This project proposes a risk-aware autonomous driving system that sets its caution from the difficulty of the road and its own current capability. A route planner predicts the risk of each route from known factors such as sun glare, forecast weather, and unprotected left turns, and selects a route within a risk budget. An adaptive driver then re-plans and changes its driving profile in real time when conditions degrade unexpectedly.
+This project builds a risk-aware route planner that sets its caution from the difficulty of the road and the vehicle's current capability. The planner predicts the risk of each road segment from known hazards such as pedestrians, wet roads, rain, fog, and low sun. It then picks the route and a speed for each segment that minimize travel time plus weighted risk.
 
-We will compare three systems in the CARLA simulator: basic driving, upfront risk-aware planning, and planning with real-time adaptation. Hard violations, such as collisions and running red lights, fail the test. We evaluate the remaining runs on travel time and on measured risk events, such as near-collisions and hard braking. The goal is to determine whether adaptive planning achieves the safety of consistently cautious driving at a lower cost in travel time.
+We compare three drivers in the CARLA simulator on the same scenarios: a naive driver that takes the quickest route at the speed limit, an always-cautious driver that drives the same route slowly, and the risk-aware driver. We score each drive on travel time and on outcomes measured from the simulator, such as collisions, near-misses, and hard braking. The goal is to find out whether the risk-aware planner gets close to the safety of the cautious driver at close to the travel time of the naive one.
 
 ## Status
 
-Early implementation. The pre-proposal is drafted. CARLA runs headless on the team's Macs ([recipe](carla-work/docs/headless-carla.md)). The driving stacks do not exist yet.
+Early implementation. CARLA runs headless on the team's Macs ([recipe](carla-work/docs/headless-carla.md)), and the demo scenarios record and replay. The planner, the risk model, and the evaluation do not exist yet.
 
-## Work plan
+## Plan
 
-1. Install CARLA 0.9.16 on all machines. Pin environments so runs reproduce across machines. Get the baseline driver (CARLA `BehaviorAgent`) driving a fixed route. Build the evaluator that logs violations, risk events, and travel time.
-2. Build the sensor degradation model, which reduces what the driver detects in rain, fog, and sun glare. Confirm that degraded conditions raise the risk event rate of the basic driving system.
-3. Build the test tracks and scenarios. Measure the cost of each action (unprotected left turn, lane change, passing a stopped vehicle) and the multiplier of each condition. Use calibration tracks that are separate from the test tracks.
-4. Build the route planner. It predicts route risk from sun angle, forecast weather, and known construction zones, and selects the quickest route within the risk budget.
-5. Build the real-time adaptation. Estimate current conditions, switch the driving profile, and re-plan the route. Add hysteresis so the profile does not oscillate. Handle edge cases such as an obstruction that appears during a maneuver.
-6. Implement online monitors and run the falsification campaign. Report counterexamples before and after fixes, plus scenario coverage. Run the final paired comparison, and produce the statistics, figures, and side-by-side demo dashboard.
+- [Project plan](docs/plan.md): the goal, the drivers, the method, and how the team judges the results.
+- [Teams](docs/teams.md): the World, Planner, and Runner teams, what each builds, and the APIs between them.
+- [Concepts](docs/concepts.md): the penalty model, the route-and-speed search, hazards in CARLA, and why the evaluation never uses the penalty model.
 
-## Schedule
+[Basic Phases](docs/Basic%20Phases.md) is the plan of record. The [pre-proposal](docs/prepreposal/pre-proposal-draft.md) was an early pitch, and its schedule does not apply.
 
-| Dates | Milestones |
+| Date | Milestone |
 | :---- | :---- |
-| Sep 21 | Project pitch due |
-| Sep 22 – Oct 4 | CARLA tested on all machines; specs, metrics, and risk events defined; basic driving system and evaluator running; sensor model go or no-go test complete |
-| Oct 5 – Oct 18 | Test tracks built; action costs and condition multipliers calibrated; route planner working |
-| Oct 19 – Nov 1 | Real-time adaptation running end to end; basic and always-cautious baselines measured; check-in demo (date TBA) |
-| Nov 2 – Nov 15 | Falsification campaign; counterexamples fixed; planner and thresholds refined |
-| Nov 16 – Nov 29 | Final runs, figures, demo dashboard, video |
-| Nov 30 / Dec 1 | 5-min video uploaded / demo day |
-| Dec 10 | 15-page final report due |
+| Dec 1 | Project presentations |
+| Dec 10 | Final report due |
 
 ## Documentation
 
@@ -47,15 +38,12 @@ Early implementation. The pre-proposal is drafted. CARLA runs headless on the te
 - [Demo driving scenarios](carla-work/docs/scenarios.md): record a drive in heavy rain, low sun, heavy traffic, crowds, a traffic light blackout, among red-light runners or jaywalkers, or on black ice.
 - [Reinforcement learning tutorial](carla-work/docs/reinforcement-learning.md): train a DQN agent to steer from the front camera, after the pythonprogramming.net CARLA tutorial, and drive the trained model. Needs the server with rendering.
 - [Publish a capture](carla-work/docs/publishing.md): share a recorded run in the public dataset [nadayusc/carla-rerun-scenarios](https://huggingface.co/datasets/nadayusc/carla-rerun-scenarios), where anyone can open it in the Rerun web viewer.
-- [Pre-proposal draft](docs/prepreposal/pre-proposal-draft.md), the one-page course submission. Also as [LaTeX](docs/prepreposal/pre-proposal-draft.tex) and [PDF](docs/prepreposal/pre-proposal-draft.pdf). The submitted version is [pre-proposal-submission-1.pdf](docs/prepreposal/pre-proposal-submission-1.pdf).
-- [Basic Phases](docs/Basic%20Phases.md): the phased plan, with a stretch goal. Also as [PDF](docs/Basic%20Phases.pdf).
+- [Pre-proposal draft](docs/prepreposal/pre-proposal-draft.md), the one-page course submission, written before work began. Also as [LaTeX](docs/prepreposal/pre-proposal-draft.tex) and [PDF](docs/prepreposal/pre-proposal-draft.pdf). The submitted version is [pre-proposal-submission-1.pdf](docs/prepreposal/pre-proposal-submission-1.pdf).
+- [Basic Phases](docs/Basic%20Phases.md): the phased plan of record, with a stretch goal. Also as [PDF](docs/Basic%20Phases.pdf).
 - [Fair matching](docs/fair-matching/README.md): assign the six members to the World, Planner, and Runner teams from their ranked choices.
 - [Registration instructions](docs/CSCI%20513%20Project%20Registration%20Instructions.docx): the course handout for the one-page registration.
 - Background papers: [`papers/`](papers/)
 
-The project knowledge base is the Atlas vault, area CS513-Project. It holds the sources, the design brainstorm, and the pages on the planner, the penalty model, and the evaluation design.
-
-Earlier idea, not pursued: a scheduler that switched between a small and a large perception model to save compute. See `CPS-Project-Brainstorm.pptx` and the vault page "Earlier CS513 Project Ideas".
 
 External:
 
