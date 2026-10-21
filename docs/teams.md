@@ -9,14 +9,6 @@ World ──Risk API──────────► Planner ──Plan API─�
 
 The planner reads only the Risk API. The Scenario API holds the hazards that actually happen in the drive, and only the Runner team uses it.
 
-## Agree in week one
-
-All three teams agree on these before they build much:
-
-- **Segment IDs.** The unit of the project is the directed road segment from CARLA's road graph (`map.get_topology()`).
-- **Run record.** The existing run file format ([run-format.md](../carla-work/docs/run-format.md)), extended with the hazards that triggered and the outcome events.
-- **Risk API and plan format.** When these two are written down, all three teams can start at the same time.
-
 ## World
 
 Builds:
@@ -59,4 +51,18 @@ Delivers:
 
 The Runner team starts from the existing scenario runner (`carla-work/client-runners/scenario.py`) on a fixed route. Its first check: the scenario runner drives with `BasicAgent`, which does not brake for pedestrians. Confirm that `BehaviorAgent` does in CARLA 0.9.16, or add pedestrian braking.
 
+---
+
+## Comments
+
 The World team has the most unknowns early, and the Runner team has the most work late. The Runner team can build the visibility filter early to balance the load.
+
+---
+
+## Exchange Formats
+
+All three teams agree on these before they build much:
+
+- **Segment IDs.** The unit of the project is the directed road segment from CARLA's road graph (`map.get_topology()`).
+- **Run record.** The existing run file format ([run-format.md](../carla-work/docs/run-format.md)), extended with the hazards that triggered and the outcome events.
+- **Risk API and plan format.** When these two are written down, all three teams can start at the same time.
