@@ -1,0 +1,72 @@
+{
+  "catalog_hash": "4a0a2168d16a084c1fa919a26878a9a4d0de3ad8271023c7ee3c1797200a0397",
+  "catalog_id": "tiny-v1",
+  "config": {
+    "candidate_speeds_kmh": [
+      20.0,
+      30.0,
+      40.0
+    ],
+    "cautious_speed_kmh": 20.0,
+    "reference_speed_kmh": 30.0,
+    "weights": {
+      "pedestrian": 1.0,
+      "visibility": 1.0,
+      "wet_road": 1.0
+    }
+  },
+  "config_hash": "b5d9b83c18c20e27160dd2059703e9cd364e2350deb87e2facff2508ee9b3bc8",
+  "estimated_time_s": 10.8,
+  "forecast_hash": "7cebc88030fbdf2f89b9a79b2f713fc7bc02c48bdce78da8089558e00165b8e2",
+  "forecast_id": "mock-0-clear",
+  "forecast_source": "mock; probabilities are invented, not measured",
+  "mode": "risk-aware",
+  "objective": 10.8,
+  "predicted_penalty": 0.0,
+  "schema_version": 1,
+  "segments": [
+    {
+      "distance_m": 10.0,
+      "end_offset_m": 10,
+      "estimated_time_s": 0.9,
+      "objective": 0.9,
+      "predicted_penalty": 0.0,
+      "segment_id": "start",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 40.0
+    },
+    {
+      "distance_m": 100.0,
+      "end_offset_m": 100,
+      "estimated_time_s": 9.0,
+      "objective": 9.0,
+      "predicted_penalty": 0.0,
+      "segment_id": "shortcut",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 40.0
+    },
+    {
+      "distance_m": 10.0,
+      "end_offset_m": 10.0,
+      "estimated_time_s": 0.9,
+      "objective": 0.9,
+      "predicted_penalty": 0.0,
+      "segment_id": "finish",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 40.0
+    }
+  ],
+  "speed_limits_verified": false,
+  "trip": {
+    "departure_time_s": 0.0,
+    "destination": {
+      "offset_m": 10.0,
+      "segment_id": "finish"
+    },
+    "origin": {
+      "offset_m": 0.0,
+      "segment_id": "start"
+    },
+    "risk_weight": 2
+  }
+}

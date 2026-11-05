@@ -1,0 +1,28 @@
+{
+  "catalog_id": "tiny-v1",
+  "forecast_id": "mock-0-hazards",
+  "schema_version": 1,
+  "segments": {
+    "detour": {
+      "pedestrian": 0.0,
+      "visibility": 0.0,
+      "wet_road": 0.0
+    },
+    "finish": {
+      "pedestrian": 0.0,
+      "visibility": 0.0,
+      "wet_road": 0.0
+    },
+    "shortcut": {
+      "pedestrian": 1.0,
+      "visibility": 0.0,
+      "wet_road": 0.0
+    },
+    "start": {
+      "pedestrian": 0.0,
+      "visibility": 0.0,
+      "wet_road": 0.0
+    }
+  },
+  "source": "mock; probabilities are invented, not measured"
+}

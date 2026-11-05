@@ -1,0 +1,12 @@
+{
+  "departure_time_s": 0.0,
+  "destination": {
+    "offset_m": 10.0,
+    "segment_id": "finish"
+  },
+  "origin": {
+    "offset_m": 0.0,
+    "segment_id": "start"
+  },
+  "risk_weight": 0.0
+}

@@ -1,0 +1,12 @@
+{
+  "departure_time_s": 0.0,
+  "destination": {
+    "offset_m": 19.33828920399691,
+    "segment_id": "r476.s0.l-1"
+  },
+  "origin": {
+    "offset_m": 2.000000088200066,
+    "segment_id": "r296.s0.l-1"
+  },
+  "risk_weight": 2.0
+}

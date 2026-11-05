@@ -1,0 +1,242 @@
+{
+  "catalog_hash": "b1c22f8f95442333641d37693793084970f113bdbe303c8ba2ad87636e14047b",
+  "catalog_id": "Town10HD_Opt:5374a6c08edd03b5",
+  "config": {
+    "candidate_speeds_kmh": [
+      20.0,
+      30.0,
+      40.0
+    ],
+    "cautious_speed_kmh": 20.0,
+    "reference_speed_kmh": 30.0,
+    "weights": {
+      "pedestrian": 1.0,
+      "visibility": 1.0,
+      "wet_road": 1.0
+    }
+  },
+  "config_hash": "b5d9b83c18c20e27160dd2059703e9cd364e2350deb87e2facff2508ee9b3bc8",
+  "estimated_time_s": 118.42634115644002,
+  "forecast_hash": "fa68099b119a4c54b9ef9ce946ef5e6ca58557dbf519d10fc5dc4141496ef1ef",
+  "forecast_id": "mock-0-hazards",
+  "forecast_source": "mock; probabilities are invented, not measured",
+  "mode": "risk-aware",
+  "objective": 316.51482070892433,
+  "predicted_penalty": 99.04423977624216,
+  "schema_version": 1,
+  "segments": [
+    {
+      "distance_m": 37.70060788436782,
+      "end_offset_m": 39.70060797256789,
+      "estimated_time_s": 6.786109419186208,
+      "objective": 19.65257287796326,
+      "predicted_penalty": 6.433231729388525,
+      "segment_id": "r296.s0.l-1",
+      "start_offset_m": 2.000000088200066,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 3.1105418622468313,
+      "end_offset_m": 3.1105418622468313,
+      "estimated_time_s": 0.5598975352044296,
+      "objective": 1.4831063599192893,
+      "predicted_penalty": 0.46160441235742977,
+      "segment_id": "r15.s0.l-1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 12.381968058793682,
+      "end_offset_m": 12.381968058793682,
+      "estimated_time_s": 2.228754250582863,
+      "objective": 4.390150594925888,
+      "predicted_penalty": 1.0806981721715125,
+      "segment_id": "r16.s0.l-1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 26.141434037431143,
+      "end_offset_m": 26.141434037431143,
+      "estimated_time_s": 4.705458126737606,
+      "objective": 8.658042953197196,
+      "predicted_penalty": 1.9762924132297945,
+      "segment_id": "r22.s0.l1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 36.65356823495426,
+      "end_offset_m": 36.65356823495426,
+      "estimated_time_s": 6.597642282291766,
+      "objective": 13.418138259452054,
+      "predicted_penalty": 3.410247988580144,
+      "segment_id": "r105.s0.l1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 88.18053799460382,
+      "end_offset_m": 88.18053799460382,
+      "estimated_time_s": 15.872496839028688,
+      "objective": 53.6843115311148,
+      "predicted_penalty": 18.90590734604306,
+      "segment_id": "r6.s0.l1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 45.60338827752646,
+      "end_offset_m": 45.60338827752646,
+      "estimated_time_s": 8.208609889954763,
+      "objective": 22.495239369538254,
+      "predicted_penalty": 7.1433147397917445,
+      "segment_id": "r811.s0.l1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 10.610003418641814,
+      "end_offset_m": 10.610003418641814,
+      "estimated_time_s": 1.9098006153555265,
+      "objective": 3.6651195809356283,
+      "predicted_penalty": 0.8776594827900508,
+      "segment_id": "r18.s0.l-2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 11.240003105249832,
+      "end_offset_m": 11.240003105249832,
+      "estimated_time_s": 2.02320055894497,
+      "objective": 5.076884602579245,
+      "predicted_penalty": 1.5268420218171372,
+      "segment_id": "r19.s0.l-2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 38.1100008498334,
+      "end_offset_m": 38.1100008498334,
+      "estimated_time_s": 6.859800152970012,
+      "objective": 19.46963723416289,
+      "predicted_penalty": 6.304918540596438,
+      "segment_id": "r255.s0.l-2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 55.13000025028861,
+      "end_offset_m": 55.13000025028861,
+      "estimated_time_s": 9.92340004505195,
+      "objective": 23.551536106923294,
+      "predicted_penalty": 6.8140680309356725,
+      "segment_id": "r20.s0.l-2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 30.99999568482801,
+      "end_offset_m": 30.99999568482801,
+      "estimated_time_s": 5.579999223269042,
+      "objective": 12.603358245623676,
+      "predicted_penalty": 3.511679511177317,
+      "segment_id": "r875.s0.l-2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 25.629997003574253,
+      "end_offset_m": 25.629997003574253,
+      "estimated_time_s": 3.0755996404289103,
+      "objective": 6.32343286072184,
+      "predicted_penalty": 1.6239166101464648,
+      "segment_id": "r21.s0.l-2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 30.0
+    },
+    {
+      "distance_m": 25.29391008076059,
+      "end_offset_m": 25.29391008076059,
+      "estimated_time_s": 4.552903814536906,
+      "objective": 10.773182181597548,
+      "predicted_penalty": 3.1101391835303214,
+      "segment_id": "r579.s0.l-1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 11.08000008554476,
+      "end_offset_m": 11.08000008554476,
+      "estimated_time_s": 1.994400015398057,
+      "objective": 4.3256320333966745,
+      "predicted_penalty": 1.1656160089993088,
+      "segment_id": "r2.s0.l2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 29.670001473173713,
+      "end_offset_m": 29.670001473173713,
+      "estimated_time_s": 5.340600265171268,
+      "objective": 15.110338350257907,
+      "predicted_penalty": 4.884869042543319,
+      "segment_id": "r676.s0.l2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 111.68426211610739,
+      "end_offset_m": 111.68426211610739,
+      "estimated_time_s": 20.10316718089933,
+      "objective": 61.43527890482835,
+      "predicted_penalty": 20.666055861964512,
+      "segment_id": "r1.s0.l2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 19.5389397059851,
+      "end_offset_m": 19.5389397059851,
+      "estimated_time_s": 3.517009147077318,
+      "objective": 6.646365730387892,
+      "predicted_penalty": 1.5646782916552868,
+      "segment_id": "r8.s0.l2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 28.37000054239424,
+      "end_offset_m": 28.37000054239424,
+      "estimated_time_s": 5.106600097630963,
+      "objective": 12.718838643166185,
+      "predicted_penalty": 3.806119272767611,
+      "segment_id": "r4.s0.l-2",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    },
+    {
+      "distance_m": 19.33828920399691,
+      "end_offset_m": 19.33828920399691,
+      "estimated_time_s": 3.480892056719444,
+      "objective": 11.033654288232476,
+      "predicted_penalty": 3.7763811157565166,
+      "segment_id": "r476.s0.l-1",
+      "start_offset_m": 0.0,
+      "target_speed_kmh": 20.0
+    }
+  ],
+  "speed_limits_verified": false,
+  "trip": {
+    "departure_time_s": 0.0,
+    "destination": {
+      "offset_m": 19.33828920399691,
+      "segment_id": "r476.s0.l-1"
+    },
+    "origin": {
+      "offset_m": 2.000000088200066,
+      "segment_id": "r296.s0.l-1"
+    },
+    "risk_weight": 2.0
+  }
+}
