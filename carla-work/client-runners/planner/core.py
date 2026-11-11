@@ -7,12 +7,19 @@ import math
 import networkx as nx
 
 HAZARDS = ("pedestrian", "visibility", "wet_road")
+# Every integer speed from 1 to 100 km/h; each segment uses those at or below its limit, plus the limit.
+# exposure_baseline (a): speed-independent hazard per second of exposure. With a > 0 the
+# per-segment penalty is U-shaped in speed, lowest at reference_speed * sqrt(a) (15 km/h at
+# a = 0.25), so a fine speed grid cannot drive the plan toward a near standstill.
 DEFAULT_CONFIG = {
-    "candidate_speeds_kmh": [20.0, 30.0, 40.0],
+    "candidate_speeds_kmh": [float(v) for v in range(1, 101)],
     "reference_speed_kmh": 30.0,
     "cautious_speed_kmh": 20.0,
     "weights": {name: 1.0 for name in HAZARDS},
+    "exposure_baseline": 0.25,
 }
+# Fields a config may omit; an omitted field means 0 (the version 1 behavior).
+OPTIONAL_CONFIG = {"exposure_baseline": 0.0}
 
 
 class PlanningError(ValueError):
@@ -83,8 +90,11 @@ def validate_inputs(catalog, forecast, trip, config, require_verified_limits=Fal
         number(point.get("offset_m"), f"{name}.offset_m", maximum=segments[sid]["length_m"])
     number(trip.get("departure_time_s"), "departure_time_s")
     number(trip.get("risk_weight"), "risk_weight")
-    if set(config) != set(DEFAULT_CONFIG):
-        raise PlanningError("configuration must contain the documented four fields")
+    required = set(DEFAULT_CONFIG) - set(OPTIONAL_CONFIG)
+    if not required <= set(config) <= set(DEFAULT_CONFIG):
+        raise PlanningError("configuration must contain the documented fields "
+                            "(exposure_baseline is optional) and no others")
+    number(config.get("exposure_baseline", 0.0), "exposure_baseline")
     if not isinstance(config["candidate_speeds_kmh"], list) or not config["candidate_speeds_kmh"]:
         raise PlanningError("candidate_speeds_kmh must be a nonempty list")
     for speed in config["candidate_speeds_kmh"]:
@@ -101,7 +111,8 @@ def validate_inputs(catalog, forecast, trip, config, require_verified_limits=Fal
 def price(distance_m, speed_kmh, risks, risk_weight, config):
     duration = distance_m / (speed_kmh / 3.6)
     hazard_score = sum(config["weights"][h] * risks[h] for h in HAZARDS)
-    rate = hazard_score * (speed_kmh / config["reference_speed_kmh"]) ** 2
+    exposure = config.get("exposure_baseline", 0.0)
+    rate = hazard_score * (exposure + (speed_kmh / config["reference_speed_kmh"]) ** 2)
     penalty = rate * duration
     return {"distance_m": distance_m, "target_speed_kmh": speed_kmh,
             "estimated_time_s": duration, "predicted_penalty": penalty,
