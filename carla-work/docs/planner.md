@@ -29,9 +29,9 @@ pedestrian probability 1; other probabilities are zero.
 | Case | Expected plan | Estimated time | Predicted penalty |
 |---|---|---|---|
 | All clear | Shortcut at 40 km/h | 10.8 s | 0 |
-| Hazard, λ = 0 | Shortcut at 40 km/h | 10.8 s | 16 |
+| Hazard, λ = 0 | Shortcut at 40 km/h | 10.8 s | 18.25 |
 | Hazard, λ = 2 | Detour at 40 km/h | 16.2 s | 0 |
-| No detour, λ = 2 | Shortcut at 20 km/h; endpoints at 40 | 19.8 s | 8 |
+| No detour, λ = 2 | Shortcut at 26 km/h; endpoints at 40 | 15.65 s | 13.86 |
 
 These are arithmetic demonstrations, not measured safety results.
 
@@ -126,9 +126,18 @@ and destination returns an empty plan. Partial first/last segments are charged b
 
 ### Configuration and plan
 
-The default configuration has candidate speeds `[20, 30, 40]` km/h, reference speed
-30 km/h, cautious cap 20 km/h, and weight 1 for each hazard. The penalty rate is the
-weighted probability sum multiplied by `(speed / reference_speed)^2`.
+The default configuration has candidate speeds of every integer from 1 to 100 km/h,
+reference speed 30 km/h, cautious cap 20 km/h, weight 1 for each hazard, and exposure
+baseline `a = 0.25`. The penalty rate is the weighted probability sum `H` multiplied by
+`a + (speed / reference_speed)^2`.
+
+The exposure baseline is hazard accrued per second regardless of speed, so a longer stay
+costs more. Without it, the penalty `H × d × v / v_ref²` falls without limit as speed
+falls, and a fine speed grid drives hazardous segments toward a standstill (about 6 km/h
+on the Town10 mock at λ = 10). With it, the penalty is U-shaped and lowest at
+`v_ref × √a` (15 km/h for the default). The chosen speed is about
+`v_ref × √(1/(λH) + a)`, clamped to the limit. Omitting `exposure_baseline` from a
+configuration means 0, the version 1 behavior.
 
 For each traversed segment, the planner evaluates candidates at or below its limit,
 plus the limit itself. Cost is `distance / speed + λ × penalty_rate × distance / speed`,
