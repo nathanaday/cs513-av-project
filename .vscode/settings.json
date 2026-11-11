@@ -1,0 +1,11 @@
+{
+  "python.analysis.extraPaths": [
+    "/Users/nathanaday/Applications/Sikarugir/CARLA.app/Contents/SharedSupport/prefix/drive_c/Program Files/CARLA_0/PythonAPI/carla",
+    "carla-work/client-runners"
+  ],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingModuleSource": "none",
+    "reportOptionalMemberAccess": "none",
+    "reportArgumentType": "none"
+  }
+}
