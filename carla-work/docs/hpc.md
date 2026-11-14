@@ -123,8 +123,11 @@ catalog was generated from the Mac's installed 0.9.16 map and is explicitly labe
 as local. Regenerate the forecast and plan for the HPC catalog; plans check the
 entire catalog hash and must not silently reuse a different export.
 
-See [Planner usage](planner.md) for creating a trip, forecast, and plan. After these
-files have been transferred to the HPC workspace:
+See [Planner usage](planner.md) for creating a trip, forecast, and plan. `scenario.py`
+accepts `--plan`, `--catalog`, and `--allow-unverified-limits`, and inside the helper it
+saves the plan, catalog, and recording in the run folder. These options are covered by
+offline tests (`planner/tests/test_scenario_wiring.py`) but have not yet been driven
+against a live server. After these files have been transferred to the HPC workspace:
 
 ```bash
 bash scripts/carla-hpc -- -m planner.drive \

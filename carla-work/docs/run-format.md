@@ -94,10 +94,11 @@ An event of the ego, at the tick it was recorded.
 
 | Field | Meaning |
 |---|---|
-| `kind` | `"collision"` or `"lane_invasion"`. |
+| `kind` | `"collision"`, `"lane_invasion"`, or `"plan_target"`. Readers may ignore unknown kinds. |
 | `tick`, `t` | Tick and simulated seconds. |
 | `other_id`, `other_type`, `impulse` | For a collision: the other actor and the impulse in N·s. A contact is recorded once, and again only after one simulated second without contact with that actor. |
 | `markings` | For a lane invasion: the crossed marking types, such as `"Broken"`, `"Solid"`, or `"NONE"` where the road has no paint. |
+| `segment_id`, `target_speed_kmh`, `planned_speed_kmh`, `live_speed_limit_kmh`, `progress_m` | For `plan_target`: a change in the Planner segment or speed command. The live speed limit can lower the command. These are instructions/diagnostics, not measured safety events. |
 
 ## `end`
 
