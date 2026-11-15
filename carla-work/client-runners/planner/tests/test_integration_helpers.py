@@ -22,6 +22,23 @@ hpc_run = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hpc_run)
 
 
+def assert_same_plan(test, actual, expected, path="plan"):
+    """Exact structure, ids, hashes, and strings; floats may differ in the last bits across machines."""
+    if isinstance(expected, float) or isinstance(actual, float):
+        test.assertTrue(math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-12),
+                        f"{path}: {actual!r} != {expected!r}")
+    elif isinstance(expected, dict):
+        test.assertEqual(sorted(actual), sorted(expected), f"{path}: keys differ")
+        for key in expected:
+            assert_same_plan(test, actual[key], expected[key], f"{path}.{key}")
+    elif isinstance(expected, list):
+        test.assertEqual(len(actual), len(expected), f"{path}: lengths differ")
+        for index, (a, e) in enumerate(zip(actual, expected)):
+            assert_same_plan(test, a, e, f"{path}[{index}]")
+    else:
+        test.assertEqual(actual, expected, path)
+
+
 class IntegrationHelperTests(unittest.TestCase):
     def test_map_hash_ignores_formatting(self):
         self.assertEqual(map_hash('<map a="1"><road id="2"/></map>'),
@@ -88,7 +105,7 @@ class Town10Tests(unittest.TestCase):
         trip = read_json(WORK / "planner-data/town10-trip.json")
         expected = read_json(WORK / "planner-data/town10-plan.json")
         actual = make_plan(self.catalog, forecast, trip)
-        self.assertEqual(actual, expected)
+        assert_same_plan(self, actual, expected)
         self.assertEqual(actual["catalog_hash"], fingerprint(self.catalog))
         self.assertGreater(len(actual["segments"]), 2)
 
