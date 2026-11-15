@@ -10,17 +10,27 @@ Runner integration, measured comparisons, and independent reproduction.
 
 ## Offline quick start on the Mac
 
-Use a native Python 3.10 or newer environment with NetworkX 3.4.2. CARLA is not required
-for planning from a saved catalog. These commands use the already available native Python:
+Use a native Python 3.10 or newer. CARLA is not required for planning from a saved
+catalog; the only dependency is NetworkX 3.4.2 (`requirements-planner.txt`). Create the
+ignored `carla-work/.venv` once:
+
+```bash
+cd /Users/illyhoang/Projects/cs513-av-project/carla-work
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-planner.txt
+```
+
+Then activate it in each new shell, so `python3` below is the venv's:
 
 ```bash
 cd /Users/illyhoang/Projects/cs513-av-project/carla-work/client-runners
+source ../.venv/bin/activate
 python3 -m unittest discover -s planner/tests -v
 python3 -m planner examples --output ../runs/planner-examples
 ```
 
-If NetworkX is absent, create a local `.venv` and install `networkx==3.4.2` there.
-Do not install the CARLA requirements into the mini-project environment.
+All tests run offline; CARLA is stubbed where `scenario.py` is checked. Do not install
+the CARLA requirements into this venv or the mini-project environment.
 
 Hand-checkable example: the common start and finish are 10 m each. The shortcut is
 100 m, while the detour is 160 m. All limits are mocked as 40 km/h. The shortcut has
