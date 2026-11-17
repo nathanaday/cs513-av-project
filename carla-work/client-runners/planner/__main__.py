@@ -39,6 +39,12 @@ def main():
     export.add_argument("--port", type=int, default=2000)
     export.add_argument("--xodr", help="offline file; provenance is labeled local, not HPC")
     export.add_argument("--speed-limits", help="verified per-segment speed-limit overrides")
+    limits = commands.add_parser("limits", help="probe live speed limits on a running server; write overrides")
+    limits.add_argument("--catalog", required=True)
+    limits.add_argument("--output", required=True, help="overrides for export --speed-limits")
+    limits.add_argument("--evidence", help="raw probe record (default: <output stem>-evidence.json)")
+    limits.add_argument("--host", default="127.0.0.1")
+    limits.add_argument("--port", type=int, default=2000)
     args = parser.parse_args()
     try:
         if args.command == "examples":
@@ -85,6 +91,26 @@ def main():
                                      verified_limits=read_json(args.speed_limits) if args.speed_limits else None)
             write_json(args.output, catalog)
             print(f"{catalog['catalog_id']}: {len(catalog['segments'])} segments, {len(catalog['spawn_points'])} spawn points")
+        elif args.command == "limits":
+            import carla
+            from .live_limits import overrides_from_probe, probe
+            client = carla.Client(args.host, args.port)
+            client.set_timeout(30.0)
+            if client.get_client_version() != "0.9.16" or client.get_server_version() != "0.9.16":
+                raise PlanningError("client and server must both be CARLA 0.9.16")
+            catalog = read_json(args.catalog)
+            evidence = probe(client.get_world(), catalog)
+            output = Path(args.output)
+            evidence_path = Path(args.evidence) if args.evidence else output.with_name(
+                output.name.split(".")[0] + "-evidence.json")
+            write_json(evidence_path, evidence)
+            print(f"probe: {len(evidence['segments'])} segments, default limit {evidence['default_limit_kmh']:g} km/h, "
+                  f"sign actors {evidence['sign_actors']}, speed-limit landmarks {len(evidence['speed_limit_landmarks'])}; "
+                  f"wrote {evidence_path}")
+            overrides = overrides_from_probe(catalog, evidence)
+            write_json(output, overrides)
+            print(f"overrides: {len(overrides['limits'])} segments at "
+                  f"{overrides['evidence']['distinct_live_limits_kmh']} km/h; wrote {output}")
         else:
             catalog, forecast, trip = (read_json(getattr(args, name)) for name in ("catalog", "forecast", "trip"))
             config = read_json(args.config) if args.config else None

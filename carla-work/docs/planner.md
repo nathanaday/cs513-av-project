@@ -4,9 +4,13 @@ Illy leads implementation; Tomo provides optional reviews and test cases. Start 
 the offline examples, then use [the Discovery runbook](hpc.md) for a driven plan.
 
 **Implemented:** graph export, mock forecasts, route/speed search, three baseline modes,
-JSON interchange, predicted-only sweeps, waypoint conversion, and a quiet-world runner hook.
-**Pending:** live HPC verification, World API agreement, verified speed limits, common
-Runner integration, measured comparisons, and independent reproduction.
+JSON interchange, predicted-only sweeps, waypoint conversion, a quiet-world runner hook,
+a live speed-limit probe, and verified Town10 limits.
+**Verified on the Mac (November 14–15):** naive, cautious and λ = 2 plans drove headless
+Town10 to arrival with 0 collisions, and commanded speed matched planned speed on every segment
+([validation notes](planner-validation.md)).
+**Pending:** live HPC verification, agreement with Runner on the 30 km/h limit, World API
+agreement, common Runner integration, measured comparisons, and independent reproduction.
 
 ## Offline quick start on the Mac
 
@@ -47,9 +51,17 @@ These are arithmetic demonstrations, not measured safety results.
 
 ## Real Town10 example
 
-The included compressed catalog contains 168 directed physical lane spans and their
-legal junction connections. It was exported from the installed CARLA 0.9.16 OpenDRIVE
-file without running the server. It has no live spawn-point list and does not claim HPC validation.
+Two compressed catalogs are included, with the same 168 directed physical lane spans,
+legal junction connections, geometry and map hash:
+
+- `town10-local.json.gz` was exported from the installed CARLA 0.9.16 OpenDRIVE file
+  without running the server. It has no spawn points, and its limits are unverified
+  OpenDRIVE declarations or mock values. It is the fixed input of the offline tests.
+- `town10-mac.json.gz` is a live export from the Mac's server, with 155 spawn points and
+  every limit verified at 30 km/h (see [Speed limits](#speed-limits)). Plan and drive from it.
+
+Neither claims HPC validation. The commands below use the local catalog; replace it with
+`town10-mac.json.gz` and add `--require-verified-limits` for a drivable plan.
 
 ```bash
 cd /Users/illyhoang/Projects/cs513-av-project/carla-work/client-runners
@@ -85,15 +97,41 @@ not change with the chosen turn. Distinct entry positions sharing an ID cause an
 Consumers use the exported catalog, not actor IDs or independently numbered graphs.
 Lengths are measured from geometry, not CARLA GlobalRoutePlanner's sample-count weights.
 
-OpenDRIVE speed declarations are converted to km/h. Undeclared limits use an explicit
-mock 40 km/h value. All are initially unverified. Runner can supply an override JSON:
+#### Speed limits
 
-```json
-{"catalog_id": "the-exported-id", "limits": {"r296.s0.l-1": 30.0}}
+The exporter converts OpenDRIVE speed declarations to km/h and gives undeclared roads an
+explicit mock 40 km/h. All of these start unverified. CARLA does not apply them to
+vehicles: a vehicle's `get_speed_limit()` changes only when it passes a speed-limit sign,
+and `PlanFollower` caps every command at that live value.
+
+Town10HD_Opt has no speed-limit signs, so its live limit is 30 km/h everywhere, against
+declared 40/50 mph. `planner limits` checks this on a running server:
+
+```bash
+cd /Users/illyhoang/Projects/cs513-av-project/carla-work/client-runners
+../scripts/carla-python -m planner limits --catalog ../planner-data/town10-local.json.gz \
+  --output ../planner-data/town10-live-limits.json
+../scripts/carla-python -m planner export --output ../planner-data/town10-mac.json.gz \
+  --speed-limits ../planner-data/town10-live-limits.json
 ```
 
-Pass this to `planner export --speed-limits FILE`. Mark limits verified only after a
-real check. `planner plan --require-verified-limits` rejects catalogs with unverified limits.
+The probe places one physics-free `vehicle.tesla.model3` (the ego model) mid-way along every
+segment and reads its live limit. It also records all `traffic.*` actors and OpenDRIVE
+maximum-speed landmarks (code 274). It writes the raw record to
+`town10-live-limits-evidence.json` and the overrides to `--output`. It refuses to write
+overrides if any speed-limit sign exists, because the limit would then depend on the route
+already driven. It also refuses if a segment is missing, if a probe lands on another lane,
+or if the probe ran on a different map. On HPC, run it through `scripts/carla-hpc -- -m planner limits …`.
+
+Overrides can also be written by hand:
+
+```json
+{"catalog_id": "the-exported-id", "limits": {"r296.s0.l-1": 30.0}, "source": "how it was checked"}
+```
+
+Pass this to `planner export --speed-limits FILE`. The optional `source` becomes each segment's
+`speed_limit_source`. Mark limits verified only after a real check.
+`planner plan --require-verified-limits` rejects catalogs with unverified limits.
 
 ### Risk API / forecast
 
@@ -169,8 +207,11 @@ map and catalog identity, reconstructs CARLA waypoints and junction directions, 
 calls the agent's existing route/speed hooks. It tracks nearby physical route progress,
 not elapsed time, to select the target speed. Live lower speed limits clamp the target.
 
-For quiet integration tests use `python -m planner.drive ...` through the HPC helper.
-`--allow-unverified-limits` is required for prototype catalogs. Final runs omit it.
+For quiet integration tests, use `python -m planner.drive ...`: through the HPC helper, or
+on the Mac through `scripts/carla-python` against `scripts/carla-server`.
+`--allow-unverified-limits` is needed only for catalogs with unverified limits, such as
+`town10-local`; verified catalogs such as `town10-mac` drive without it. Summarize a
+recording with `scripts/run-report` (see [run-format.md](run-format.md#read-a-run-file)).
 The run header includes Planner provenance; `plan_target` events record planned speed,
 commanded speed, live limit, segment, and route progress. Existing replay readers can
 ignore this additional event kind. The scenario runner's behavior without `--plan` is unchanged.
@@ -182,8 +223,8 @@ establish safety merely because a plan has a lower predicted penalty.
 ## Handoff checklist
 
 - World: agree on catalog IDs and hazard meanings; supply a complete probability file.
-- Runner: consume the route/speed output, verify speed limits, and apply one common
-  driver and visibility filter to every baseline.
+- Runner: consume the route/speed output, confirm the comparison uses CARLA's live limit
+  (30 km/h in Town10), and apply one common driver and visibility filter to every baseline.
 - Evaluation: calculate collisions, near-misses, braking, close calls, and actual time
   from ground truth, without importing this penalty function.
 - Illy: retain source/input hashes, configuration, seed, and Slurm job ID with each run.

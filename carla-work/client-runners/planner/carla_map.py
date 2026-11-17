@@ -108,20 +108,27 @@ def export_catalog(cmap, *, provenance, resolution=2.0, verified_limits=None):
     if catalog["map"] != "Town10HD_Opt":
         raise PlanningError(f"expected Town10HD_Opt, got {catalog['map']}")
     if verified_limits is not None:
-        if verified_limits.get("catalog_id") != catalog["catalog_id"]:
-            raise PlanningError("speed-limit overrides belong to a different catalog")
-        from .core import number
-        for sid, value in verified_limits.get("limits", {}).items():
-            if sid not in segments:
-                raise PlanningError(f"unknown speed-limit segment: {sid}")
-            segments[sid].update(speed_limit_kmh=number(value, f"limit {sid}", positive=True),
-                                 speed_limit_verified=True, speed_limit_source="explicit verified override")
+        apply_speed_limits(catalog, verified_limits)
     for index, transform in enumerate(cmap.get_spawn_points()):
         waypoint = cmap.get_waypoint(transform.location)
         sid = segment_id(waypoint)
         if sid in segments:
             catalog["spawn_points"].append({"index": index, "segment_id": sid,
                                              "offset_m": offset_for_s(segments[sid], waypoint.s)})
+    return catalog
+
+
+def apply_speed_limits(catalog, verified_limits):
+    """Mark the listed segments verified at the given limits; others keep their declared value."""
+    if verified_limits.get("catalog_id") != catalog["catalog_id"]:
+        raise PlanningError("speed-limit overrides belong to a different catalog")
+    from .core import number
+    source = verified_limits.get("source", "explicit verified override")
+    for sid, value in verified_limits.get("limits", {}).items():
+        if sid not in catalog["segments"]:
+            raise PlanningError(f"unknown speed-limit segment: {sid}")
+        catalog["segments"][sid].update(speed_limit_kmh=number(value, f"limit {sid}", positive=True),
+                                        speed_limit_verified=True, speed_limit_source=source)
     return catalog
 
 

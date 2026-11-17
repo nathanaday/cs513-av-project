@@ -123,20 +123,37 @@ catalog was generated from the Mac's installed 0.9.16 map and is explicitly labe
 as local. Regenerate the forecast and plan for the HPC catalog; plans check the
 entire catalog hash and must not silently reuse a different export.
 
-See [Planner usage](planner.md) for creating a trip, forecast, and plan. `scenario.py`
-accepts `--plan`, `--catalog`, and `--allow-unverified-limits`, and inside the helper it
-saves the plan, catalog, and recording in the run folder. These options are covered by
-offline tests (`planner/tests/test_scenario_wiring.py`) but have not yet been driven
-against a live server. After these files have been transferred to the HPC workspace:
+Then verify its speed limits on the same allocation and re-export with them. CARLA's live
+limit is the one the driver is held to (30 km/h on the Mac's Town10; see
+[Speed limits](planner.md#speed-limits)):
+
+```bash
+bash scripts/carla-hpc -- -m planner limits \
+  --catalog "$CARLA_HPC_HOME/town10-hpc.json.gz" --output "$CARLA_HPC_HOME/town10-hpc-limits.json"
+bash scripts/carla-hpc -- -m planner export \
+  --output "$CARLA_HPC_HOME/town10-hpc.json.gz" --speed-limits "$CARLA_HPC_HOME/town10-hpc-limits.json"
+```
+
+The probe also writes `town10-hpc-limits-evidence.json`. It refuses if the map has
+speed-limit signs or if any segment fails.
+
+See [Planner usage](planner.md) for creating a trip, forecast, and plan; add
+`--require-verified-limits`. `scenario.py` accepts `--plan`, `--catalog`, and
+`--allow-unverified-limits`, and inside the helper it saves the plan, catalog, and recording
+in the run folder. It was driven live on the Mac's headless server on November 14–15
+(naive, cautious and λ = 2: all arrived with 0 collisions; see
+[validation notes](planner-validation.md)). It has not yet been driven on HPC. After the plan
+has been transferred to the HPC workspace:
 
 ```bash
 bash scripts/carla-hpc -- -m planner.drive \
   --catalog "$CARLA_HPC_HOME/town10-hpc.json.gz" \
-  --plan "$CARLA_HPC_HOME/plan.json" --allow-unverified-limits --no-follow
+  --plan "$CARLA_HPC_HOME/plan.json" --no-follow
 ```
 
-`--allow-unverified-limits` is an explicit prototype flag. Final comparisons require
-verified limits and Runner's common driver, visibility filter, and outcome evaluator.
+`--allow-unverified-limits` is an explicit prototype flag for catalogs whose limits were
+not verified; a catalog re-exported with the probe's overrides does not need it. Final
+comparisons also require Runner's common driver, visibility filter, and outcome evaluator.
 The demo uses BasicAgent and does not establish pedestrian safety.
 
 To select different ports on a shared node, use helper options before `--`:
