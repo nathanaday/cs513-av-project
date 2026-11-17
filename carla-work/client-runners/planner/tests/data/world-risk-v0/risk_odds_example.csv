@@ -1,0 +1,5 @@
+segment_id,start_node,end_node,p_pedestrian,p_cyclist,p_rain,p_fog,p_snow,p_wind,p_heat,p_traffic,p_narrow,p_low_light,p_sun_glare,p_stopped_vehicle,p_intersection_conflict,p_road_work,p_aggressive_driver,p_blind_corner
+r1_f_0,A,B,0.01,0.003,0.02,0.004,0,0.001,0,0.015,0.002,0.002,0,0.003,0.006,0,0.002,0.001
+r2_f_0,B,C,0.004,0.001,0.02,0.004,0,0.001,0,0.008,0,0.002,0.03,0.001,0.002,0,0.001,0
+r3_f_0,B,D,0.002,0,0.035,0.004,0,0.002,0,0.004,0.012,0.002,0.002,0.002,0.001,0.01,0.001,0.006
+r4_f_0,D,E,0.001,0,0.02,0.025,0,0.004,0,0.002,0,0.002,0,0,0,0,0,0
