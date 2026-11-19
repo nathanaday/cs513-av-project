@@ -22,7 +22,7 @@ import warnings
 from collections import defaultdict
 
 WARN_ABOVE = 0.05   # per second; above this a 12 s pass almost always triggers
-REQUIRED = ("segment_id", "start_node", "end_node")
+REQUIRED = ("segment_id",)   # start_node / end_node are optional labels
 
 
 def _rate(p):
@@ -55,6 +55,7 @@ class RiskAPI:
 
     def _read_odds(self, path):
         windows = defaultdict(list)
+        ignored = set()
         with open(path, newline="") as f:
             reader = csv.DictReader(f)
             cols = reader.fieldnames or []
@@ -76,7 +77,8 @@ class RiskAPI:
             for n, row in enumerate(reader, start=2):
                 where = f"{path} line {n}"
                 seg = row["segment_id"].strip()
-                nodes = (row["start_node"].strip(), row["end_node"].strip())
+                nodes = ((row.get("start_node") or "").strip(),
+                         (row.get("end_node") or "").strip())
                 if self._nodes.setdefault(seg, nodes) != nodes:
                     raise ValueError(f"{where}: {seg} has two different node pairs")
                 t0 = float(row["t_from_s"]) if has_t0 else 0.0
@@ -96,11 +98,18 @@ class RiskAPI:
                         raise ValueError(f"{where}: {h}={p} is outside [0, 1]")
                     if p > WARN_ABOVE:
                         warnings.warn(f"{where}: {h}={p} per second is very high")
+                    if p > 0.0 and not self.registry[h]["enabled"]:
+                        ignored.add(h)           # not made real in CARLA: count as 0
+                        p = 0.0
                     probs[h] = p
                 windows[seg].append((t0, t1, probs))
 
         if not windows:
             raise ValueError(f"{path}: no rows")
+        self.ignored_disabled = sorted(ignored)
+        if ignored:
+            warnings.warn(f"{path}: disabled hazards with nonzero odds were set to 0: "
+                          f"{self.ignored_disabled}")
         for seg, wins in windows.items():
             wins.sort(key=lambda w: w[0])
             for a, b in zip(wins, wins[1:]):
@@ -114,7 +123,8 @@ class RiskAPI:
         return list(self._windows)
 
     def edges(self):
-        """(segment_id, start_node, end_node) for every directed segment."""
+        """(segment_id, start_node, end_node) for every directed segment.
+        Node labels are empty strings if the file has no node columns."""
         return [(s, *self._nodes[s]) for s in self._windows]
 
     def get(self, segment_id, t=0.0):
@@ -160,4 +170,5 @@ if __name__ == "__main__":
     n_on = sum(m["enabled"] for m in api.registry.values())
     print(f"{len(api.segment_ids)} segments, {len(api.hazards)} hazards ({n_on} enabled)")
     for seg, a, b in api.edges():
-        print(f"{seg} {a}->{b}: P(any incident in 12 s) = {api.prob_any(seg, 12):.1%}")
+        label = f" {a}->{b}" if a or b else ""
+        print(f"{seg}{label}: P(any incident in 12 s) = {api.prob_any(seg, 12):.1%}")

@@ -13,8 +13,8 @@ The Risk API delivers **the odds of each hazard on each road segment** to the Pl
 
 | Column | Meaning |
 |---|---|
-| `segment_id` | One ID per directed road section, from the shared `segments.json`. Unique. |
-| `start_node`, `end_node` | The segment's endpoints. Parallel roads can share a node pair, so never key on nodes. |
+| `segment_id` | The Planner catalog's ID for one directed lane span (e.g. `r296.s0.l-1`). Unique. Every catalog segment needs a row. |
+| `start_node`, `end_node` *(optional)* | Labels only. The catalog is authoritative, so never key on nodes. |
 | `p_<hazard>` | Probability **per second** that one incident of this hazard starts while the car is on the segment. Decimal, 0 to 1. |
 | `t_from_s`, `t_to_s` *(optional, both or neither)* | Time window the row applies to. Blank `t_to_s` means open-ended. Windows must not overlap. |
 
@@ -29,6 +29,8 @@ The Risk API delivers **the odds of each hazard on each road segment** to the Pl
 ## Rules
 
 - Every hazard with `enabled = 1` must have a column. Disabled hazards may be left out and read as 0.
+- A disabled hazard with nonzero odds is **ignored** (set to 0, with a warning). It is not made real in CARLA, so it must not be priced.
+- No blanks: a missing value is an error, not zero.
 - A column not in `hazards.csv` is an error.
 - Hazards that are the same on every segment (e.g. rain) change how fast to drive, not which route. Route choice only responds to hazards that differ between segments.
 - Wall 1: the Risk API holds odds only. Rolls, detection ranges and friction values live in the Scenario API.
