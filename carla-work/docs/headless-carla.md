@@ -186,7 +186,18 @@ The cause of the slow starts (14 s and 13 s) is not known.
 
 Server memory is the physical footprint from `footprint -p <pid>`, the number that `carla-server` prints. The first row after the port opens is too early to judge by: the server keeps growing. In the default mode it grows to about 5.9 GB within about 10 seconds after the port opens, with no client. In the off-screen mode it grows from about 3 GB to 15 GB within 6 to 10 seconds after the port opens, with no client. Use the `peak MB` column to judge the fit on your Mac. Do not use the RSS from `ps` or Activity Monitor's default column: it leaves out graphics memory and showed 2.9 GB for the off-screen server.
 
-**On a 16 GB Mac:** the default mode leaves about 10 GB for macOS and your other programs, so it should fit. The off-screen mode does not fit. No cohort member has confirmed a 16 GB run yet. If you do, add your numbers here.
+**On a 16 GB Mac:** the default mode fits, and the off-screen mode does not. Confirmed on a MacBook with an Apple M4, 16 GB, in the default mode, with the usual apps open (editor, browser, chat apps):
+
+| | 2026-10-06, macOS 27.2 | 2026-11-14 and 15, macOS 27.3 |
+|---|---|---|
+| Start until port 2000 is open | 22 s | 14 s (both days) |
+| Server memory when the port opens | 2.4 GB | 2.4 to 2.8 GB |
+| Server memory, settled and peak | 5.87 to 5.90 GB settled, 6.38 GB peak, the same with 120 vehicles | 5.88 GB settled, 6.39 GB peak |
+| Swap | 0 MB throughout | No growth from its starting value (1.1 GB on Nov 14, 4.6 GB on Nov 15) |
+| Free memory (`memory_pressure`) | 68% before, lowest 44% | 67 to 76% before, lowest 37% |
+| Simulated time per wall second | 2.7 with 30 vehicles and 30 walkers; 1.0 with 120 vehicles | Planner drives in an empty town: 10 to 13 (Nov 14); 5.5 to 5.9 (Nov 15, with a load average near 5) |
+
+The simulated results do not depend on the wall-time speed: the same drive gave the same simulated times on both November days.
 
 ## Troubleshooting
 

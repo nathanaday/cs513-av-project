@@ -16,7 +16,7 @@ We compare three drivers in the CARLA simulator on the same scenarios: a naive d
 
 ## Status
 
-Early implementation. CARLA runs headless on the team's Macs ([recipe](carla-work/docs/headless-carla.md)), and the demo scenarios record and replay. An [offline Planner prototype](carla-work/docs/planner.md) now selects routes and speeds from mock hazard probabilities. [USC Discovery helpers](carla-work/docs/hpc.md) prepare a separate CARLA 0.9.16 environment and run a server/client pair inside an allocation. Live HPC verification, the World API, Runner's common driver, and measured safety evaluation remain pending.
+Early implementation. CARLA runs headless on the team's Macs ([recipe](carla-work/docs/headless-carla.md)), and the demo scenarios record and replay. The [Planner prototype](carla-work/docs/planner.md) selects routes and speeds from mock hazard probabilities. Its naive, cautious, and risk-aware plans have been driven on the Mac's headless CARLA, with Town10 speed limits verified against the live server ([validation](carla-work/docs/planner-validation.md)). [USC Discovery helpers](carla-work/docs/hpc.md) prepare a separate CARLA 0.9.16 environment and run a server/client pair inside an allocation. Live HPC verification, the World API, Runner's common driver, and measured safety evaluation remain pending.
 
 ## Plan
 

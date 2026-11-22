@@ -35,7 +35,7 @@ The first pass holds off on left turns, obstruction sneaking, and other single r
 
 The planner finds the route and the speeds that minimize `time + λ × penalty`. It does a graph search (Dijkstra or A*) over CARLA's directed road segments.
 
-The penalty modes depend on speed, so the planner also chooses a speed for each segment. For a segment of length `L`, it tries a few speeds `v` (for example 20, 30, and 40 km/h) and keeps the cheapest:
+The penalty modes depend on speed, so the planner also chooses a speed for each segment. For a segment of length `L`, it tries every whole speed `v` from 1 km/h up to the segment's speed limit, plus the limit itself, and keeps the cheapest:
 
 ```
 segment cost(v) = L/v + λ × rate(v, conditions) × L/v
@@ -44,7 +44,7 @@ segment cost(v) = L/v + λ × rate(v, conditions) × L/v
 `rate` is the penalty per second at speed `v`, from the penalty model and the Risk API probabilities for that segment. The cheapest cost is the edge weight for the search. The output is a route with a target speed for each segment.
 
 - λ is the weight of risk against time. Each value of λ gives one plan. A sweep of λ gives a curve of travel time against risk.
-- The naive driver gets the quickest route at the speed limit.
+- The naive driver gets the quickest route at the speed limit. The limit is the one CARLA holds the car to. Town10 has no speed-limit signs, so that is 30 km/h on every road, whatever the map file declares ([details](../carla-work/docs/planner.md#speed-limits)).
 - The planner needs no training. The road graph comes from CARLA, the team writes the penalty model, and the Risk API gives the probabilities, so the search finds the exact best route in milliseconds.
 
 ## What the planner may know

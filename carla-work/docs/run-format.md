@@ -112,6 +112,16 @@ A file with no `end` record was cut off, for example by `kill -9`. Its records u
 
 ## Read a run file
 
+For a run report, `scripts/run-report RUN.jsonl.gz [--plan PLAN.json] [--catalog CATALOG.json.gz]`
+prints Markdown summarizing the run. It covers the outcome, distance, simulated and wall time,
+moving and stopped time, stops with the nearest traffic light, and speed tracking. For a Planner
+drive it also prints a per-segment table: planned and commanded speed, live and catalog limits,
+distance, time, and speed. The plan and catalog default to `plan.json` and `catalog.json.gz`
+next to the run file, as the HPC helper saves them. It uses only the standard library, so any
+native Python 3.10+ runs it.
+
+To read the format directly:
+
 ```python
 import gzip
 import json

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Summarize a run file as Markdown for its report note, in native Python 3.10+ (no CARLA).
+#
+# Usage:
+#   scripts/run-report RUN.jsonl.gz [--plan PLAN.json] [--catalog CATALOG.json.gz]
+#
+# The plan and catalog default to plan.json and catalog.json.gz next to the run file,
+# as the HPC helper saves them. Paste the output into the run's note in the vault.
+set -euo pipefail
+exec python3 "$(dirname "$0")/run_report.py" "$@"
