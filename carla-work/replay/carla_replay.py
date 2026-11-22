@@ -191,6 +191,10 @@ def log_events(events):
         if event["kind"] == "collision":
             text = f"collision with {event.get('other_type')} ({event.get('other_id')}), impulse {event.get('impulse')} N*s"
             rr.log("events", rr.TextLog(text, level=rr.TextLogLevel.WARN))
+        elif event["kind"] == "plan_target":
+            text = (f"plan {event['segment_id']}: target {event['target_speed_kmh']:g} km/h "
+                    f"(planned {event['planned_speed_kmh']:g}, limit {event['live_speed_limit_kmh']:g})")
+            rr.log("events", rr.TextLog(text, level=rr.TextLogLevel.INFO))
         else:
             rr.log("events", rr.TextLog(f"{event['kind']}: {', '.join(event.get('markings', []))}",
                                         level=rr.TextLogLevel.INFO))

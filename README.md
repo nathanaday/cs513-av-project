@@ -16,7 +16,7 @@ We compare three drivers in the CARLA simulator on the same scenarios: a naive d
 
 ## Status
 
-Early implementation. CARLA runs headless on the team's Macs ([recipe](carla-work/docs/headless-carla.md)), and the demo scenarios record and replay. The planner, the risk model, and the evaluation do not exist yet.
+Early implementation. CARLA runs headless on the team's Macs ([recipe](carla-work/docs/headless-carla.md)), and the demo scenarios record and replay. An [offline Planner prototype](carla-work/docs/planner.md) now selects routes and speeds from mock hazard probabilities. [USC Discovery helpers](carla-work/docs/hpc.md) prepare a separate CARLA 0.9.16 environment and run a server/client pair inside an allocation. Live HPC verification, the World API, Runner's common driver, and measured safety evaluation remain pending.
 
 ## Plan
 
@@ -33,6 +33,8 @@ Early implementation. CARLA runs headless on the team's Macs ([recipe](carla-wor
 
 ## Documentation
 
+- [Planner and team interfaces](carla-work/docs/planner.md): offline examples, graph export, experimental penalty model, and Runner handoff.
+- [CARLA on USC Discovery](carla-work/docs/hpc.md): allocate a GPU node, prepare CARLA 0.9.16, run and record there, then review locally.
 - [Headless CARLA on Apple Silicon](carla-work/docs/headless-carla.md): run the CARLA server with no window, drive a car from Python, and read its telemetry. Start here to set up a team machine.
 - [Record and replay a CARLA run](carla-work/docs/replay.md): record a drive among traffic and pedestrians, then watch it in the Rerun viewer. The file format is in [run-format.md](carla-work/docs/run-format.md).
 - [Demo driving scenarios](carla-work/docs/scenarios.md): record a drive in heavy rain, low sun, heavy traffic, crowds, a traffic light blackout, among red-light runners or jaywalkers, or on black ice.

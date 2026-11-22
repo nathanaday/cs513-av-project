@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Run once on an allocated Linux node. Leaves the course 0.9.15 environment alone.
+set -euo pipefail
+
+if [[ "$(uname -s)" != Linux || -z "${SLURM_JOB_ID:-}" ]]; then
+  echo "Run setup on a Discovery compute node after salloc." >&2
+  exit 2
+fi
+if ! scontrol show hostnames "${SLURM_JOB_NODELIST:?}" | grep -Fxq "$(hostname -s)"; then
+  echo "This host is not in the allocation." >&2
+  exit 2
+fi
+command -v conda >/dev/null || { echo "Load the conda module first." >&2; exit 2; }
+command -v apptainer >/dev/null || { echo "Load the apptainer module first." >&2; exit 2; }
+
+WORK="$(cd "$(dirname "$0")/.." && pwd)"
+HPC_HOME="${CARLA_HPC_HOME:-/project2/jdeshmuk_786/$USER/cs513-av-hpc}"
+mkdir -p "$HPC_HOME" "$HPC_HOME/images" "$HPC_HOME/pythonapi" "$HPC_HOME/runs"
+HPC_HOME="$(cd "$HPC_HOME" && pwd)"
+export APPTAINER_CACHEDIR="${APPTAINER_CACHEDIR:-$HPC_HOME/apptainer-cache}"
+IMAGE="$HPC_HOME/images/carla-0.9.16.sif"
+ENV_DIR="$HPC_HOME/env-0.9.16"
+if [[ ! -f "$IMAGE" ]]; then
+  apptainer pull "$IMAGE" docker://carlasim/carla:0.9.16
+fi
+if [[ ! -x "$ENV_DIR/bin/python" ]]; then
+  conda create --yes --prefix "$ENV_DIR" python=3.10 pip
+fi
+"$ENV_DIR/bin/python" -c 'import sys; assert sys.version_info[:2] == (3, 10), sys.version'
+"$ENV_DIR/bin/python" -m pip install -r "$WORK/requirements-carla.txt"
+
+SERVER_ROOT="$(apptainer exec --cleanenv --no-home "$IMAGE" sh -c '
+  for root in /workspace /home/carla /opt/carla /carla; do
+    if [ -f "$root/CarlaUE4.sh" ] && [ -d "$root/PythonAPI/carla/agents" ]; then
+      printf "%s\n" "$root"
+      exit 0
+    fi
+  done
+  echo "Cannot locate CarlaUE4.sh and PythonAPI/carla/agents in image" >&2
+  exit 1
+')"
+apptainer exec --cleanenv --no-home "$IMAGE" tar -C "$SERVER_ROOT/PythonAPI/carla" -cf - agents \
+  | tar -C "$HPC_HOME/pythonapi" -xf -
+export PYTHONPATH="$HPC_HOME/pythonapi:$WORK/client-runners"
+"$ENV_DIR/bin/python" - "$HPC_HOME" "$SERVER_ROOT" <<'PY'
+import hashlib
+import importlib.metadata
+import json
+from pathlib import Path
+import sys
+import carla
+from agents.navigation.basic_agent import BasicAgent
+
+root = Path(sys.argv[1])
+image = root / "images/carla-0.9.16.sif"
+digest = hashlib.sha256()
+with image.open("rb") as stream:
+    for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+        digest.update(block)
+stat = image.stat()
+record = {
+    "schema_version": 1, "image": str(image), "image_sha256": digest.hexdigest(),
+    "image_size": stat.st_size, "image_mtime_ns": stat.st_mtime_ns,
+    "server_root": sys.argv[2], "python": sys.executable,
+    "agents_root": str(root / "pythonapi"),
+    "versions": {name: importlib.metadata.version(name) for name in ("carla", "numpy", "networkx", "shapely")},
+    "runtime_verified": False,
+}
+if record["versions"]["carla"] != "0.9.16":
+    raise SystemExit("Expected CARLA 0.9.16")
+(root / "environment.json").write_text(json.dumps(record, indent=2) + "\n")
+print("Environment prepared:", root / "environment.json")
+print("Next: run carla-hpc smoke. Container startup and GPU compatibility are not yet verified.")
+PY

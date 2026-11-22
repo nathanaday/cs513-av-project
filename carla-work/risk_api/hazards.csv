@@ -1,0 +1,17 @@
+hazard,source,penalty_mode,occurrence,carla_effect,tier,enabled
+p_pedestrian,people nearby,pedestrian_proximity,A pedestrian starts crossing ahead of the car,Spawn a walker ahead_dist_m ahead at the roadside and walk it across (jaywalker demo),1,1
+p_cyclist,people nearby,pedestrian_proximity,A cyclist crosses or pulls into the lane ahead,Spawn a bicycle blueprint (e.g. vehicle.diamondback.century) on a path across the lane,2,1
+p_rain,rain,wet_surface,A skid spell: something ahead forces a hard stop on a wet road,"Lower tire_friction via apply_physics_control on the segment, spawn a sudden stopped obstacle ahead, set rain and wetness for visuals",1,1
+p_fog,fog,visibility,An obstacle appears just inside the fog-reduced detection range,Set fog_density; Scenario API sets detection_range_m; spawn the obstacle at about 0.8 x that range,1,1
+p_snow,snow,wet_surface,A skid spell on a low-traction winter road,"CARLA has no snow: emulate with very low tire_friction and a short detection range, and call it low traction in the report",3,0
+p_wind,strong winds,vehicle_dynamics,A gust pushes the car sideways,CARLA wind_intensity is visual only: apply a short lateral force or impulse to the ego car,2,1
+p_heat,high heat,vehicle_dynamics,An engine overheat cuts available power,CARLA has no thermal model: emulate by capping throttle. Affects travel time more than safety,3,0
+p_traffic,traffic density,traffic_conflict,The vehicle ahead brakes hard or a car cuts in,Traffic Manager vehicles ahead; force a hard brake or lane change. Density comes from the scenario traffic count,1,1
+p_narrow,street width,obstruction,A vehicle encroaches into the lane and leaves little room,Spawn a parked or oncoming car partly in the lane; odds scale with 1/lane_width (waypoint.lane_width),2,1
+p_low_light,"time of day (night, dawn)",visibility,An unlit hazard appears inside the night-reduced detection range,Set sun_altitude_angle below the horizon; Scenario API sets detection range; spawn a dark-clothed walker or obstacle,1,1
+p_sun_glare,sunset,visibility,A hazard is hidden by glare while driving toward a low sun,Nonzero only where segment heading is within M degrees of sun azimuth and the sun is low; filter shortens range; spawn a hidden hazard,1,1
+p_stopped_vehicle,added,obstruction,A stopped or double-parked vehicle blocks the lane,Spawn a static vehicle in the lane,2,1
+p_intersection_conflict,added,traffic_conflict,Cross traffic runs a light or turns across the car's path,"Cross-traffic vehicle with Traffic Manager ignore_lights_percentage, or an oncoming left turn",2,1
+p_road_work,added,obstruction,Cones or barriers close part of the lane,Spawn static.prop.constructioncone and streetbarrier props,2,1
+p_aggressive_driver,added,traffic_conflict,A nearby car tailgates or speeds past,Traffic Manager vehicle_percentage_speed_difference and distance_to_leading_vehicle on a nearby car,2,1
+p_blind_corner,added,visibility,A hazard emerges from around a corner or parked cars at short range,Spawn an actor at short distance around the corner,2,1

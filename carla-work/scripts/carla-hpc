@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Linux entry point; the Python helper owns server/client lifetime and logging.
+set -euo pipefail
+WORK="$(cd "$(dirname "$0")/.." && pwd)"
+HPC_HOME="${CARLA_HPC_HOME:-/project2/jdeshmuk_786/$USER/cs513-av-hpc}"
+if [[ ! -x "$HPC_HOME/env-0.9.16/bin/python" ]]; then
+  echo "Run carla-hpc-setup on an allocation first, or set CARLA_HPC_HOME." >&2
+  exit 2
+fi
+exec "$HPC_HOME/env-0.9.16/bin/python" "$WORK/scripts/hpc_run.py" --home "$HPC_HOME" "$@"
