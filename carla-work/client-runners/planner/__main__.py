@@ -45,6 +45,15 @@ def main():
     limits.add_argument("--evidence", help="raw probe record (default: <output stem>-evidence.json)")
     limits.add_argument("--host", default="127.0.0.1")
     limits.add_argument("--port", type=int, default=2000)
+    risk = commands.add_parser("risk-api", help="convert World's Risk API v0 CSV to a Planner forecast")
+    template = commands.add_parser("risk-template", help="write an all-zero Risk API v0 CSV with every catalog segment")
+    for sub in (risk, template):
+        sub.add_argument("--catalog", required=True)
+        sub.add_argument("--hazards", required=True, help="World's hazards.csv registry")
+        sub.add_argument("--output", required=True)
+    risk.add_argument("--odds", required=True, help="World's risk_<scenario>.csv")
+    risk.add_argument("--time", type=float, default=0.0, help="seconds; which time window to use (default 0)")
+    risk.add_argument("--forecast-id")
     args = parser.parse_args()
     try:
         if args.command == "examples":
@@ -111,6 +120,25 @@ def main():
             write_json(output, overrides)
             print(f"overrides: {len(overrides['limits'])} segments at "
                   f"{overrides['evidence']['distinct_live_limits_kmh']} km/h; wrote {output}")
+        elif args.command == "risk-template":
+            from .world_risk import read_registry, write_template
+            count, enabled = write_template(read_json(args.catalog), read_registry(args.hazards), args.output)
+            print(f"{count} segments, {len(enabled)} enabled hazards, all odds 0; wrote {args.output}")
+        elif args.command == "risk-api":
+            from .world_risk import forecast_from_risk_api, read_odds, read_registry
+            registry = read_registry(args.hazards)
+            forecast = forecast_from_risk_api(read_json(args.catalog), registry, read_odds(args.odds, registry),
+                                              time_s=args.time, forecast_id=args.forecast_id,
+                                              name=Path(args.odds).stem)
+            write_json(args.output, forecast)
+            info = forecast["risk_api"]
+            print(f"{forecast['forecast_id']}: {len(forecast['segments'])} segments, "
+                  f"mean hazard sum {info['mean_hazard_sum']:.4f} per second; "
+                  f"priced: {', '.join(sorted(info['mode_map']))}; "
+                  f"not priced: {', '.join(sorted(info['unpriced_modes'])) or 'none'}")
+            if info["disabled_hazards_with_odds"]:
+                print(f"switched off in hazards.csv but with nonzero odds, still counted: "
+                      f"{', '.join(info['disabled_hazards_with_odds'])}")
         else:
             catalog, forecast, trip = (read_json(getattr(args, name)) for name in ("catalog", "forecast", "trip"))
             config = read_json(args.config) if args.config else None

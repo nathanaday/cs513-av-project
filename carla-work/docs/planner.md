@@ -155,6 +155,56 @@ scenario sampling. Actor locations, crossing times, and sampled outcomes do not 
 Create an explicitly labeled mock with `planner mock --catalog FILE --seed 0 --output FILE`.
 Use `--clear` for all-zero risks or repeat `--hazard-segment ID` to mark chosen segments.
 
+#### From World's Risk API v0
+
+World's prototype (`carla-work/risk_api/` on branch `planner-risk-api`, November 15) publishes
+a CSV of per-second odds for each segment, and a `hazards.csv` registry that gives each
+hazard a penalty mode. Two commands connect it to the Planner. Neither needs CARLA:
+
+```bash
+cd /Users/illyhoang/Projects/cs513-av-project/carla-work/client-runners
+python3 -m planner risk-template --catalog ../planner-data/town10-mac.json.gz \
+  --hazards ../risk_api/hazards.csv --output ../runs/risk_template.csv
+python3 -m planner risk-api --catalog ../planner-data/town10-mac.json.gz \
+  --hazards ../risk_api/hazards.csv --odds ../runs/risk_town10.csv \
+  --output ../runs/forecast-world.json
+```
+
+- `risk-template` writes an all-zero file in World's format, with one row per catalog segment
+  (168 for Town10) and one column per enabled hazard. World's own `RiskAPI` loader accepts it.
+  World fills in the odds.
+- `risk-api` converts a filled file to the forecast above, for `planner plan`.
+
+Until World's branch is merged, a copy of its registry and example file is in
+`planner/tests/data/world-risk-v0/`.
+
+| | World's v0 | What the conversion does |
+|---|---|---|
+| Segment IDs | From a shared `segments.json`, not yet written | They must be the catalog's IDs, all of them. Other IDs or missing rows are an error that names them. |
+| Nodes | `start_node`, `end_node` | Ignored. The template fills them with each segment's end coordinates (`x:y` in CARLA metres) as labels. |
+| Hazards | 16, in 6 penalty modes | `pedestrian_proximity` → `pedestrian`, `visibility` → `visibility`, `wet_surface` → `wet_road`. The modes `traffic_conflict`, `obstruction` and `vehicle_dynamics` are **not priced**. The forecast's `risk_api` block lists them with their mean odds. |
+| Values | Probability per second that an incident starts | Per mode, the probability that at least one of its hazards starts: `1 − ∏(1 − p)`. This equals `1 − exp(−r)`, where `r` is the rate from World's `rate_by_mode`. |
+| Disabled hazards | May be left out | A disabled hazard that still has nonzero odds is counted, as World's loader counts it. It is listed in `risk_api.disabled_hazards_with_odds`. |
+| Time windows | Optional `t_from_s`, `t_to_s` | One window serves the whole trip: the one covering `--time` (default 0 s). |
+
+**Scale.** World's sensible range is 0.001–0.05 per second, far below the mock forecast's
+0–1. The chosen speed depends on λ times the segment's hazard sum, so λ must grow as the
+odds shrink. With odds drawn evenly from World's range, the mean hazard sum is 0.18 per
+second, and λ = 2 gives exactly the naive plan (79 s). λ = 20, 50 and 100 give 107, 130 and
+142 s. `risk-api` prints the mean hazard sum. To cover the same range of behaviour as the
+mock sweep, choose λ values so that λ × mean hazard sum runs from about 0.75 to 15. Freeze
+the λ set only after World's real file exists.
+
+**Open questions for World:**
+
+1. Can `town10-mac.json.gz` be the shared segment list? It has 168 directed lane spans,
+   junction connectors included, not one ID per road section.
+2. Should the Planner price `traffic_conflict`, `obstruction` and `vehicle_dynamics`? They
+   hold 29% of the odds in World's example file. Until they are priced, the planner can
+   route into them at no cost.
+3. Is 0.001–0.05 per second the final range?
+4. Should a disabled hazard with nonzero odds count?
+
 ### Trip request
 
 ```json
