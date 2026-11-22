@@ -1,0 +1,4 @@
+# Offline Planner (plan, sweep, mock, examples, tests) from a saved catalog. No CARLA.
+# Install into a native venv, see docs/planner.md:
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements-planner.txt
+networkx==3.4.2

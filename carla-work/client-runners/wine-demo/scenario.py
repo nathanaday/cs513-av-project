@@ -96,7 +96,7 @@ def parse_args(scenario):
     parser = argparse.ArgumentParser(description=scenario.description)
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2000)
-    parser.add_argument("--tm-port", type=int, default=8000, help="Traffic Manager port")
+    parser.add_argument("--tm-port", type=int, default=int(os.environ.get("CARLA_TM_PORT", "8000")), help="Traffic Manager port")
     parser.add_argument("--ticks", type=int, default=scenario.ticks,
                         help=f"stop after N ticks; 0 drives until arrival (default {scenario.ticks})")
     parser.add_argument("--every", type=float, default=5.0, help="simulated seconds between telemetry lines")
@@ -116,12 +116,21 @@ def parse_args(scenario):
     parser.add_argument("--no-follow", action="store_true",
                         help="leave the spectator free; by default it follows behind the ego")
     parser.add_argument("--timeout", type=float, default=60.0, help="client timeout in seconds")
-    return parser.parse_args()
+    parser.add_argument("--plan", help="Planner JSON; requires --catalog")
+    parser.add_argument("--catalog", help="Road catalog used to make --plan")
+    parser.add_argument("--allow-unverified-limits", action="store_true",
+                        help="prototype only: allow limits not yet verified by Runner")
+    args = parser.parse_args()
+    if bool(args.plan) != bool(args.catalog):
+        parser.error("--plan and --catalog must be supplied together")
+    return args
 
 
 def run_path(scenario, args):
     if args.log:
         return args.log
+    if os.environ.get("CARLA_RUN_DIR"):
+        return os.path.join(os.environ["CARLA_RUN_DIR"], "run.jsonl.gz")
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S")
     name = f"{scenario.name}-{stamp}" if scenario.name else stamp
     return os.path.normpath(os.path.join(RUNS, f"{name}.jsonl.gz"))
@@ -206,7 +215,7 @@ def follow(spectator, vehicle):
         carla.Rotation(pitch=FOLLOW_PITCH, yaw=transform.rotation.yaw)))
 
 
-def drive(args, world, agent, vehicle, events, stats, log, step):
+def drive(args, world, agent, vehicle, events, stats, log, step, follower=None):
     spectator = None if args.no_follow else world.get_spectator()
     print(f"{'sim_s':>7} {'km/h':>6} {'x':>8} {'y':>8} {'thr':>5} {'brk':>5} {'steer':>6}")
 
@@ -217,11 +226,14 @@ def drive(args, world, agent, vehicle, events, stats, log, step):
         if agent.done():
             stats["arrived"] = True
             break
+        target_event = follower.update(agent, vehicle) if follower is not None else None
         vehicle.apply_control(agent.run_step())
         world.tick()
         snapshot = world.get_snapshot()
         if log:
             log.tick(snapshot)
+            if target_event is not None:
+                log.event("plan_target", snapshot.timestamp.elapsed_seconds, **target_event)
         stats["ticks"] += 1
         stats["sim_s"] = snapshot.timestamp.elapsed_seconds - stats["t0"]
         if step:
@@ -273,7 +285,20 @@ def _run(scenario, args):
                 "ticks": args.ticks, "seed": args.seed, "spawn": args.spawn}
     status, reason = 0, "stopped"
     wall_start = time.monotonic()
+    follower = None
     try:
+        if args.plan:
+            from planner.adapter import PlanFollower
+            from planner.files import read_json, write_json
+            if client.get_client_version() != "0.9.16" or client.get_server_version() != "0.9.16":
+                raise RuntimeError("Planner driving requires CARLA 0.9.16 on client and server")
+            catalog, plan = read_json(args.catalog), read_json(args.plan)
+            follower = PlanFollower(world.get_map(), catalog, plan,
+                                    allow_unverified=args.allow_unverified_limits)
+            settings["planner"] = follower.metadata
+            if os.environ.get("CARLA_RUN_DIR"):
+                write_json(os.path.join(os.environ["CARLA_RUN_DIR"], "plan.json"), plan)
+                write_json(os.path.join(os.environ["CARLA_RUN_DIR"], "catalog.json.gz"), catalog)
         world_settings = world.get_settings()
         world_settings.synchronous_mode = True
         world_settings.fixed_delta_seconds = DELTA
@@ -287,6 +312,8 @@ def _run(scenario, args):
         start = spawns[args.spawn % len(spawns)]
         destination = random.Random(args.seed).choice(
             [s for s in spawns if s.location.distance(start.location) > 100.0] or spawns)
+        if follower is not None:
+            start = follower.spawn
         if scenario.weather is not None:
             values = scenario.weather(start) if callable(scenario.weather) else scenario.weather
             world.set_weather(make_weather(world, values))
@@ -304,7 +331,10 @@ def _run(scenario, args):
         vehicles = spawn_vehicles(client, world, tm, args.vehicles, others, rng)
         spawn_walkers(world, args.walkers, rng, walkers, controllers)
         agent = BasicAgent(ego, target_speed=args.speed)
-        agent.set_destination(destination.location)
+        if follower is not None:
+            follower.install(agent)
+        else:
+            agent.set_destination(destination.location)
         route = [waypoint for waypoint, _ in agent.get_local_planner().get_plan()]
         context = Context(client, world, tm, ego, route, list(world.get_actors(vehicles)), walkers, rng, settings)
         if scenario.setup is not None:
@@ -326,7 +356,7 @@ def _run(scenario, args):
             log = RunLog(run_path(scenario, args), client, world, ego=ego, argv=sys.argv,
                          scenario=scenario.name, settings=settings)
             print(f"recording to {log.path}")
-        drive(args, world, agent, ego, events, stats, log, step)
+        drive(args, world, agent, ego, events, stats, log, step, follower)
         reason = "arrived" if stats["arrived"] else "stopped"
     except KeyboardInterrupt:
         print("interrupted")

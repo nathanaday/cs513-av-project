@@ -1,0 +1,29 @@
+{
+  "catalog_id": "single-route-v1",
+  "map": "synthetic",
+  "schema_version": 1,
+  "segments": {
+    "finish": {
+      "length_m": 10,
+      "speed_limit_kmh": 40.0,
+      "speed_limit_verified": false,
+      "successors": []
+    },
+    "shortcut": {
+      "length_m": 100,
+      "speed_limit_kmh": 40.0,
+      "speed_limit_verified": false,
+      "successors": [
+        "finish"
+      ]
+    },
+    "start": {
+      "length_m": 10,
+      "speed_limit_kmh": 40.0,
+      "speed_limit_verified": false,
+      "successors": [
+        "shortcut"
+      ]
+    }
+  }
+}

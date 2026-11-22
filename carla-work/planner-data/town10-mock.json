@@ -1,0 +1,848 @@
+{
+  "catalog_id": "Town10HD_Opt:5374a6c08edd03b5",
+  "forecast_id": "mock-0-hazards",
+  "schema_version": 1,
+  "segments": {
+    "r0.s0.l-1": {
+      "pedestrian": 0.844,
+      "visibility": 0.758,
+      "wet_road": 0.421
+    },
+    "r0.s0.l-2": {
+      "pedestrian": 0.259,
+      "visibility": 0.511,
+      "wet_road": 0.405
+    },
+    "r0.s0.l1": {
+      "pedestrian": 0.784,
+      "visibility": 0.303,
+      "wet_road": 0.477
+    },
+    "r0.s0.l2": {
+      "pedestrian": 0.583,
+      "visibility": 0.908,
+      "wet_road": 0.505
+    },
+    "r1.s0.l-1": {
+      "pedestrian": 0.282,
+      "visibility": 0.756,
+      "wet_road": 0.618
+    },
+    "r1.s0.l-2": {
+      "pedestrian": 0.251,
+      "visibility": 0.91,
+      "wet_road": 0.983
+    },
+    "r1.s0.l1": {
+      "pedestrian": 0.81,
+      "visibility": 0.902,
+      "wet_road": 0.31
+    },
+    "r1.s0.l2": {
+      "pedestrian": 0.73,
+      "visibility": 0.899,
+      "wet_road": 0.684
+    },
+    "r10.s0.l-1": {
+      "pedestrian": 0.472,
+      "visibility": 0.101,
+      "wet_road": 0.434
+    },
+    "r10.s0.l-2": {
+      "pedestrian": 0.611,
+      "visibility": 0.913,
+      "wet_road": 0.967
+    },
+    "r10.s0.l1": {
+      "pedestrian": 0.477,
+      "visibility": 0.865,
+      "wet_road": 0.26
+    },
+    "r10.s0.l2": {
+      "pedestrian": 0.805,
+      "visibility": 0.549,
+      "wet_road": 0.014
+    },
+    "r100.s0.l1": {
+      "pedestrian": 0.72,
+      "visibility": 0.399,
+      "wet_road": 0.825
+    },
+    "r105.s0.l1": {
+      "pedestrian": 0.668,
+      "visibility": 0.001,
+      "wet_road": 0.494
+    },
+    "r11.s0.l-1": {
+      "pedestrian": 0.868,
+      "visibility": 0.244,
+      "wet_road": 0.325
+    },
+    "r11.s0.l1": {
+      "pedestrian": 0.87,
+      "visibility": 0.191,
+      "wet_road": 0.568
+    },
+    "r12.s0.l-1": {
+      "pedestrian": 0.239,
+      "visibility": 0.968,
+      "wet_road": 0.803
+    },
+    "r12.s0.l1": {
+      "pedestrian": 0.448,
+      "visibility": 0.08,
+      "wet_road": 0.32
+    },
+    "r125.s0.l-1": {
+      "pedestrian": 0.508,
+      "visibility": 0.933,
+      "wet_road": 0.109
+    },
+    "r13.s0.l-1": {
+      "pedestrian": 0.551,
+      "visibility": 0.707,
+      "wet_road": 0.547
+    },
+    "r13.s0.l-2": {
+      "pedestrian": 0.814,
+      "visibility": 0.54,
+      "wet_road": 0.964
+    },
+    "r13.s0.l1": {
+      "pedestrian": 0.603,
+      "visibility": 0.588,
+      "wet_road": 0.445
+    },
+    "r13.s0.l2": {
+      "pedestrian": 0.596,
+      "visibility": 0.385,
+      "wet_road": 0.576
+    },
+    "r14.s0.l-1": {
+      "pedestrian": 0.29,
+      "visibility": 0.189,
+      "wet_road": 0.187
+    },
+    "r14.s0.l-2": {
+      "pedestrian": 0.613,
+      "visibility": 0.657,
+      "wet_road": 0.477
+    },
+    "r14.s0.l1": {
+      "pedestrian": 0.09,
+      "visibility": 0.758,
+      "wet_road": 0.877
+    },
+    "r14.s0.l2": {
+      "pedestrian": 0.923,
+      "visibility": 0.842,
+      "wet_road": 0.898
+    },
+    "r15.s0.l-1": {
+      "pedestrian": 0.923,
+      "visibility": 0.541,
+      "wet_road": 0.391
+    },
+    "r15.s0.l-2": {
+      "pedestrian": 0.705,
+      "visibility": 0.276,
+      "wet_road": 0.812
+    },
+    "r15.s0.l1": {
+      "pedestrian": 0.849,
+      "visibility": 0.895,
+      "wet_road": 0.59
+    },
+    "r15.s0.l2": {
+      "pedestrian": 0.95,
+      "visibility": 0.58,
+      "wet_road": 0.451
+    },
+    "r150.s0.l1": {
+      "pedestrian": 0.66,
+      "visibility": 0.996,
+      "wet_road": 0.917
+    },
+    "r151.s0.l-1": {
+      "pedestrian": 0.793,
+      "visibility": 0.082,
+      "wet_road": 0.613
+    },
+    "r152.s0.l1": {
+      "pedestrian": 0.486,
+      "visibility": 0.63,
+      "wet_road": 0.845
+    },
+    "r16.s0.l-1": {
+      "pedestrian": 0.243,
+      "visibility": 0.731,
+      "wet_road": 0.117
+    },
+    "r16.s0.l-2": {
+      "pedestrian": 0.22,
+      "visibility": 0.795,
+      "wet_road": 0.333
+    },
+    "r16.s0.l1": {
+      "pedestrian": 0.816,
+      "visibility": 0.101,
+      "wet_road": 0.146
+    },
+    "r16.s0.l2": {
+      "pedestrian": 0.698,
+      "visibility": 0.045,
+      "wet_road": 0.574
+    },
+    "r160.s0.l-1": {
+      "pedestrian": 0.91,
+      "visibility": 0.534,
+      "wet_road": 0.681
+    },
+    "r17.s0.l-1": {
+      "pedestrian": 0.027,
+      "visibility": 0.635,
+      "wet_road": 0.606
+    },
+    "r17.s0.l-2": {
+      "pedestrian": 0.576,
+      "visibility": 0.391,
+      "wet_road": 0.37
+    },
+    "r17.s0.l1": {
+      "pedestrian": 0.981,
+      "visibility": 0.036,
+      "wet_road": 0.022
+    },
+    "r17.s0.l2": {
+      "pedestrian": 0.961,
+      "visibility": 0.185,
+      "wet_road": 0.124
+    },
+    "r172.s0.l1": {
+      "pedestrian": 0.211,
+      "visibility": 0.801,
+      "wet_road": 0.937
+    },
+    "r179.s0.l1": {
+      "pedestrian": 0.023,
+      "visibility": 0.426,
+      "wet_road": 0.102
+    },
+    "r18.s0.l-1": {
+      "pedestrian": 0.26,
+      "visibility": 0.221,
+      "wet_road": 0.647
+    },
+    "r18.s0.l-2": {
+      "pedestrian": 0.35,
+      "visibility": 0.18,
+      "wet_road": 0.504
+    },
+    "r18.s0.l4": {
+      "pedestrian": 0.039,
+      "visibility": 0.101,
+      "wet_road": 0.988
+    },
+    "r18.s0.l5": {
+      "pedestrian": 0.199,
+      "visibility": 0.359,
+      "wet_road": 0.732
+    },
+    "r19.s0.l-1": {
+      "pedestrian": 0.838,
+      "visibility": 0.918,
+      "wet_road": 0.169
+    },
+    "r19.s0.l-2": {
+      "pedestrian": 0.673,
+      "visibility": 0.967,
+      "wet_road": 0.058
+    },
+    "r19.s0.l4": {
+      "pedestrian": 0.676,
+      "visibility": 0.845,
+      "wet_road": 0.342
+    },
+    "r19.s0.l5": {
+      "pedestrian": 0.251,
+      "visibility": 0.597,
+      "wet_road": 0.442
+    },
+    "r2.s0.l-1": {
+      "pedestrian": 0.175,
+      "visibility": 0.472,
+      "wet_road": 0.41
+    },
+    "r2.s0.l-2": {
+      "pedestrian": 0.569,
+      "visibility": 0.509,
+      "wet_road": 0.311
+    },
+    "r2.s0.l1": {
+      "pedestrian": 0.357,
+      "visibility": 0.838,
+      "wet_road": 0.251
+    },
+    "r2.s0.l2": {
+      "pedestrian": 0.561,
+      "visibility": 0.012,
+      "wet_road": 0.742
+    },
+    "r20.s0.l-1": {
+      "pedestrian": 0.336,
+      "visibility": 0.046,
+      "wet_road": 0.281
+    },
+    "r20.s0.l-2": {
+      "pedestrian": 0.24,
+      "visibility": 0.953,
+      "wet_road": 0.352
+    },
+    "r20.s0.l4": {
+      "pedestrian": 0.288,
+      "visibility": 0.359,
+      "wet_road": 0.947
+    },
+    "r20.s0.l5": {
+      "pedestrian": 0.634,
+      "visibility": 0.621,
+      "wet_road": 0.716
+    },
+    "r21.s0.l-1": {
+      "pedestrian": 0.388,
+      "visibility": 0.414,
+      "wet_road": 0.651
+    },
+    "r21.s0.l-2": {
+      "pedestrian": 0.002,
+      "visibility": 0.192,
+      "wet_road": 0.334
+    },
+    "r21.s0.l4": {
+      "pedestrian": 0.239,
+      "visibility": 0.637,
+      "wet_road": 0.379
+    },
+    "r21.s0.l5": {
+      "pedestrian": 0.875,
+      "visibility": 0.568,
+      "wet_road": 0.414
+    },
+    "r22.s0.l-1": {
+      "pedestrian": 0.402,
+      "visibility": 0.702,
+      "wet_road": 0.418
+    },
+    "r22.s0.l-2": {
+      "pedestrian": 0.662,
+      "visibility": 0.047,
+      "wet_road": 0.445
+    },
+    "r22.s0.l1": {
+      "pedestrian": 0.259,
+      "visibility": 0.158,
+      "wet_road": 0.528
+    },
+    "r22.s0.l2": {
+      "pedestrian": 0.487,
+      "visibility": 0.561,
+      "wet_road": 0.755
+    },
+    "r24.s0.l1": {
+      "pedestrian": 0.884,
+      "visibility": 0.495,
+      "wet_road": 0.312
+    },
+    "r254.s0.l4": {
+      "pedestrian": 0.467,
+      "visibility": 0.809,
+      "wet_road": 0.875
+    },
+    "r254.s0.l5": {
+      "pedestrian": 0.812,
+      "visibility": 0.188,
+      "wet_road": 0.999
+    },
+    "r255.s0.l-1": {
+      "pedestrian": 0.633,
+      "visibility": 0.083,
+      "wet_road": 0.726
+    },
+    "r255.s0.l-2": {
+      "pedestrian": 0.987,
+      "visibility": 0.402,
+      "wet_road": 0.679
+    },
+    "r256.s0.l-1": {
+      "pedestrian": 0.316,
+      "visibility": 0.214,
+      "wet_road": 0.717
+    },
+    "r268.s0.l-1": {
+      "pedestrian": 0.002,
+      "visibility": 0.823,
+      "wet_road": 0.528
+    },
+    "r286.s0.l1": {
+      "pedestrian": 0.098,
+      "visibility": 0.119,
+      "wet_road": 0.649
+    },
+    "r296.s0.l-1": {
+      "pedestrian": 0.874,
+      "visibility": 0.28,
+      "wet_road": 0.979
+    },
+    "r3.s0.l-1": {
+      "pedestrian": 0.1,
+      "visibility": 0.854,
+      "wet_road": 0.397
+    },
+    "r3.s0.l-2": {
+      "pedestrian": 0.081,
+      "visibility": 0.275,
+      "wet_road": 0.453
+    },
+    "r3.s0.l1": {
+      "pedestrian": 0.792,
+      "visibility": 0.861,
+      "wet_road": 0.133
+    },
+    "r3.s0.l2": {
+      "pedestrian": 0.521,
+      "visibility": 0.651,
+      "wet_road": 0.347
+    },
+    "r315.s0.l-1": {
+      "pedestrian": 0.872,
+      "visibility": 0.278,
+      "wet_road": 0.019
+    },
+    "r33.s0.l1": {
+      "pedestrian": 0.041,
+      "visibility": 0.681,
+      "wet_road": 0.558
+    },
+    "r338.s0.l1": {
+      "pedestrian": 0.947,
+      "visibility": 0.938,
+      "wet_road": 0.91
+    },
+    "r344.s0.l-1": {
+      "pedestrian": 0.042,
+      "visibility": 0.749,
+      "wet_road": 0.701
+    },
+    "r375.s0.l1": {
+      "pedestrian": 0.655,
+      "visibility": 0.712,
+      "wet_road": 0.903
+    },
+    "r382.s0.l1": {
+      "pedestrian": 0.64,
+      "visibility": 0.372,
+      "wet_road": 0.538
+    },
+    "r395.s0.l1": {
+      "pedestrian": 0.208,
+      "visibility": 0.587,
+      "wet_road": 0.009
+    },
+    "r4.s0.l-1": {
+      "pedestrian": 0.151,
+      "visibility": 0.333,
+      "wet_road": 0.79
+    },
+    "r4.s0.l-2": {
+      "pedestrian": 0.718,
+      "visibility": 0.338,
+      "wet_road": 0.621
+    },
+    "r4.s0.l1": {
+      "pedestrian": 0.041,
+      "visibility": 0.164,
+      "wet_road": 0.982
+    },
+    "r4.s0.l2": {
+      "pedestrian": 0.29,
+      "visibility": 0.395,
+      "wet_road": 0.548
+    },
+    "r41.s0.l1": {
+      "pedestrian": 0.293,
+      "visibility": 0.478,
+      "wet_road": 0.24
+    },
+    "r466.s0.l1": {
+      "pedestrian": 0.048,
+      "visibility": 0.18,
+      "wet_road": 0.523
+    },
+    "r466.s0.l2": {
+      "pedestrian": 0.071,
+      "visibility": 0.403,
+      "wet_road": 0.329
+    },
+    "r467.s0.l-1": {
+      "pedestrian": 0.415,
+      "visibility": 0.099,
+      "wet_road": 0.909
+    },
+    "r467.s0.l-2": {
+      "pedestrian": 0.474,
+      "visibility": 0.841,
+      "wet_road": 0.976
+    },
+    "r469.s0.l1": {
+      "pedestrian": 0.344,
+      "visibility": 0.479,
+      "wet_road": 0.7
+    },
+    "r472.s0.l1": {
+      "pedestrian": 0.427,
+      "visibility": 0.302,
+      "wet_road": 0.735
+    },
+    "r476.s0.l-1": {
+      "pedestrian": 0.894,
+      "visibility": 0.92,
+      "wet_road": 0.627
+    },
+    "r486.s0.l-1": {
+      "pedestrian": 0.376,
+      "visibility": 0.975,
+      "wet_road": 0.639
+    },
+    "r5.s0.l-1": {
+      "pedestrian": 0.066,
+      "visibility": 0.085,
+      "wet_road": 0.75
+    },
+    "r5.s0.l-2": {
+      "pedestrian": 0.061,
+      "visibility": 0.008,
+      "wet_road": 0.394
+    },
+    "r5.s0.l1": {
+      "pedestrian": 0.519,
+      "visibility": 0.449,
+      "wet_road": 0.489
+    },
+    "r5.s0.l2": {
+      "pedestrian": 0.585,
+      "visibility": 0.679,
+      "wet_road": 0.423
+    },
+    "r515.s0.l-1": {
+      "pedestrian": 0.368,
+      "visibility": 0.988,
+      "wet_road": 0.261
+    },
+    "r515.s0.l-2": {
+      "pedestrian": 0.777,
+      "visibility": 0.431,
+      "wet_road": 0.359
+    },
+    "r516.s0.l1": {
+      "pedestrian": 0.064,
+      "visibility": 0.864,
+      "wet_road": 0.702
+    },
+    "r516.s0.l2": {
+      "pedestrian": 0.903,
+      "visibility": 0.452,
+      "wet_road": 0.677
+    },
+    "r565.s0.l1": {
+      "pedestrian": 0.119,
+      "visibility": 0.398,
+      "wet_road": 0.207
+    },
+    "r565.s0.l2": {
+      "pedestrian": 0.042,
+      "visibility": 0.948,
+      "wet_road": 0.216
+    },
+    "r566.s0.l-1": {
+      "pedestrian": 0.146,
+      "visibility": 0.198,
+      "wet_road": 0.378
+    },
+    "r566.s0.l-2": {
+      "pedestrian": 0.546,
+      "visibility": 0.151,
+      "wet_road": 0.989
+    },
+    "r579.s0.l-1": {
+      "pedestrian": 0.983,
+      "visibility": 0.148,
+      "wet_road": 0.406
+    },
+    "r584.s0.l-1": {
+      "pedestrian": 0.68,
+      "visibility": 0.878,
+      "wet_road": 0.495
+    },
+    "r597.s0.l-1": {
+      "pedestrian": 0.917,
+      "visibility": 0.322,
+      "wet_road": 0.498
+    },
+    "r6.s0.l-1": {
+      "pedestrian": 0.499,
+      "visibility": 0.67,
+      "wet_road": 0.202
+    },
+    "r6.s0.l-2": {
+      "pedestrian": 0.61,
+      "visibility": 0.219,
+      "wet_road": 0.34
+    },
+    "r6.s0.l1": {
+      "pedestrian": 0.963,
+      "visibility": 0.899,
+      "wet_road": 0.818
+    },
+    "r6.s0.l2": {
+      "pedestrian": 0.035,
+      "visibility": 0.148,
+      "wet_road": 0.257
+    },
+    "r608.s0.l-1": {
+      "pedestrian": 0.784,
+      "visibility": 0.842,
+      "wet_road": 0.583
+    },
+    "r630.s0.l-1": {
+      "pedestrian": 0.718,
+      "visibility": 0.807,
+      "wet_road": 0.066
+    },
+    "r637.s0.l-1": {
+      "pedestrian": 0.085,
+      "visibility": 0.869,
+      "wet_road": 0.039
+    },
+    "r655.s0.l1": {
+      "pedestrian": 0.225,
+      "visibility": 0.041,
+      "wet_road": 0.015
+    },
+    "r675.s0.l-1": {
+      "pedestrian": 0.844,
+      "visibility": 0.331,
+      "wet_road": 0.161
+    },
+    "r675.s0.l-2": {
+      "pedestrian": 0.149,
+      "visibility": 0.656,
+      "wet_road": 0.969
+    },
+    "r676.s0.l1": {
+      "pedestrian": 0.505,
+      "visibility": 0.901,
+      "wet_road": 0.502
+    },
+    "r676.s0.l2": {
+      "pedestrian": 0.574,
+      "visibility": 0.679,
+      "wet_road": 0.805
+    },
+    "r7.s0.l-1": {
+      "pedestrian": 0.758,
+      "visibility": 0.991,
+      "wet_road": 0.747
+    },
+    "r7.s0.l-2": {
+      "pedestrian": 0.906,
+      "visibility": 0.206,
+      "wet_road": 0.535
+    },
+    "r7.s0.l1": {
+      "pedestrian": 0.599,
+      "visibility": 0.826,
+      "wet_road": 0.482
+    },
+    "r7.s0.l2": {
+      "pedestrian": 0.791,
+      "visibility": 0.389,
+      "wet_road": 0.586
+    },
+    "r703.s0.l1": {
+      "pedestrian": 0.851,
+      "visibility": 0.798,
+      "wet_road": 0.657
+    },
+    "r712.s0.l1": {
+      "pedestrian": 0.0,
+      "visibility": 0.182,
+      "wet_road": 0.507
+    },
+    "r735.s0.l1": {
+      "pedestrian": 0.254,
+      "visibility": 0.066,
+      "wet_road": 0.86
+    },
+    "r735.s0.l2": {
+      "pedestrian": 0.943,
+      "visibility": 0.303,
+      "wet_road": 0.408
+    },
+    "r736.s0.l-1": {
+      "pedestrian": 0.81,
+      "visibility": 0.062,
+      "wet_road": 0.641
+    },
+    "r763.s0.l-1": {
+      "pedestrian": 0.127,
+      "visibility": 0.287,
+      "wet_road": 0.83
+    },
+    "r780.s0.l1": {
+      "pedestrian": 0.056,
+      "visibility": 0.036,
+      "wet_road": 0.418
+    },
+    "r787.s0.l1": {
+      "pedestrian": 0.492,
+      "visibility": 0.863,
+      "wet_road": 0.717
+    },
+    "r795.s0.l-1": {
+      "pedestrian": 0.674,
+      "visibility": 0.151,
+      "wet_road": 0.987
+    },
+    "r8.s0.l-1": {
+      "pedestrian": 0.411,
+      "visibility": 0.612,
+      "wet_road": 0.387
+    },
+    "r8.s0.l-2": {
+      "pedestrian": 0.047,
+      "visibility": 0.471,
+      "wet_road": 0.151
+    },
+    "r8.s0.l1": {
+      "pedestrian": 0.032,
+      "visibility": 0.617,
+      "wet_road": 0.63
+    },
+    "r8.s0.l2": {
+      "pedestrian": 0.105,
+      "visibility": 0.549,
+      "wet_road": 0.347
+    },
+    "r801.s0.l1": {
+      "pedestrian": 0.383,
+      "visibility": 0.776,
+      "wet_road": 0.49
+    },
+    "r811.s0.l1": {
+      "pedestrian": 0.881,
+      "visibility": 0.61,
+      "wet_road": 0.467
+    },
+    "r823.s0.l1": {
+      "pedestrian": 0.632,
+      "visibility": 0.338,
+      "wet_road": 0.124
+    },
+    "r832.s0.l1": {
+      "pedestrian": 0.683,
+      "visibility": 0.622,
+      "wet_road": 0.789
+    },
+    "r843.s0.l-1": {
+      "pedestrian": 0.127,
+      "visibility": 0.912,
+      "wet_road": 0.799
+    },
+    "r848.s0.l-1": {
+      "pedestrian": 0.917,
+      "visibility": 0.873,
+      "wet_road": 0.681
+    },
+    "r875.s0.l-1": {
+      "pedestrian": 0.81,
+      "visibility": 0.519,
+      "wet_road": 0.785
+    },
+    "r875.s0.l-2": {
+      "pedestrian": 0.189,
+      "visibility": 0.782,
+      "wet_road": 0.445
+    },
+    "r876.s0.l4": {
+      "pedestrian": 0.757,
+      "visibility": 0.455,
+      "wet_road": 0.79
+    },
+    "r876.s0.l5": {
+      "pedestrian": 0.075,
+      "visibility": 0.045,
+      "wet_road": 0.934
+    },
+    "r89.s0.l-1": {
+      "pedestrian": 0.486,
+      "visibility": 0.901,
+      "wet_road": 0.945
+    },
+    "r89.s0.l-2": {
+      "pedestrian": 0.667,
+      "visibility": 0.572,
+      "wet_road": 0.216
+    },
+    "r9.s0.l-1": {
+      "pedestrian": 0.093,
+      "visibility": 0.819,
+      "wet_road": 0.889
+    },
+    "r9.s0.l1": {
+      "pedestrian": 0.779,
+      "visibility": 0.699,
+      "wet_road": 0.42
+    },
+    "r90.s0.l1": {
+      "pedestrian": 0.305,
+      "visibility": 0.113,
+      "wet_road": 0.426
+    },
+    "r90.s0.l2": {
+      "pedestrian": 0.566,
+      "visibility": 0.923,
+      "wet_road": 0.936
+    },
+    "r900.s0.l-1": {
+      "pedestrian": 0.416,
+      "visibility": 0.099,
+      "wet_road": 0.774
+    },
+    "r933.s0.l1": {
+      "pedestrian": 0.734,
+      "visibility": 0.031,
+      "wet_road": 0.447
+    },
+    "r933.s0.l2": {
+      "pedestrian": 0.686,
+      "visibility": 0.03,
+      "wet_road": 0.919
+    },
+    "r934.s0.l-1": {
+      "pedestrian": 0.962,
+      "visibility": 0.723,
+      "wet_road": 0.079
+    },
+    "r934.s0.l-2": {
+      "pedestrian": 0.07,
+      "visibility": 0.359,
+      "wet_road": 0.029
+    },
+    "r939.s0.l-1": {
+      "pedestrian": 0.348,
+      "visibility": 0.01,
+      "wet_road": 0.974
+    }
+  },
+  "source": "mock; probabilities are invented, not measured"
+}
