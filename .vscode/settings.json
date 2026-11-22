@@ -6,6 +6,7 @@
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingModuleSource": "none",
     "reportOptionalMemberAccess": "none",
-    "reportArgumentType": "none"
+    "reportArgumentType": "none",
+    "reportAttributeAccessIssue": "none"
   }
 }

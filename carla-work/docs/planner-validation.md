@@ -40,6 +40,24 @@ tables come from `scripts/run-report`.
 - **Repeatability:** the same plan on two days gave the same simulated drive. Stops agreed
   within 0.1 s and segments within 1 m; the λ = 2 repeat was identical.
 
+## Risk API fit, November 16, 2026
+
+World pushed a Risk API v0 prototype (branch `planner-risk-api`, November 15).
+`planner risk-api` converts its files to a Planner forecast, and `planner risk-template`
+writes the file World fills in. The rules and the open questions for World are in
+[Planner usage](planner.md#from-worlds-risk-api-v0). Checked offline:
+
+- World's example file converts and plans on a matching 4-segment catalog. Against the
+  Town10 catalog it is refused, naming the 4 unknown IDs and the 168 segments with no row.
+- A Town10-sized file made from the template (168 segments, 14 enabled hazards, odds in
+  World's stated range) converts, and plans with verified limits.
+- World's own `RiskAPI` loader accepts the template and the filled file. The Planner's
+  values equal `1 − exp(−rate_by_mode)` from that loader on all 504 values, within 5e-13.
+- Three of World's six penalty modes are not priced: 29% of the odds in World's example.
+- At World's scale, λ = 2 gives exactly the naive plan. The λ set has to be re-chosen
+  from World's real file before the freeze.
+- 7 planted faults in the conversion were each caught by its 14 tests.
+
 ## Predicted-only results
 
 Regenerated on November 15 with the exposure term (`a = 0.25`) and the verified catalog
