@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Start or stop a headless CARLA server in the macOS Wine wrapper.
+#
+# Usage:
+#   use-pyotter/carla/wine/server start [--port N]   start in the background and wait until it answers
+#   use-pyotter/carla/wine/server stop               end the server and every Wine process of the wrapper
+#
+# The server runs with -nullrhi: physics only, no rendering, so camera sensors
+# are not available. Its log is use-pyotter/runs/carla-server.log.
+
+set -euo pipefail
+source "$(dirname "$0")/env.sh"
+LOG="$REPO/use-pyotter/runs/carla-server.log"
+
+stop() {
+  wineserver -k 2>/dev/null || true
+  sleep 2
+  pkill -9 -f 'CarlaUE4' 2>/dev/null || true
+  pkill -9 -x wineserver 2>/dev/null || true
+}
+
+case "${1:-}" in
+  stop)
+    stop
+    echo "CARLA server stopped"
+    ;;
+  start)
+    port=2000
+    [[ "${2:-}" == --port ]] && port="${3:?--port needs a number}"
+    if pgrep -f 'CarlaUE4' >/dev/null || nc -z 127.0.0.1 "$port" 2>/dev/null; then
+      echo "a CARLA server already runs; stop it with: $0 stop" >&2
+      exit 1
+    fi
+    [[ -n "$CARLA_DIR" ]] || { echo "no CarlaUE4.exe under C:\\Program Files in $APP" >&2; exit 2; }
+    mkdir -p "$(dirname "$LOG")"
+    (cd "$CARLA_DIR" && exec wine "$(to_windows "$CARLA_DIR/CarlaUE4.exe")" -nullrhi -nosound -carla-rpc-port="$port") \
+      < /dev/null > "$LOG" 2>&1 &
+    disown
+    echo "CARLA server starting on port $port; log: $LOG"
+    "$(dirname "$0")/pyotter" wait --port "$port"
+    ;;
+  *)
+    sed -n 2,9p "$0" | sed 's/^# \{0,1\}//' >&2
+    exit 2
+    ;;
+esac

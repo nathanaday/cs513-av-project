@@ -1,22 +1,27 @@
+"""The world: roll the hazards of one run from a forecast, and draw the map, the forecast and the roll."""
+
 from __future__ import annotations
 
-import hashlib
-import math
-import random
 from typing import TYPE_CHECKING
 
-from ...core.models.world_hazard_library import LOW_VISIBILITY as VISIBILITY, Hazard, HazardKind, WorldHazardLibrary
-from ...core.models.world_road_graph import (
-    RoadGraphError, RoadSegment, SegmentPosition, WorldRoadGraph, severity_level,
+from ...core.models.world_hazard_library import LOW_VISIBILITY, Hazard, HazardKind, WorldHazardLibrary
+from ...core.models.world_road_graph import RoadGraphError, RoadSegment, WorldRoadGraph
+from ...core.utilities.config import CONFIG
+from ...core.utilities.mapview import THEME, draw_lanes, hue_ramp, matplotlib_tools, scale_bar, style_map
+from .models.world_hazard_spawns import WorldHazardSpawns
+from .utilities import (
+    check_forecast,
+    draw_sun_arrow,
+    forecast_map,
+    label_anchor,
+    roll_conditions,
+    roll_events,
+    rolled_visibility_loss,
+    shown_hazards,
+    spawn_text,
+    sun_glare,
+    sun_text,
 )
-from ...core.utilities.mapview import (
-    AXIS, INK, INK_MUTED, INK_SECONDARY, SURFACE, draw_lanes as _draw_lanes, hue_ramp as _ramp,
-    matplotlib_tools as _matplotlib, scale_bar as _scale_bar, style_map as _style_map,
-)
-from ...core.utilities.sun import (
-    glare_strength, low_sun_factor, sun_position, visibility_loss_by_segment as _visibility_loss,
-)
-from .models.world_hazard_spawns import ConditionSpawn, EventSpawn, SunGlare, WorldHazardSpawns
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
@@ -25,79 +30,75 @@ if TYPE_CHECKING:
 class World:
     @staticmethod
     def roll_hazards(graph: WorldRoadGraph, library: WorldHazardLibrary, seed: int, *,
-                     duration_s: float = 300.0) -> WorldHazardSpawns:
-        """Decide which hazards occur in one run. The same graph, seed and duration always give the same spawns.
+                     duration_s: float = CONFIG.world.roll_duration_s) -> WorldHazardSpawns:
+        """Decide which hazards occur in one run.
 
-        A condition is drawn once for the whole world: whether it is present,
-        and at what severity. An event is drawn once per second of simulation
-        time on each segment; each success starts within that second at a drawn
+        The same graph, seed and duration always give the same spawns. A
+        condition is drawn once for the whole world: whether it is present, and
+        at what severity. An event is drawn once per second of simulation time
+        on each segment, and each success starts within that second at a drawn
         point along the segment. The sun's glare follows from the time of day
         and the rolled visibility.
 
         Each condition, and each segment and event pair, has its own random
         stream, so changing one forecast leaves every other outcome unchanged,
         and a longer duration only appends events after the earlier ones.
+
+        Args:
+            graph: The world, with its forecast.
+            library: The hazards the forecast may name.
+            seed: Selects the run.
+            duration_s: The length of simulation time to roll events for.
+
+        Returns:
+            The conditions, event starts and sun of the run.
+
+        Raises:
+            RoadGraphError: If the duration is not positive, or the forecast is
+                empty or disagrees with the library.
         """
         if duration_s <= 0:
             raise RoadGraphError("duration must be positive")
-        _check_assigned(graph, library)
-        conditions = []
-        for hazard_id in sorted(graph.conditions):
-            forecast, stream = graph.conditions[hazard_id], _stream(seed, "*", hazard_id)
-            present, draw = stream.random(), stream.random()
-            if present < forecast.probability:
-                conditions.append(ConditionSpawn(hazard_id, forecast.severity_at(draw)))
-        events = []
-        for sid in sorted(graph.segments):
-            segment = graph.segments[sid]
-            for item in sorted(segment.hazard_probabilities, key=lambda item: item.hazard_id):
-                stream = _stream(seed, sid, item.hazard_id)
-                for second in range(math.ceil(duration_s)):
-                    occurs, fraction, along = stream.random(), stream.random(), stream.random()
-                    start = second + fraction
-                    if occurs < item.probability and start < duration_s:
-                        events.append(EventSpawn(item.hazard_id, SegmentPosition(sid, along * segment.length_m), start))
-        events.sort(key=lambda spawn: (spawn.start_s, spawn.position.segment_id, spawn.hazard_id))
-        sun = None
-        if graph.time_of_day_h is not None:
-            altitude, azimuth = sun_position(graph.time_of_day_h)
-            fog = next((spawn.severity for spawn in conditions if spawn.hazard_id == VISIBILITY), 0.0)
-            sun = SunGlare(graph.time_of_day_h, altitude, azimuth, glare_strength(graph.time_of_day_h, fog))
-        return WorldHazardSpawns(graph.graph_id, graph.forecast_hash(), seed, float(duration_s),
-                                 tuple(conditions), tuple(events), sun)
+        check_forecast(graph, library)
+        conditions = roll_conditions(graph, seed)
+        events = roll_events(graph, seed, duration_s)
+        return WorldHazardSpawns(
+            graph_id=graph.graph_id,
+            probabilities_hash=graph.forecast_hash(),
+            seed=seed,
+            duration_s=float(duration_s),
+            conditions=tuple(conditions),
+            events=tuple(events),
+            sun=sun_glare(graph, conditions),
+        )
 
     @staticmethod
     def view_topology(graph: WorldRoadGraph, *, label_segments: bool = False, show_junctions: bool = True) -> Figure:
-        """Draw the graph from above, in meters. Call `.savefig(path)` or `pyplot.show()` on the result.
+        """Draw the graph from above, in meters.
 
-        With `label_segments`, the figure is larger and each lane carries its segment id.
-        With `show_junctions`, each junction's bounding box is outlined and tagged with its id.
+        Args:
+            graph: The map.
+            label_segments: Whether to make the figure larger and write each
+                lane's segment id on it.
+            show_junctions: Whether to outline each junction's bounding box and
+                tag it with its id.
+
+        Returns:
+            The figure. Call `.savefig(path)` on it, or `pyplot.show()`.
         """
-        try:
-            from matplotlib import pyplot
-            from matplotlib.patches import Rectangle
-        except ImportError:
-            raise ImportError("view_topology needs matplotlib: pip install 'pyotter[view]'") from None
-
-        size, dpi = (24, 200) if label_segments else (10, 100)
+        pyplot, tools = matplotlib_tools("view_topology")
+        settings = CONFIG.view.topology
+        size = settings.labelled_size_in if label_segments else settings.size_in
+        dpi = settings.labelled_dpi if label_segments else settings.dpi
         figure, axes = pyplot.subplots(figsize=(size, size), dpi=dpi)
-        placed: list[tuple[float, float]] = []
         if show_junctions:
-            for junction in graph.get_junctions():
-                left, top = junction.x - junction.extent_x, junction.y - junction.extent_y
-                axes.add_patch(Rectangle((left, top), 2 * junction.extent_x, 2 * junction.extent_y, zorder=0,
-                                         facecolor="0.93", edgecolor="0.4", linestyle="--", linewidth=0.9))
-                axes.text(left, top - 1.0, f"junction {junction.id}", fontsize=8, color="0.25", ha="left", va="bottom",
-                          bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.6, "alpha": 0.85})
+            _draw_junction_boxes(axes, graph, tools)
+        placed_labels: list[tuple[float, float]] = []
         for segment in graph.get_segments():
-            line = segment.centerline
             color = "tab:orange" if segment.in_junction else "tab:blue"
-            axes.plot([p.x for p in line], [p.y for p in line], color=color, linewidth=1.2)
-            middle, after = line[(len(line) - 1) // 2], line[(len(line) - 1) // 2 + 1]
-            axes.annotate("", xy=(after.x, after.y), xytext=(middle.x, middle.y),
-                          arrowprops={"arrowstyle": "->", "color": color, "linewidth": 1.2})
+            _draw_lane_with_arrow(axes, segment, color)
             if label_segments:
-                x, y, angle = _label_anchor(segment, placed)
+                x, y, angle = label_anchor(segment, placed_labels)
                 axes.text(x, y, segment.id, fontsize=5.5, color=color, ha="center", va="center",
                           rotation=angle, rotation_mode="anchor",
                           bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.4, "alpha": 0.85})
@@ -121,36 +122,32 @@ class World:
         An event's map shades each segment by its chance per second. A
         condition's map shades the world by expected severity. The visibility
         map adds the low sun, lane by lane, by how directly each lane faces it.
+
+        Args:
+            graph: The world, with its forecast.
+            library: The hazards the forecast may name.
+            show_junctions: Whether to outline each junction's bounding box.
+
+        Returns:
+            The figure.
+
+        Raises:
+            RoadGraphError: If the forecast is empty or disagrees with the library.
         """
-        pyplot, tools = _matplotlib("view_hazards")
-        panes = _panes(graph, library)
-        figure, axes_row = pyplot.subplots(1, len(panes), figsize=(6.5 * len(panes), 7.6), dpi=130,
-                                           squeeze=False, facecolor=SURFACE, layout="constrained")
-        for axes, (index, hazard) in zip(axes_row[0], panes):
-            ramp = tools.LinearSegmentedColormap.from_list(hazard.id, _ramp(index))
-            forecast = graph.get_condition(hazard)
-            if hazard.kind is HazardKind.EVENT:
-                values = {s.id: s.hazard_probability(hazard) for s in graph.get_segments()}
-                scale = tools.Normalize(vmin=0.0, vmax=max(values.values()))
-                lines = [f"event · assigned on {sum(v > 0 for v in values.values())} of {len(values)} segments"]
-                unit = "chance per second that one starts"
-            elif hazard.id == VISIBILITY:
-                expected = forecast.expected_severity() if forecast else 0.0
-                values = _visibility_loss(graph, expected, _low_sun(graph.time_of_day_h))
-                scale = tools.Normalize(vmin=0.0, vmax=1.0)
-                lines = [_forecast_text(forecast), _sun_text(graph.time_of_day_h)]
-                unit = "expected visibility loss (0 none, 1 total)"
-            else:
-                values = dict.fromkeys(graph.segments, forecast.expected_severity())
-                scale = tools.Normalize(vmin=0.0, vmax=1.0)
-                lines = [_forecast_text(forecast)]
-                unit = "expected severity (chance x severity)"
-            _draw_lanes(axes, graph, values, ramp, scale, show_junctions, tools)
-            if hazard.id == VISIBILITY:
-                _sun_arrow(axes, graph.time_of_day_h)
-            _style_map(axes, hazard.id, lines)
-            _scale_bar(figure, axes, scale, ramp, unit, tools)
-        figure.suptitle(f"{graph.map_name}: hazard forecast", x=0.02, ha="left", fontsize=14, color=INK)
+        pyplot, tools = matplotlib_tools("view_hazards")
+        hazards = shown_hazards(graph, library)
+        figure, axes_row = pyplot.subplots(1, len(hazards), figsize=(6.5 * len(hazards), 7.6), dpi=130,
+                                           squeeze=False, facecolor=THEME.surface, layout="constrained")
+        for axes, (index, hazard) in zip(axes_row[0], hazards):
+            shown = forecast_map(graph, hazard)
+            ramp = tools.LinearSegmentedColormap.from_list(hazard.id, hue_ramp(index))
+            scale = tools.Normalize(vmin=0.0, vmax=shown.top)
+            draw_lanes(axes, graph, shown.values, ramp, scale, show_junctions, tools)
+            if hazard.id == LOW_VISIBILITY:
+                draw_sun_arrow(axes, graph.time_of_day_h)
+            style_map(axes, hazard.id, shown.lines)
+            scale_bar(figure, axes, scale, ramp, shown.unit, tools)
+        figure.suptitle(f"{graph.map_name}: hazard forecast", x=0.02, ha="left", fontsize=14, color=THEME.ink)
         return figure
 
     @staticmethod
@@ -161,160 +158,121 @@ class World:
         On an event's map, each dot is one start. A condition's map shades the
         world by its severity this run. The visibility map adds the low sun,
         lane by lane, by how directly each lane faces it.
+
+        Args:
+            graph: The world the spawns were rolled on.
+            library: The hazards the forecast may name.
+            spawns: The roll.
+            show_junctions: Whether to outline each junction's bounding box.
+
+        Returns:
+            The figure.
+
+        Raises:
+            RoadGraphError: If the spawns were rolled from another map or forecast.
         """
-        pyplot, tools = _matplotlib("view_spawns")
+        pyplot, tools = matplotlib_tools("view_spawns")
         if spawns.graph_id != graph.graph_id or spawns.probabilities_hash != graph.forecast_hash():
             raise RoadGraphError("these spawns were rolled from a different map or a different forecast")
-        panes = _panes(graph, library)
-        event_rows = [(index, hazard) for index, hazard in panes if hazard.kind is HazardKind.EVENT]
-        present = {spawn.hazard_id for spawn in spawns.conditions}
+        hazards = shown_hazards(graph, library)
+        events = [(index, hazard) for index, hazard in hazards if hazard.kind is HazardKind.EVENT]
 
-        figure = pyplot.figure(figsize=(6.5 * len(panes), 8.0 + (1.6 if event_rows else 0.0)), dpi=130,
-                               facecolor=SURFACE, layout="constrained")
-        heights = (7.6, 0.16) + ((0.35 + 0.35 * len(event_rows),) if event_rows else ())
-        grid = figure.add_gridspec(len(heights), len(panes), height_ratios=heights)
-        for column, (index, hazard) in enumerate(panes):
-            axes, below = figure.add_subplot(grid[0, column]), figure.add_subplot(grid[1, column])
-            pale, solid, _ = _ramp(index)
-            ramp = tools.LinearSegmentedColormap.from_list(hazard.id, _ramp(index))
-            scale = tools.Normalize(vmin=0.0, vmax=1.0)
-            severity = spawns.condition_severity(hazard)
+        height = 8.0 + (1.6 if events else 0.0)
+        figure = pyplot.figure(figsize=(6.5 * len(hazards), height), dpi=130, facecolor=THEME.surface,
+                               layout="constrained")
+        # Rows: the maps, each map's key, and one timeline across the figure when there are events.
+        row_heights = [7.6, 0.16]
+        if events:
+            row_heights.append(0.35 + 0.35 * len(events))
+        grid = figure.add_gridspec(len(row_heights), len(hazards), height_ratios=row_heights)
+        for column, (index, hazard) in enumerate(hazards):
+            axes = figure.add_subplot(grid[0, column])
+            key_axes = figure.add_subplot(grid[1, column])
             if hazard.kind is HazardKind.EVENT:
-                possible = {s.id: 1.0 for s in graph.get_segments() if s.hazard_probability(hazard) > 0}
-                _draw_lanes(axes, graph, possible, tools.ListedColormap([pale]), scale, show_junctions, tools)
-                starts = [spawn for spawn in spawns.events if spawn.hazard_id == hazard.id]
-                points = [graph.get_segment(s.position.segment_id).point_at(s.position.offset_m) for s in starts]
-                axes.scatter([p[0] for p in points], [p[1] for p in points], s=26, color=solid,
-                             edgecolors=SURFACE, linewidths=0.8, zorder=4)
-                lines = [f"event · started {len(starts)} times in {spawns.duration_s:g} s, "
-                         f"on {len(possible)} segments that could have it"]
-                keys = [tools.Line2D([], [], color=solid, marker="o", linestyle="none", markersize=6, label="one start"),
-                        tools.Line2D([], [], color=pale, linewidth=2.8, label="segment where it can occur")]
-                below.axis("off")
-                below.legend(handles=keys, loc="center", ncols=2, frameon=False, fontsize=9, labelcolor=INK_SECONDARY)
-            elif hazard.id == VISIBILITY:
-                strength = spawns.sun.strength / (1.0 - severity) if spawns.sun and severity < 1.0 else 0.0
-                values = _visibility_loss(graph, severity, strength)
-                _draw_lanes(axes, graph, values, ramp, scale, show_junctions, tools)
-                _sun_arrow(axes, graph.time_of_day_h)
-                lines = [_spawn_text(hazard, severity, present), _sun_text(graph.time_of_day_h, spawns.sun)]
-                _scale_bar(figure, below, scale, ramp, "visibility loss this run (0 none, 1 total)", tools, own_axes=True)
+                lines = _draw_event_starts(axes, key_axes, graph, spawns, hazard, index, show_junctions, tools)
             else:
-                _draw_lanes(axes, graph, dict.fromkeys(graph.segments, severity), ramp, scale, show_junctions, tools)
-                lines = [_spawn_text(hazard, severity, present)]
-                _scale_bar(figure, below, scale, ramp, "severity this run", tools, own_axes=True)
-            _style_map(axes, hazard.id, lines)
-        if event_rows:
-            timeline = figure.add_subplot(grid[2, :])
-            timeline.set_facecolor(SURFACE)
-            for row, (index, hazard) in enumerate(event_rows):
-                times = [spawn.start_s for spawn in spawns.events if spawn.hazard_id == hazard.id]
-                timeline.eventplot(times, lineoffsets=row, linelengths=0.7, linewidths=1.0, colors=_ramp(index)[1])
-            timeline.set_yticks(range(len(event_rows)), [hazard.id for _, hazard in event_rows])
-            timeline.set_ylim(len(event_rows) - 0.5, -0.5)
-            timeline.set_xlim(0, spawns.duration_s)
-            timeline.set_xlabel("simulation time when each event starts (s)", color=INK_SECONDARY)
-            timeline.tick_params(colors=INK_MUTED, labelsize=8)
-            timeline.tick_params(axis="y", colors=INK_SECONDARY, labelsize=9.5, length=0)
-            for name, spine in timeline.spines.items():
-                spine.set_visible(name == "bottom")
-                spine.set_color(AXIS)
+                lines = _draw_condition(figure, axes, key_axes, graph, spawns, hazard, index, show_junctions, tools)
+            style_map(axes, hazard.id, lines)
+        if events:
+            _draw_timeline(figure.add_subplot(grid[2, :]), spawns, events)
         figure.suptitle(f"{graph.map_name}: hazards rolled with seed {spawns.seed}", x=0.02, ha="left",
-                        fontsize=14, color=INK)
+                        fontsize=14, color=THEME.ink)
         return figure
 
 
-LABEL_FRACTIONS = (0.3, 0.7, 0.15, 0.85, 0.5, 0.4, 0.6)
-
-def _label_anchor(segment: RoadSegment, placed: list[tuple[float, float]]) -> tuple[float, float, float]:
-    """Pick the point along the lane farthest from the labels already placed, and the lane's screen angle there."""
-    best = None
-    for fraction in LABEL_FRACTIONS:
-        offset = fraction * segment.length_m
-        x, y, _ = segment.point_at(offset)
-        clearance = min((math.hypot(x - px, y - py) for px, py in placed), default=math.inf)
-        if best is None or clearance > best[0]:
-            best = (clearance, x, y, offset)
-        if clearance >= 6.0:
-            break
-    _, x, y, offset = best
-    placed.append((x, y))
-    ahead = segment.point_at(min(offset + 1.0, segment.length_m))
-    behind = segment.point_at(max(offset - 1.0, 0.0))
-    angle = math.degrees(math.atan2(-(ahead[1] - behind[1]), ahead[0] - behind[0]))  # y axis is inverted
-    if not -90.0 < angle <= 90.0:
-        angle += 180.0
-    return x, y, angle
+def _draw_junction_boxes(axes, graph: WorldRoadGraph, tools) -> None:
+    for junction in graph.get_junctions():
+        left = junction.x - junction.extent_x
+        top = junction.y - junction.extent_y
+        axes.add_patch(tools.Rectangle((left, top), 2 * junction.extent_x, 2 * junction.extent_y, zorder=0,
+                                       facecolor="0.93", edgecolor="0.4", linestyle="--", linewidth=0.9))
+        axes.text(left, top - 1.0, f"junction {junction.id}", fontsize=8, color="0.25", ha="left", va="bottom",
+                  bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.6, "alpha": 0.85})
 
 
-
-def _check_assigned(graph: WorldRoadGraph, library: WorldHazardLibrary) -> None:
-    if not graph.hazard_ids() and graph.time_of_day_h is None:
-        raise RoadGraphError("no events are assigned, no conditions are set, and there is no time of day")
-    unknown = sorted(graph.hazard_ids() - {hazard.id for hazard in library})
-    if unknown:
-        raise RoadGraphError(f"hazards not in the library: {', '.join(unknown)}")
-    for hazard_id in sorted(graph.event_ids()):
-        if library.get(hazard_id).kind is not HazardKind.EVENT:
-            raise RoadGraphError(f"{hazard_id} is a condition; set it for the whole world with set_condition")
-    for hazard_id in sorted(graph.conditions):
-        if library.get(hazard_id).kind is not HazardKind.CONDITION:
-            raise RoadGraphError(f"{hazard_id} is an event; assign it to segments")
+def _draw_lane_with_arrow(axes, segment: RoadSegment, color: str) -> None:
+    """Draw a lane's centerline, with an arrow at its middle showing the driving direction."""
+    line = segment.centerline
+    axes.plot([point.x for point in line], [point.y for point in line], color=color, linewidth=1.2)
+    middle = line[(len(line) - 1) // 2]
+    after = line[(len(line) - 1) // 2 + 1]
+    axes.annotate("", xy=(after.x, after.y), xytext=(middle.x, middle.y),
+                  arrowprops={"arrowstyle": "->", "color": color, "linewidth": 1.2})
 
 
-def _panes(graph: WorldRoadGraph, library: WorldHazardLibrary) -> list[tuple[int, Hazard]]:
-    _check_assigned(graph, library)
-    shown = graph.hazard_ids() | ({VISIBILITY} if graph.time_of_day_h is not None else set())
-    return [(index, hazard) for index, hazard in enumerate(library) if hazard.id in shown]
+def _draw_event_starts(axes, key_axes, graph: WorldRoadGraph, spawns: WorldHazardSpawns, hazard: Hazard,
+                       index: int, show_junctions: bool, tools) -> list[str]:
+    """Draw the segments an event can start on and a dot at each start. Returns the map's subtitle."""
+    pale, solid, _ = hue_ramp(index)
+    possible = {segment.id: 1.0 for segment in graph.get_segments() if segment.hazard_probability(hazard) > 0}
+    scale = tools.Normalize(vmin=0.0, vmax=1.0)
+    draw_lanes(axes, graph, possible, tools.ListedColormap([pale]), scale, show_junctions, tools)
+    starts = spawns.events_of(hazard)
+    points = [graph.get_segment(start.position.segment_id).point_at(start.position.offset_m) for start in starts]
+    axes.scatter([point[0] for point in points], [point[1] for point in points], s=26, color=solid,
+                 edgecolors=THEME.surface, linewidths=0.8, zorder=4)
+    keys = [
+        tools.Line2D([], [], color=solid, marker="o", linestyle="none", markersize=6, label="one start"),
+        tools.Line2D([], [], color=pale, linewidth=2.8, label="segment where it can occur"),
+    ]
+    key_axes.axis("off")
+    key_axes.legend(handles=keys, loc="center", ncols=2, frameon=False, fontsize=9, labelcolor=THEME.ink_secondary)
+    return [f"event · started {len(starts)} times in {spawns.duration_s:g} s, "
+            f"on {len(possible)} segments that could have it"]
 
 
-def _stream(seed: int, scope: str, hazard_id: str) -> random.Random:
-    digest = hashlib.sha256(f"{seed}|{scope}|{hazard_id}".encode()).digest()
-    return random.Random(int.from_bytes(digest[:8], "big"))
+def _draw_condition(figure, axes, key_axes, graph: WorldRoadGraph, spawns: WorldHazardSpawns, hazard: Hazard,
+                    index: int, show_junctions: bool, tools) -> list[str]:
+    """Shade the map by a condition's severity in one run. Returns the map's subtitle."""
+    ramp = tools.LinearSegmentedColormap.from_list(hazard.id, hue_ramp(index))
+    scale = tools.Normalize(vmin=0.0, vmax=1.0)
+    lines = [spawn_text(hazard, spawns)]
+    if hazard.id == LOW_VISIBILITY:
+        draw_lanes(axes, graph, rolled_visibility_loss(graph, spawns), ramp, scale, show_junctions, tools)
+        draw_sun_arrow(axes, graph.time_of_day_h)
+        lines.append(sun_text(graph.time_of_day_h, spawns.sun))
+        label = "visibility loss this run (0 none, 1 total)"
+    else:
+        severity = spawns.condition_severity(hazard)
+        draw_lanes(axes, graph, dict.fromkeys(graph.segments, severity), ramp, scale, show_junctions, tools)
+        label = "severity this run"
+    scale_bar(figure, key_axes, scale, ramp, label, tools, own_axes=True)
+    return lines
 
 
-def _low_sun(time_of_day_h: float | None) -> float:
-    return 0.0 if time_of_day_h is None else low_sun_factor(sun_position(time_of_day_h)[0])
-
-
-def _clock(time_of_day_h: float) -> str:
-    minutes = round(time_of_day_h * 60)
-    return f"{minutes // 60:02d}:{minutes % 60:02d}"
-
-
-def _forecast_text(forecast) -> str:
-    if forecast is None:
-        return "condition · not forecast"
-    low, high = forecast.severity_range()
-    spread = f"{low:.2f} to {high:.2f}" if high > low else f"{low:.2f}"
-    return f"condition · {forecast.probability:.0%} chance · severity {spread} ({severity_level(forecast.severity)})"
-
-
-def _spawn_text(hazard: Hazard, severity: float, present: set[str]) -> str:
-    if hazard.id not in present:
-        return "condition · not present this run"
-    return f"condition · present this run at severity {severity:.2f} ({severity_level(severity)})"
-
-
-def _sun_text(time_of_day_h: float | None, sun: SunGlare | None = None) -> str:
-    if time_of_day_h is None:
-        return "sun · no time of day set"
-    altitude = sun_position(time_of_day_h)[0]
-    if altitude < 0:
-        return f"sun · {_clock(time_of_day_h)}, below the horizon, no glare"
-    where = f"sun · {_clock(time_of_day_h)}, {altitude:.0f} degrees above the horizon"
-    if sun is not None:
-        return f"{where} · facing it loses {sun.strength:.2f}"
-    return f"{where} · low-sun factor {low_sun_factor(altitude):.2f}"
-
-
-def _sun_arrow(axes, time_of_day_h: float | None) -> None:
-    """An arrow in the corner pointing the way to the sun, when the sun is low enough to matter."""
-    if _low_sun(time_of_day_h) <= 0.0:
-        return
-    azimuth = math.radians(sun_position(time_of_day_h)[1])
-    dx, dy = 0.055 * math.cos(azimuth), -0.055 * math.sin(azimuth)  # the y axis is inverted
-    axes.annotate("", xy=(0.93 + dx, 1.07 + dy), xytext=(0.93 - dx, 1.07 - dy), xycoords="axes fraction",
-                  annotation_clip=False, arrowprops={"arrowstyle": "-|>", "color": INK, "linewidth": 1.6})
-    axes.text(0.86, 1.07, "to the sun", transform=axes.transAxes, fontsize=9.5, color=INK_SECONDARY,
-              ha="right", va="center")
+def _draw_timeline(axes, spawns: WorldHazardSpawns, events: list[tuple[int, Hazard]]) -> None:
+    """Draw one row per event, with a tick at the time of each start."""
+    axes.set_facecolor(THEME.surface)
+    for row, (index, hazard) in enumerate(events):
+        times = [spawn.start_s for spawn in spawns.events_of(hazard)]
+        _, solid, _ = hue_ramp(index)
+        axes.eventplot(times, lineoffsets=row, linelengths=0.7, linewidths=1.0, colors=solid)
+    axes.set_yticks(range(len(events)), [hazard.id for _, hazard in events])
+    axes.set_ylim(len(events) - 0.5, -0.5)
+    axes.set_xlim(0, spawns.duration_s)
+    axes.set_xlabel("simulation time when each event starts (s)", color=THEME.ink_secondary)
+    axes.tick_params(colors=THEME.ink_muted, labelsize=8)
+    axes.tick_params(axis="y", colors=THEME.ink_secondary, labelsize=9.5, length=0)
+    for name, spine in axes.spines.items():
+        spine.set_visible(name == "bottom")
+        spine.set_color(THEME.axis)

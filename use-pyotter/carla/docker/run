@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Drive scenario files with Docker: start a CARLA server, drive, write telemetry, stop the server.
+#
+# Usage:
+#   use-pyotter/carla/docker/run SCENARIO.json.gz [SCENARIO.json.gz ...]
+#
+# The scenario files must be in use-pyotter/runs/. Telemetry is written beside them.
+# Needs Docker with the NVIDIA container toolkit.
+
+set -euo pipefail
+cd "$(dirname "$0")"
+[[ $# -gt 0 ]] || { sed -n 2,8p "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+
+scenarios=()
+for path in "$@"; do
+  [[ -f "../../runs/$(basename "$path")" ]] || { echo "not in use-pyotter/runs/: $path" >&2; exit 2; }
+  scenarios+=("/runs/$(basename "$path")")
+done
+
+trap 'docker compose down' EXIT
+docker compose up -d carla
+docker compose run --rm otter wait --host carla
+docker compose run --rm otter drive "${scenarios[@]}" --host carla

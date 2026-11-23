@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Iterable, Iterator
 
+from ..utilities.text_enum import TextEnum
 
-class HazardKind(str, Enum):
-    """How a hazard exists on a segment, which also fixes what its probability means.
+PEDESTRIAN = "pedestrian"
+LOW_VISIBILITY = "low_visibility"
+WET_ROAD = "wet_road"
 
-    CONDITION: a state of the segment that holds for the whole run. Its
-    probability is the chance that the state is present in a run.
-    EVENT: something that happens at a moment. Its probability is the chance,
-    per second, that one occurrence starts on the segment.
+
+class HazardKind(TextEnum):
+    """How a hazard exists in the world, which also fixes what its forecast means.
+
+    Attributes:
+        CONDITION: A state of the whole world that holds for a whole run. It is
+            forecast as the chance that it is present, and its severity.
+        EVENT: Something that happens at a moment on a segment. It is forecast
+            as the chance, per second, that one occurrence starts there.
     """
 
     CONDITION = "condition"
@@ -20,19 +26,17 @@ class HazardKind(str, Enum):
 
 @dataclass(frozen=True)
 class Hazard:
-    """A risk situation on a segment, defined without reference to the car or to any outcome."""
+    """A risk situation, defined without reference to the car or to any outcome."""
 
     id: str
     kind: HazardKind
     description: str
 
 
-LOW_VISIBILITY = "low_visibility"
-
 DEFAULT_HAZARDS = (
-    Hazard("pedestrian", HazardKind.EVENT, "A pedestrian is on or entering the roadway"),
+    Hazard(PEDESTRIAN, HazardKind.EVENT, "A pedestrian is on or entering the roadway"),
     Hazard(LOW_VISIBILITY, HazardKind.CONDITION, "Detection range is reduced"),
-    Hazard("wet_road", HazardKind.CONDITION, "Tire friction is reduced"),
+    Hazard(WET_ROAD, HazardKind.CONDITION, "Tire friction is reduced"),
 )
 
 
@@ -45,19 +49,25 @@ class WorldHazardLibrary:
     def __getattr__(self, name: str) -> Hazard:
         if name.startswith("_"):
             raise AttributeError(name)
-        try:
-            return self._hazards[name]
-        except KeyError:
-            raise AttributeError(f"unknown hazard: {name}") from None
+        if name not in self._hazards:
+            raise AttributeError(f"unknown hazard: {name}")
+        return self._hazards[name]
 
     def __iter__(self) -> Iterator[Hazard]:
         return iter(self._hazards.values())
 
     def __contains__(self, hazard: Hazard | str) -> bool:
-        return (hazard if isinstance(hazard, str) else hazard.id) in self._hazards
+        return hazard_id_of(hazard) in self._hazards
 
     def get(self, hazard_id: str) -> Hazard:
         return self._hazards[hazard_id]
 
     def of_kind(self, kind: HazardKind) -> list[Hazard]:
         return [hazard for hazard in self._hazards.values() if hazard.kind is kind]
+
+
+def hazard_id_of(hazard: Hazard | str) -> str:
+    """The id of a hazard given as either a `Hazard` or its id."""
+    if isinstance(hazard, Hazard):
+        return hazard.id
+    return hazard

@@ -2,20 +2,26 @@
 
 from __future__ import annotations
 
-import gzip
-import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from ....core.models.world_road_graph import SegmentPosition
+from ....core.utilities.config import CONFIG
+from ....core.utilities.json_file import read_json, write_json
 from .planner_config import PlannerConfig
-
-SCHEMA_VERSION = 1
+from .route_mode import RouteMode
 
 
 @dataclass(frozen=True)
 class RouteStep:
-    """One stretch of one segment, driven at one target speed. Offsets run in the driving direction."""
+    """One stretch of one segment, driven at one target speed.
+
+    Attributes:
+        start_offset_m: Where the stretch starts, in the driving direction.
+        end_offset_m: Where the stretch ends.
+        predicted_penalty: The penalty the planner expects on the stretch.
+        hazard_score: The segment's weighted forecast, which the penalty is priced from.
+    """
 
     segment_id: str
     start_offset_m: float
@@ -32,15 +38,26 @@ class RouteStep:
 
 @dataclass(frozen=True)
 class PlannerComputedWaypoints:
+    """A planned route.
+
+    Attributes:
+        graph_id: The road graph the route was planned on.
+        forecast_hash: The forecast hash of that graph when it was planned.
+        risk_scale: The weight the search gave the predicted penalty. It is 0
+            in the naive and cautious modes.
+        config: The tuning the route was planned with.
+        steps: The stretches to drive, in order.
+    """
+
     graph_id: str
     forecast_hash: str
     origin: SegmentPosition
     destination: SegmentPosition
-    mode: str
+    mode: RouteMode
     risk_scale: float
     config: PlannerConfig
     steps: tuple[RouteStep, ...]
-    schema_version: int = SCHEMA_VERSION
+    schema_version: int = CONFIG.schema_version
 
     @property
     def distance_m(self) -> float:
@@ -64,29 +81,25 @@ class PlannerComputedWaypoints:
         return [step.segment_id for step in self.steps]
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        data = asdict(self)
+        data["mode"] = self.mode.value
+        return data
 
     @classmethod
     def from_dict(cls, data: dict) -> PlannerComputedWaypoints:
-        config = dict(data["config"], candidate_speeds_kmh=tuple(data["config"]["candidate_speeds_kmh"]))
-        return cls(**{
-            **data,
-            "origin": SegmentPosition(**data["origin"]),
-            "destination": SegmentPosition(**data["destination"]),
-            "config": PlannerConfig(**config),
-            "steps": tuple(RouteStep(**raw) for raw in data["steps"]),
-        })
+        config = dict(data["config"])
+        config["candidate_speeds_kmh"] = tuple(config["candidate_speeds_kmh"])
+        fields = dict(data)
+        fields["origin"] = SegmentPosition(**data["origin"])
+        fields["destination"] = SegmentPosition(**data["destination"])
+        fields["mode"] = RouteMode(data["mode"])
+        fields["config"] = PlannerConfig(**config)
+        fields["steps"] = tuple(RouteStep(**raw) for raw in data["steps"])
+        return cls(**fields)
 
     def save(self, path: str | Path) -> None:
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        opener = gzip.open if path.suffix == ".gz" else open
-        with opener(path, "wt", encoding="utf-8") as stream:
-            json.dump(self.to_dict(), stream, sort_keys=True)
+        write_json(path, self.to_dict())
 
     @classmethod
     def load(cls, path: str | Path) -> PlannerComputedWaypoints:
-        path = Path(path)
-        opener = gzip.open if path.suffix == ".gz" else open
-        with opener(path, "rt", encoding="utf-8") as stream:
-            return cls.from_dict(json.load(stream))
+        return cls.from_dict(read_json(path))

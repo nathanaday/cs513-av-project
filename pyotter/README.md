@@ -55,6 +55,8 @@ Driving module entities:
 
 ## Guidelines
 
+### Modules
+
 Each module should follow a template:
 - models - contains all schema, entities
 - api - contians runnable entrypoints for module usage
@@ -63,7 +65,28 @@ Each module should follow a template:
 - utilities.py - for internal module utilities (private to the module, no export)
 - {classname}.py - include a dedicated python file per class
 
-For public utilies used in all classes, define and export them in `core/utilities/`
+### Core
 
-For public schema, models, include them in `core/models/`
+- For public utilies used in all classes, define and export them in `core/utilities/`
+- For public schema, models, include them in `core/models/`
 
+### Configuration
+
+`config.yaml` holds the library version, the schema version of every file pyotter writes, and every tunable value. Read it by attribute:
+
+```python
+from pyotter.core.utilities.config import CONFIG
+
+CONFIG.safety.min_gap_m
+CONFIG.driver.controller.speed_gain
+```
+
+- A model's default comes from the config (`min_gap_m: float = CONFIG.safety.min_gap_m`), so a value is tuned in one place
+- A scenario file stores the driver and planner values it was made with, so a saved run does not change when the config does
+- Names with a fixed set of values are enums built on `TextEnum` (`core/utilities/text_enum.py`), which read and write as plain text
+
+### Code Style
+
+- Use google style python docstrings
+- Do not declare tunable parameters as globals in the same file; use the yaml config
+- Keep classes short, reable, and favor clarity over compacted synatx

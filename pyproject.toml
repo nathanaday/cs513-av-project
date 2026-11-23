@@ -7,7 +7,7 @@ name = "pyotter"
 version = "0.1.0"
 description = "Optimizing Travel Through Environmental Risk: risk-aware navigation in CARLA"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["PyYAML>=6.0"]
 
 [project.optional-dependencies]
 view = ["matplotlib>=3.8"]
@@ -17,4 +17,4 @@ notebook = ["matplotlib>=3.8", "ipykernel"]
 include = ["pyotter*"]
 
 [tool.setuptools.package-data]
-pyotter = ["templates/*.json.gz"]
+pyotter = ["config.yaml", "templates/*.json.gz"]

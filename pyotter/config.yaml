@@ -1,0 +1,140 @@
+# pyotter settings: the library version, the schema version of the files it
+# writes, and every tunable value. Code reads them by attribute:
+#
+#     from pyotter.core.utilities.config import CONFIG
+#     CONFIG.safety.min_gap_m
+
+version: "0.1.0"
+schema_version: 1
+
+carla:
+  version: "0.9.16"
+  host: "127.0.0.1"
+  port: 2000
+  drive_timeout_s: 60.0         # client timeout while driving a scenario
+  wait_timeout_s: 300.0         # how long `wait` keeps trying to reach a server
+  wait_probe_timeout_s: 5.0     # client timeout of one attempt
+  wait_retry_s: 2.0             # pause between attempts
+
+world:
+  roll_duration_s: 300.0
+  # Names for equal bands of the 0 to 1 severity scale, lowest first.
+  severity_levels: [low, mid, high]
+  expected_severity_steps: 200  # samples used to average a forecast's severity
+  sun:
+    sunrise_h: 6.0
+    sunset_h: 18.0
+    noon_altitude_deg: 60.0
+    full_glare_below_deg: 5.0   # sun altitude at or below which glare is total
+    no_glare_above_deg: 25.0    # sun altitude at or above which there is none
+    no_glare_beyond_deg: 60.0   # angle off the heading past which there is none
+
+# Defaults of the driving safety requirements.
+safety:
+  min_gap_m: 2.0
+  max_deceleration_mps2: 6.0
+  max_acceleration_mps2: 3.0
+  speed_tolerance_kmh: 3.0
+
+planner:
+  # Every whole speed from slowest to fastest is a candidate on each segment.
+  slowest_candidate_kmh: 1
+  fastest_candidate_kmh: 100
+  reference_speed_kmh: 30.0
+  cautious_speed_kmh: 20.0
+  exposure_baseline: 0.25
+  default_hazard_weight: 1.0
+  hazard_weights: {}            # per hazard id; others use the default weight
+
+driver:
+  tick_s: 0.05
+  longest_tick_s: 0.1
+  model:
+    detection_range_m: 60.0
+    min_detection_range_m: 5.0
+    comfortable_deceleration_mps2: 3.0
+    wet_braking_loss: 0.5
+    vehicle_blueprint: vehicle.tesla.model3
+  evaluation:
+    # An acceleration limit is breached only when exceeded for this long.
+    sustained_s: 0.5
+    # Margins on the speed limit are compared against the tolerance, or this if larger.
+    least_speed_scale_mps: 1.0
+  controller:
+    speed_gain: 1.2
+    speed_memory_gain: 0.4
+    speed_memory_limit: 3.0
+    speed_memory_band_mps: 1.5
+    # Rough pedal response of the car.
+    full_throttle_mps2: 9.0
+    full_brake_mps2: 8.0
+    cruise_throttle_per_mps: 0.037
+    least_grip: 0.1
+    # Holding still: brake this hard once a stop is wanted and the car is slow.
+    stop_wanted_below_mps: 0.05
+    hold_below_mps: 0.3
+    hold_brake: 0.6
+    least_stopping_room_m: 0.1
+    path_half_width_m: 3.0
+    arrival_m: 1.5
+    # How far around the last known progress the car is searched for.
+    locate_behind_m: 2.0
+    locate_ahead_m: 15.0
+    # Pure pursuit aims at a point this far ahead: base + per_mps * speed.
+    lookahead_base_m: 1.5
+    lookahead_per_mps: 0.6
+    shortest_lookahead_m: 3.0
+    longest_lookahead_m: 8.0
+  runner:
+    wet_friction_loss: 0.6      # share of tire friction lost at full wetness
+    stop_margin_m: 1.0
+    settle_ticks: 20            # ticks held still after spawning the car
+    contact_gap_s: 1.0          # contacts closer than this are one collision
+    report_every_s: 10.0
+    spawn_lift_m: 0.5
+    wheelbase_per_half_length: 1.2
+    walker:
+      speed_mps: 1.4
+      walk_m: 9.0
+      start_off_m: 2.75         # to the right of the lane center
+      radius_m: 0.4
+      spawn_lift_m: 1.0
+    # CARLA weather values, in percent, at full severity.
+    weather:
+      wetness: 100.0
+      precipitation_deposits: 60.0
+      precipitation: 70.0
+      fog_density: 70.0
+      clear_cloudiness: 20.0
+      fog_cloudiness: 80.0      # added to the clear value
+
+view:
+  surface: "#fcfcfb"
+  ink: "#0b0b0b"
+  ink_secondary: "#52514e"
+  ink_muted: "#898781"
+  grid: "#e1e0d9"
+  axis: "#c3c2b7"
+  # Lines that share one chart, in order.
+  series_colors: ["#2a78d6", "#eb6834", "#1baf7a"]
+  # One light-to-dark ramp per hazard, in library order, so that a hazard
+  # keeps its hue whichever others are shown.
+  hazard_ramps:
+    - ["#9ec5f4", "#2a78d6", "#0d366b"]
+    - ["#f7c3ad", "#eb6834", "#7a2c0c"]
+    - ["#a4dfca", "#1baf7a", "#0a5038"]
+    - ["#f8d999", "#eda100", "#6e4b00"]
+    - ["#f6cadb", "#e87ba4", "#7d2748"]
+    - ["#99cd99", "#008300", "#003c00"]
+    - ["#c0b9ef", "#6250d6", "#2a2068"]
+    - ["#f4b6b6", "#e34948", "#6f1a1a"]
+  shaded_above: 0.005           # lanes with a value at or below this stay gray
+  gap_shown_m: 40.0             # top of the gap axis on the telemetry figure
+  topology:
+    size_in: 10
+    dpi: 100
+    labelled_size_in: 24
+    labelled_dpi: 200
+    # Where along a lane a segment label may sit, tried in order.
+    label_fractions: [0.3, 0.7, 0.15, 0.85, 0.5, 0.4, 0.6]
+    label_clearance_m: 6.0
