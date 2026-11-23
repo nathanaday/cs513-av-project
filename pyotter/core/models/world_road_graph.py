@@ -9,6 +9,7 @@ without them is a map template.
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import math
 from dataclasses import asdict, dataclass, field
@@ -139,6 +140,11 @@ class RoadSegment:
     def clear_hazard_probabilities(self) -> None:
         self.hazard_probabilities = []
 
+    def points_between(self, start_m: float, end_m: float) -> list[tuple[float, float, float]]:
+        """The centerline from one offset to another, including both ends."""
+        inside = [(p.x, p.y, p.z) for p in self.centerline if start_m < p.distance_m < end_m]
+        return [self.point_at(start_m), *inside, self.point_at(end_m)]
+
     def point_at(self, offset_m: float) -> tuple[float, float, float]:
         if not 0.0 <= offset_m <= self.length_m + 1e-6:
             raise RoadGraphError(f"{self.id}: offset {offset_m} is outside 0 to {self.length_m}")
@@ -215,6 +221,13 @@ class WorldRoadGraph:
 
     def hazard_ids(self) -> set[str]:
         return self.event_ids() | set(self.conditions)
+
+    def forecast_hash(self) -> str:
+        """Identifies the forecast, so that spawns and routes can name the one they were made from."""
+        events = sorted((sid, item.hazard_id, item.probability)
+                        for sid, segment in self.segments.items() for item in segment.hazard_probabilities)
+        conditions = sorted((f.hazard_id, f.probability, f.severity, f.variability) for f in self.conditions.values())
+        return hashlib.sha256(json.dumps([events, conditions, self.time_of_day_h]).encode()).hexdigest()
 
     def clear_hazard_probabilities(self) -> None:
         for segment in self.segments.values():

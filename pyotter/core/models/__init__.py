@@ -1,4 +1,4 @@
-from .world_hazard_library import Hazard, HazardKind, WorldHazardLibrary
+from .world_hazard_library import LOW_VISIBILITY, Hazard, HazardKind, WorldHazardLibrary
 from .world_road_graph import (
     CenterlinePoint,
     ConditionForecast,
@@ -18,6 +18,7 @@ __all__ = [
     "HazardKind",
     "HazardProbability",
     "Junction",
+    "LOW_VISIBILITY",
     "RoadGraphError",
     "RoadSegment",
     "SegmentPosition",

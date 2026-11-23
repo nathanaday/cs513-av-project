@@ -27,9 +27,11 @@ class Hazard:
     description: str
 
 
+LOW_VISIBILITY = "low_visibility"
+
 DEFAULT_HAZARDS = (
     Hazard("pedestrian", HazardKind.EVENT, "A pedestrian is on or entering the roadway"),
-    Hazard("low_visibility", HazardKind.CONDITION, "Detection range is reduced"),
+    Hazard(LOW_VISIBILITY, HazardKind.CONDITION, "Detection range is reduced"),
     Hazard("wet_road", HazardKind.CONDITION, "Tire friction is reduced"),
 )
 

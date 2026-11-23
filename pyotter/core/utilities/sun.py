@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import math
 
-from ..models.world_road_graph import RoadSegment
+from ..models.world_hazard_library import LOW_VISIBILITY
+from ..models.world_road_graph import RoadSegment, WorldRoadGraph
 
 SUNRISE_H, SUNSET_H = 6.0, 18.0
 NOON_ALTITUDE_DEG = 60.0
@@ -50,3 +51,20 @@ def segment_sun_exposure(segment: RoadSegment, azimuth_deg: float) -> float:
         heading = math.degrees(math.atan2(b.y - a.y, b.x - a.x))
         total += facing_factor(heading, azimuth_deg) * (b.distance_m - a.distance_m)
     return total / segment.length_m
+
+
+def visibility_loss_by_segment(graph: WorldRoadGraph, fog: float, low_sun: float) -> dict[str, float]:
+    """Per lane: the rain or fog everywhere, plus the low sun on what the rain or fog leaves clear."""
+    if graph.time_of_day_h is None or low_sun <= 0.0:
+        return dict.fromkeys(graph.segments, fog)
+    azimuth = sun_position(graph.time_of_day_h)[1]
+    return {sid: fog + (1.0 - fog) * low_sun * segment_sun_exposure(segment, azimuth)
+            for sid, segment in graph.segments.items()}
+
+
+def expected_visibility_loss(graph: WorldRoadGraph) -> dict[str, float]:
+    """The forecast's mean visibility loss per lane, from the rain or fog forecast and the time of day."""
+    forecast = graph.conditions.get(LOW_VISIBILITY)
+    fog = forecast.expected_severity() if forecast else 0.0
+    low_sun = 0.0 if graph.time_of_day_h is None else low_sun_factor(sun_position(graph.time_of_day_h)[0])
+    return visibility_loss_by_segment(graph, fog, low_sun)

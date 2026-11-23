@@ -1,22 +1,25 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import random
 from typing import TYPE_CHECKING
 
-from ...core.models.world_hazard_library import Hazard, HazardKind, WorldHazardLibrary
+from ...core.models.world_hazard_library import LOW_VISIBILITY as VISIBILITY, Hazard, HazardKind, WorldHazardLibrary
 from ...core.models.world_road_graph import (
     RoadGraphError, RoadSegment, SegmentPosition, WorldRoadGraph, severity_level,
 )
-from ...core.utilities.sun import glare_strength, low_sun_factor, segment_sun_exposure, sun_position
+from ...core.utilities.mapview import (
+    AXIS, INK, INK_MUTED, INK_SECONDARY, SURFACE, draw_lanes as _draw_lanes, hue_ramp as _ramp,
+    matplotlib_tools as _matplotlib, scale_bar as _scale_bar, style_map as _style_map,
+)
+from ...core.utilities.sun import (
+    glare_strength, low_sun_factor, sun_position, visibility_loss_by_segment as _visibility_loss,
+)
 from .models.world_hazard_spawns import ConditionSpawn, EventSpawn, SunGlare, WorldHazardSpawns
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
-
-VISIBILITY = "low_visibility"
 
 
 class World:
@@ -60,7 +63,7 @@ class World:
             altitude, azimuth = sun_position(graph.time_of_day_h)
             fog = next((spawn.severity for spawn in conditions if spawn.hazard_id == VISIBILITY), 0.0)
             sun = SunGlare(graph.time_of_day_h, altitude, azimuth, glare_strength(graph.time_of_day_h, fog))
-        return WorldHazardSpawns(graph.graph_id, _probabilities_hash(graph), seed, float(duration_s),
+        return WorldHazardSpawns(graph.graph_id, graph.forecast_hash(), seed, float(duration_s),
                                  tuple(conditions), tuple(events), sun)
 
     @staticmethod
@@ -145,7 +148,7 @@ class World:
             _draw_lanes(axes, graph, values, ramp, scale, show_junctions, tools)
             if hazard.id == VISIBILITY:
                 _sun_arrow(axes, graph.time_of_day_h)
-            _style_map(axes, hazard, lines)
+            _style_map(axes, hazard.id, lines)
             _scale_bar(figure, axes, scale, ramp, unit, tools)
         figure.suptitle(f"{graph.map_name}: hazard forecast", x=0.02, ha="left", fontsize=14, color=INK)
         return figure
@@ -160,7 +163,7 @@ class World:
         lane by lane, by how directly each lane faces it.
         """
         pyplot, tools = _matplotlib("view_spawns")
-        if spawns.graph_id != graph.graph_id or spawns.probabilities_hash != _probabilities_hash(graph):
+        if spawns.graph_id != graph.graph_id or spawns.probabilities_hash != graph.forecast_hash():
             raise RoadGraphError("these spawns were rolled from a different map or a different forecast")
         panes = _panes(graph, library)
         event_rows = [(index, hazard) for index, hazard in panes if hazard.kind is HazardKind.EVENT]
@@ -200,7 +203,7 @@ class World:
                 _draw_lanes(axes, graph, dict.fromkeys(graph.segments, severity), ramp, scale, show_junctions, tools)
                 lines = [_spawn_text(hazard, severity, present)]
                 _scale_bar(figure, below, scale, ramp, "severity this run", tools, own_axes=True)
-            _style_map(axes, hazard, lines)
+            _style_map(axes, hazard.id, lines)
         if event_rows:
             timeline = figure.add_subplot(grid[2, :])
             timeline.set_facecolor(SURFACE)
@@ -223,21 +226,6 @@ class World:
 
 LABEL_FRACTIONS = (0.3, 0.7, 0.15, 0.85, 0.5, 0.4, 0.6)
 
-SURFACE, INK, INK_SECONDARY, INK_MUTED, GRID, AXIS = "#fcfcfb", "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3c2b7"
-
-# One light-to-dark ramp per hazard, in library order, so a hazard keeps its hue whichever others are shown.
-HAZARD_RAMPS = (
-    ("#9ec5f4", "#2a78d6", "#0d366b"),
-    ("#f7c3ad", "#eb6834", "#7a2c0c"),
-    ("#a4dfca", "#1baf7a", "#0a5038"),
-    ("#f8d999", "#eda100", "#6e4b00"),
-    ("#f6cadb", "#e87ba4", "#7d2748"),
-    ("#99cd99", "#008300", "#003c00"),
-    ("#c0b9ef", "#6250d6", "#2a2068"),
-    ("#f4b6b6", "#e34948", "#6f1a1a"),
-)
-
-
 def _label_anchor(segment: RoadSegment, placed: list[tuple[float, float]]) -> tuple[float, float, float]:
     """Pick the point along the lane farthest from the labels already placed, and the lane's screen angle there."""
     best = None
@@ -258,23 +246,6 @@ def _label_anchor(segment: RoadSegment, placed: list[tuple[float, float]]) -> tu
         angle += 180.0
     return x, y, angle
 
-
-
-def _ramp(index: int) -> tuple[str, str, str]:
-    return HAZARD_RAMPS[index] if index < len(HAZARD_RAMPS) else HAZARD_RAMPS[0]
-
-
-def _matplotlib(caller: str):
-    try:
-        from matplotlib import cm, colors, lines, patches, pyplot
-    except ImportError:
-        raise ImportError(f"{caller} needs matplotlib: pip install 'pyotter[view]'") from None
-
-    class Tools:
-        LinearSegmentedColormap, ListedColormap, Normalize = colors.LinearSegmentedColormap, colors.ListedColormap, colors.Normalize
-        ScalarMappable, Line2D, Rectangle = cm.ScalarMappable, lines.Line2D, patches.Rectangle
-
-    return pyplot, Tools
 
 
 def _check_assigned(graph: WorldRoadGraph, library: WorldHazardLibrary) -> None:
@@ -302,24 +273,8 @@ def _stream(seed: int, scope: str, hazard_id: str) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def _probabilities_hash(graph: WorldRoadGraph) -> str:
-    events = sorted((sid, item.hazard_id, item.probability)
-                    for sid, segment in graph.segments.items() for item in segment.hazard_probabilities)
-    conditions = sorted((f.hazard_id, f.probability, f.severity, f.variability) for f in graph.conditions.values())
-    return hashlib.sha256(json.dumps([events, conditions, graph.time_of_day_h]).encode()).hexdigest()
-
-
 def _low_sun(time_of_day_h: float | None) -> float:
     return 0.0 if time_of_day_h is None else low_sun_factor(sun_position(time_of_day_h)[0])
-
-
-def _visibility_loss(graph: WorldRoadGraph, fog: float, low_sun: float) -> dict[str, float]:
-    """Per lane: the rain or fog everywhere, plus the low sun on what the rain or fog leaves clear."""
-    if graph.time_of_day_h is None or low_sun <= 0.0:
-        return dict.fromkeys(graph.segments, fog)
-    azimuth = sun_position(graph.time_of_day_h)[1]
-    return {sid: fog + (1.0 - fog) * low_sun * segment_sun_exposure(segment, azimuth)
-            for sid, segment in graph.segments.items()}
 
 
 def _clock(time_of_day_h: float) -> str:
@@ -353,22 +308,6 @@ def _sun_text(time_of_day_h: float | None, sun: SunGlare | None = None) -> str:
     return f"{where} · low-sun factor {low_sun_factor(altitude):.2f}"
 
 
-def _draw_lanes(axes, graph: WorldRoadGraph, values: dict[str, float], ramp, scale, show_junctions: bool, tools) -> None:
-    axes.set_facecolor(SURFACE)
-    if show_junctions:
-        for junction in graph.get_junctions():
-            axes.add_patch(tools.Rectangle((junction.x - junction.extent_x, junction.y - junction.extent_y),
-                                           2 * junction.extent_x, 2 * junction.extent_y, zorder=0,
-                                           facecolor="none", edgecolor=AXIS, linestyle="--", linewidth=0.7))
-    for sid in sorted(graph.segments, key=lambda sid: values.get(sid, 0.0)):
-        line, value = graph.segments[sid].centerline, values.get(sid, 0.0)
-        xs, ys = [p.x for p in line], [p.y for p in line]
-        if value > 0.005:
-            axes.plot(xs, ys, color=ramp(scale(value)), linewidth=2.8, solid_capstyle="round", zorder=2)
-        else:
-            axes.plot(xs, ys, color=AXIS, linewidth=0.8, zorder=1)
-
-
 def _sun_arrow(axes, time_of_day_h: float | None) -> None:
     """An arrow in the corner pointing the way to the sun, when the sun is low enough to matter."""
     if _low_sun(time_of_day_h) <= 0.0:
@@ -379,26 +318,3 @@ def _sun_arrow(axes, time_of_day_h: float | None) -> None:
                   annotation_clip=False, arrowprops={"arrowstyle": "-|>", "color": INK, "linewidth": 1.6})
     axes.text(0.86, 1.07, "to the sun", transform=axes.transAxes, fontsize=9.5, color=INK_SECONDARY,
               ha="right", va="center")
-
-
-def _style_map(axes, hazard: Hazard, lines: list[str]) -> None:
-    axes.set_title(hazard.id, loc="left", fontsize=13, fontweight="bold", color=INK, pad=38)
-    axes.text(0.0, 1.015, "\n".join(lines + [""] * (2 - len(lines))), transform=axes.transAxes, fontsize=9.5, color=INK_SECONDARY,
-              ha="left", va="bottom", linespacing=1.4)
-    axes.set_aspect("equal")
-    axes.invert_yaxis()
-    axes.set_xlabel("x (m)", color=INK_SECONDARY)
-    axes.set_ylabel("y (m)", color=INK_SECONDARY)
-    axes.tick_params(colors=INK_MUTED, labelsize=8)
-    axes.grid(True, linewidth=0.4, color=GRID)
-    for spine in axes.spines.values():
-        spine.set_color(AXIS)
-
-
-def _scale_bar(figure, axes, scale, ramp, label: str, tools, *, own_axes: bool = False) -> None:
-    """Draw the scale under `axes`, or inside it when `own_axes` says the axes is reserved for the scale."""
-    where = {"cax": axes} if own_axes else {"ax": axes, "fraction": 0.035, "pad": 0.03, "aspect": 40}
-    bar = figure.colorbar(tools.ScalarMappable(norm=scale, cmap=ramp), orientation="horizontal", **where)
-    bar.set_label(label, color=INK_SECONDARY, fontsize=9.5)
-    bar.ax.tick_params(colors=INK_MUTED, labelsize=8)
-    bar.outline.set_visible(False)
