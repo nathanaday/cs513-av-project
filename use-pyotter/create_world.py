@@ -1,51 +1,46 @@
 # Example: create a world using the world module
-from ..pyotter import World, Planner, Driver
-from ..pyotter.core import DrivingSafetyReq, WorldHazardLibrary, WorldRoadGraph
-from ..pyotter.world import WorldHazardProbability, WorldHazardSpawns
+from pathlib import Path
 
+from pyotter import World
+from pyotter.core import WorldHazardLibrary, WorldRoadGraph
 
+OUTPUT = Path(__file__).parent / "runs"
 
-
-
-    
 
 def main():
-    
     hazards = WorldHazardLibrary()
-    
-    wrg = WorldRoadGraph.from_template('town10') # or similar
-    
+
+    wrg = WorldRoadGraph.from_template("town10")
+
     # view the road graph with dimensions (meters)
-    # should be a matplot lib (or similar) object that exposes the usual options to view in a window, or save to disc
-    World.view_topology(wrg)
-    
+    # the result is a matplotlib Figure: save it, or call matplotlib.pyplot.show() to open a window
+    OUTPUT.mkdir(exist_ok=True)
+    figure = World.view_topology(wrg)
+    figure.savefig(OUTPUT / "town10-topology.png", dpi=150)
+
     # API (getters)
-    wrg.get_segments() # returns all navigable road segments
-    
-    xyz_seg = wrg.get_segment(sid='xyz') # returns the particular segment by id
-    
-    # assign hazard probabilities by segment
-    # I think this should be a list, not dict; I believe we can assign multiple of the same hazard class to the segment? e.g. probability of 1 person vs probability of 10 people
-    xyz_seg.assign_hazard_probability([
-        hazards.person, 0.03,
+    segments = wrg.get_segments()  # returns all navigable road segments
+    print(f"{wrg.map_name}: {len(segments)} segments, {len(wrg.spawn_points)} spawn points")
+
+    segment = wrg.get_segment("r296.s0.l-1")  # returns the particular segment by id
+    print(f"{segment.id}: {segment.length_m:.1f} m, limit {segment.speed_limit_kmh:g} km/h, "
+          f"leads to {', '.join(segment.successors)}")
+
+    # assign hazard probabilities by segment: one value per hazard, and assigning again replaces it
+    segment.assign_hazard_probability([
+        (hazards.pedestrian, 0.03),  # event: chance per second that one starts
+        (hazards.wet_road, 0.4),     # condition: chance that it holds for the run
     ])
-    
+
     # save the world road graph from this session
-    wrg.save('path/to/disc')
-    
+    path = OUTPUT / "town10-world.json.gz"
+    wrg.save(path)
+
     # load a world road graph
-    wrg = WorldRoadGraph.load('path/to/disc')
-    
-    # TODO - have not confirmed this design yet: I think the risk planner takes a weight for how much each penalty should be weighed? In short, we just need some way to produce a dumb route with no risk modelling vs. the risk modeled route
-    
-    # produce a route that does simple point A to point B routing based on ETA/time optimization only
-    naive_waypoints = Planner.route('locA', 'locB', wrg, risk_scale=0)
-    
-    # produce the risk aware route
-    opt_waypoints = Planner.route('locA', 'locB', wrg, risk_scale=1)
-    
-    # TODO - not designed yet: how to produce the actual runtime map of spawned hazards from seed, not just probabilities
-    
-    runtime_seed = World.generate_seed(wrg, )
-    
-    pass
+    wrg = WorldRoadGraph.load(path)
+    for item in wrg.get_segment("r296.s0.l-1").hazard_probabilities:
+        print(f"  {item.hazard_id} ({hazards.get(item.hazard_id).kind.value}): {item.probability}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyotter"
+version = "0.1.0"
+description = "Optimizing Travel Through Environmental Risk: risk-aware navigation in CARLA"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+view = ["matplotlib>=3.8"]
+
+[tool.setuptools.packages.find]
+include = ["pyotter*"]
+
+[tool.setuptools.package-data]
+pyotter = ["templates/*.json.gz"]
