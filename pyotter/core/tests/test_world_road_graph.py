@@ -17,6 +17,26 @@ class Town10Template(unittest.TestCase):
         segment = self.graph.get_segment("r296.s0.l-1")
         self.assertEqual([s.id for s in self.graph.successors_of(segment.id)], ["r15.s0.l-1"])
 
+    def test_junctions_group_their_segments(self):
+        self.assertEqual(len(self.graph.get_junctions()), 9)
+        segment = self.graph.get_segment("r296.s0.l-1")
+        self.assertTrue(segment.in_junction)
+        junction = self.graph.get_junction(segment.junction_id)
+        members = self.graph.segments_in_junction(junction.id)
+        self.assertIn(segment, members)
+        self.assertEqual(len(members), 18)
+        self.assertTrue(all(junction.contains(*m.point_at(m.length_m / 2)[:2]) for m in members))
+        road = self.graph.get_segment("r15.s0.l-1")
+        self.assertFalse(road.in_junction)
+        self.assertIsNone(road.junction_id)
+        self.assertEqual(sum(len(self.graph.segments_in_junction(j.id)) for j in self.graph.get_junctions()), 82)
+
+    def test_segment_in_an_unknown_junction_is_rejected(self):
+        data = self.graph.to_dict()
+        data["segments"]["r296.s0.l-1"]["junction_id"] = 99999
+        with self.assertRaises(RoadGraphError):
+            WorldRoadGraph.from_dict(data)
+
     def test_point_at_interpolates_the_centerline(self):
         segment = self.graph.get_segment("r296.s0.l-1")
         start, end = segment.centerline[0], segment.centerline[-1]

@@ -11,19 +11,28 @@ if TYPE_CHECKING:
 
 class World:
     @staticmethod
-    def view_topology(graph: WorldRoadGraph, *, label_segments: bool = False) -> Figure:
+    def view_topology(graph: WorldRoadGraph, *, label_segments: bool = False, show_junctions: bool = True) -> Figure:
         """Draw the graph from above, in meters. Call `.savefig(path)` or `pyplot.show()` on the result.
 
         With `label_segments`, the figure is larger and each lane carries its segment id.
+        With `show_junctions`, each junction's bounding box is outlined and tagged with its id.
         """
         try:
             from matplotlib import pyplot
+            from matplotlib.patches import Rectangle
         except ImportError:
             raise ImportError("view_topology needs matplotlib: pip install 'pyotter[view]'") from None
 
         size, dpi = (24, 200) if label_segments else (10, 100)
         figure, axes = pyplot.subplots(figsize=(size, size), dpi=dpi)
         placed: list[tuple[float, float]] = []
+        if show_junctions:
+            for junction in graph.get_junctions():
+                left, top = junction.x - junction.extent_x, junction.y - junction.extent_y
+                axes.add_patch(Rectangle((left, top), 2 * junction.extent_x, 2 * junction.extent_y, zorder=0,
+                                         facecolor="0.93", edgecolor="0.4", linestyle="--", linewidth=0.9))
+                axes.text(left, top - 1.0, f"junction {junction.id}", fontsize=8, color="0.25", ha="left", va="bottom",
+                          bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.6, "alpha": 0.85})
         for segment in graph.get_segments():
             line = segment.centerline
             color = "tab:orange" if segment.in_junction else "tab:blue"
@@ -38,12 +47,14 @@ class World:
                           bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.4, "alpha": 0.85})
         axes.plot([], [], color="tab:blue", label="road lane")
         axes.plot([], [], color="tab:orange", label="junction lane")
+        if show_junctions and graph.junctions:
+            axes.plot([], [], color="0.4", linestyle="--", linewidth=0.9, label="junction bounds")
         axes.legend(loc="upper right")
         axes.set_aspect("equal")
         axes.invert_yaxis()  # CARLA's frame is left-handed: +y is to the right of +x
         axes.set_xlabel("x (m)")
         axes.set_ylabel("y (m)")
-        axes.set_title(f"{graph.map_name}: {len(graph.segments)} segments")
+        axes.set_title(graph.map_name)
         axes.grid(True, linewidth=0.3)
         return figure
 

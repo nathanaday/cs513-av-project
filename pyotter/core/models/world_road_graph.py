@@ -51,12 +51,26 @@ class HazardProbability:
     probability: float
 
 
+@dataclass(frozen=True)
+class Junction:
+    """An intersection from the map. The box is axis-aligned, in meters, and encloses the junction's lanes."""
+
+    id: int
+    x: float
+    y: float
+    extent_x: float
+    extent_y: float
+
+    def contains(self, x: float, y: float) -> bool:
+        return abs(x - self.x) <= self.extent_x and abs(y - self.y) <= self.extent_y
+
+
 @dataclass
 class RoadSegment:
     road_id: int
     section_id: int
     lane_id: int
-    in_junction: bool
+    junction_id: int | None
     length_m: float
     speed_limit_kmh: float
     speed_limit_verified: bool
@@ -67,6 +81,10 @@ class RoadSegment:
     @property
     def id(self) -> str:
         return f"r{self.road_id}.s{self.section_id}.l{self.lane_id}"
+
+    @property
+    def in_junction(self) -> bool:
+        return self.junction_id is not None
 
     def assign_hazard_probability(self, assignments: Iterable[HazardProbability | tuple[Hazard | str, float]]) -> None:
         """Set the probability of each given hazard, replacing an earlier value for the same hazard."""
@@ -105,6 +123,7 @@ class WorldRoadGraph:
     carla_version: str
     provenance: str
     segments: dict[str, RoadSegment]
+    junctions: dict[int, Junction] = field(default_factory=dict)
     spawn_points: tuple[SegmentPosition, ...] = ()
     schema_version: int = SCHEMA_VERSION
 
@@ -120,6 +139,19 @@ class WorldRoadGraph:
     def successors_of(self, sid: str) -> list[RoadSegment]:
         return [self.segments[successor] for successor in self.get_segment(sid).successors]
 
+    def get_junctions(self) -> list[Junction]:
+        return list(self.junctions.values())
+
+    def get_junction(self, junction_id: int) -> Junction:
+        try:
+            return self.junctions[junction_id]
+        except KeyError:
+            raise RoadGraphError(f"unknown junction: {junction_id}") from None
+
+    def segments_in_junction(self, junction_id: int) -> list[RoadSegment]:
+        self.get_junction(junction_id)
+        return [segment for segment in self.segments.values() if segment.junction_id == junction_id]
+
     def hazard_ids(self) -> set[str]:
         return {item.hazard_id for segment in self.segments.values() for item in segment.hazard_probabilities}
 
@@ -134,6 +166,12 @@ class WorldRoadGraph:
             raise RoadGraphError("graph has no segments")
         for sid, segment in self.segments.items():
             _check_segment(sid, segment, self.segments)
+            if segment.in_junction and segment.junction_id not in self.junctions:
+                raise RoadGraphError(f"{sid}: unknown junction {segment.junction_id}")
+        used = {segment.junction_id for segment in self.segments.values()}
+        for key, junction in self.junctions.items():
+            if key != junction.id or key not in used:
+                raise RoadGraphError(f"junction {key}: key does not match its id, or no segment belongs to it")
         for position in self.spawn_points:
             segment = self.get_segment(position.segment_id)
             if not 0.0 <= position.offset_m <= segment.length_m + 1e-6:
@@ -157,6 +195,7 @@ class WorldRoadGraph:
             graph = cls(**{
                 **data,
                 "segments": segments,
+                "junctions": {int(key): Junction(**raw) for key, raw in data.get("junctions", {}).items()},
                 "spawn_points": tuple(SegmentPosition(**point) for point in data.get("spawn_points", ())),
             })
         except (KeyError, TypeError) as error:

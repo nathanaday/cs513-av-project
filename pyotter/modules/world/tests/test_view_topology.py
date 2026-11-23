@@ -17,13 +17,15 @@ class ViewTopology(unittest.TestCase):
         axes = World.view_topology(graph).axes[0]
         drawn = [line for line in axes.lines if len(line.get_xdata()) > 0]
         self.assertEqual(len(drawn), len(graph.segments))
+        self.assertEqual(len(axes.patches), len(graph.junctions))
         self.assertEqual(axes.get_xlabel(), "x (m)")
         self.assertTrue(axes.yaxis_inverted())
-        self.assertEqual(_labels(axes), [])
+        self.assertEqual(_labels(axes), [f"junction {j.id}" for j in graph.get_junctions()])
 
     def test_labels_are_off_by_default_and_cover_every_segment_when_on(self):
         graph = WorldRoadGraph.from_template("town10")
-        axes = World.view_topology(graph, label_segments=True).axes[0]
+        axes = World.view_topology(graph, label_segments=True, show_junctions=False).axes[0]
+        self.assertEqual(len(axes.patches), 0)
         self.assertEqual(sorted(_labels(axes)), sorted(graph.segments))
 
 
