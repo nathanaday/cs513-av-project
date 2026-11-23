@@ -22,7 +22,10 @@ from pyotter.modules.driver import DrivingScenario, DrivingScenarioTelemetry
 
 from . import container, drive, server, slurm
 from .console import FAIL, NOTE, OK, LabError, console, next_steps, show_error, size_text, table
-from .library import TELEMETRY_SUFFIX, ResultsLibrary, ScenarioEntry, ScenarioLibrary, web_address
+from .library import (
+    SCENARIOS, TELEMETRY, TELEMETRY_SUFFIX, ResultsLibrary, ScenarioEntry, ScenarioLibrary,
+    require_current_schema, web_address,
+)
 from .settings import SETTINGS, relative
 
 INTERRUPTED = 130
@@ -134,7 +137,7 @@ def otter_drive(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         prog="otter-drive",
         description="Queue one drive per scenario on the running CARLA server. "
-                    "Telemetry goes to runs/telemetry/ and to the telemetry library.",
+                    f"Telemetry goes to runs/{TELEMETRY}/ and to the telemetry library.",
     )
     parser.add_argument("scenarios", nargs="+", metavar="SCENARIO",
                         help="a name or fingerprint from the library, or a scenario file (added to the library first)")
@@ -188,7 +191,7 @@ def otter_scenarios(argv: list[str]) -> int:
     push.add_argument("files", nargs="+", type=Path, metavar="FILE")
     show = actions.add_parser("show", help="what a scenario holds")
     show.add_argument("scenario", metavar="SCENARIO")
-    pull = actions.add_parser("pull", help="download scenarios to runs/scenarios/")
+    pull = actions.add_parser("pull", help=f"download scenarios to runs/{SCENARIOS}/")
     pull.add_argument("scenarios", nargs="+", metavar="SCENARIO")
     args = _parse(parser, argv, "list")
     library = ScenarioLibrary()
@@ -259,7 +262,7 @@ def otter_results(argv: list[str]) -> int:
     actions = parser.add_subparsers(dest="action", required=True)
     listing = actions.add_parser("list", help="every run (the default)")
     listing.add_argument("scenario", nargs="?", default="", metavar="SCENARIO")
-    pull = actions.add_parser("pull", help="download runs to runs/telemetry/")
+    pull = actions.add_parser("pull", help=f"download runs to runs/{TELEMETRY}/")
     pull.add_argument("scenario", nargs="?", default="", metavar="SCENARIO")
     actions.add_parser("sync", help="upload local results the library does not have")
     push = actions.add_parser("push", help="add telemetry files driven outside the cluster")
@@ -314,6 +317,7 @@ def _results_push(results: ResultsLibrary, files: list[Path]) -> int:
             telemetry = DrivingScenarioTelemetry.load(path)
         except Exception as error:
             raise LabError(f"{path} is not a telemetry file ({error}).") from error
+        require_current_schema(telemetry.schema_version, path)
         entry = _scenario_of(telemetry, entries, path)
         driven = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         target = results.telemetry_path(entry.label, f"{driven}-local")
