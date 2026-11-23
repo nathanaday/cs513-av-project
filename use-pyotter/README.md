@@ -27,7 +27,7 @@ job    scenario                     fingerprint
   Watch    tail -f logs/4102.log
   Queue    squeue --me
   Results  runs/telemetry/town10-seed1227-naive.f6d948589e74/
-  Library  https://huggingface.co/datasets/nadayusc/otter-telemetry
+  Library  https://huggingface.co/datasets/otter-usc/otter-telemetry
 ```
 
 `SCENARIO` is a name from the library, the first characters of a fingerprint, or a scenario file. A file is added to the library before it is driven.
@@ -38,11 +38,11 @@ job    scenario                     fingerprint
 curl -LsSf https://astral.sh/uv/install.sh | sh    # uv, once per account
 git clone https://github.com/nathanaday/cs513-av-project.git && cd cs513-av-project/use-pyotter
 uv sync
-uv run hf auth login                               # a token with write access
+uv run hf auth login                               # a token with write access to otter-usc
 uv run otter-check
 ```
 
-`otter-check` lists what is set up and what is missing, with the command that fixes each item. The first `carla-server` also fetches the toolchain image, so that one start takes longer.
+The token must belong to a member of the `otter-usc` organization on Hugging Face, which owns both libraries. Ask a maintainer for an invitation. `otter-check` lists what is set up and what is missing, with the command that fixes each item. The first `carla-server` also fetches the toolchain image, so that one start takes longer.
 
 ### The Server
 
@@ -111,16 +111,14 @@ On November 22, 2026 the commands ran from end to end against stand-ins for Slur
 
 Do these steps once for the team.
 
-1. Merge `.github/workflows/toolchain-image.yml` to `main`. It builds the image and pushes it under the name in `otter.yaml`. To publish a changed image, raise the tag in `otter.yaml` in the same change.
-2. Make the package public in its settings on GitHub, since the repository is private. Otherwise each user exports `APPTAINER_DOCKER_USERNAME` and `APPTAINER_DOCKER_PASSWORD` (a token with `read:packages`) before the first `carla-server`.
-3. Create the two datasets:
+1. Keep `.github/workflows/toolchain-image.yml` on `main`. It builds the image and pushes it under the name in `otter.yaml`. To publish a changed image, raise the tag in `otter.yaml` in the same change.
+2. Make the `carla-toolchain` package public in its settings on GitHub. A package starts private even though the repository is public. While it is private, each user exports `APPTAINER_DOCKER_USERNAME` and `APPTAINER_DOCKER_PASSWORD` (a token with `read:packages`) before the first `carla-server`.
+3. Invite each teammate to the [otter-usc](https://huggingface.co/otter-usc) organization on Hugging Face with write access. Both datasets belong to it:
 
-   ```bash
-   uv run hf repos create nadayusc/otter-scenarios --repo-type dataset
-   uv run hf repos create nadayusc/otter-telemetry --repo-type dataset
-   ```
+   - [otter-usc/otter-scenarios](https://huggingface.co/datasets/otter-usc/otter-scenarios)
+   - [otter-usc/otter-telemetry](https://huggingface.co/datasets/otter-usc/otter-telemetry)
 
-   As far as we know, a dataset under a personal account has one writer, and shared write access needs an organization. For teammates to upload, create the datasets under a shared organization and set the two names in `otter.yaml`, or share a write token through `HF_TOKEN`.
+   To move the libraries, create two datasets elsewhere with `uv run hf repos create NAME --repo-type dataset` and set their names in `otter.yaml`.
 
 ## Tests
 

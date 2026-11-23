@@ -2,8 +2,8 @@
 # otter-results, otter-check). Read through SETTINGS in otterlab/settings.py.
 
 # Hugging Face datasets: every scenario file, and the telemetry of every run.
-scenarios_repo: nadayusc/otter-scenarios
-results_repo: nadayusc/otter-telemetry
+scenarios_repo: otter-usc/otter-scenarios
+results_repo: otter-usc/otter-telemetry
 
 # The toolchain image: the CARLA server and a Python with the CARLA client.
 # .github/workflows/toolchain-image.yml builds and pushes exactly this name.
