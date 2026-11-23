@@ -1,9 +1,12 @@
-"""Shared drawing for pyotter's figures. matplotlib is imported only when a figure is made."""
+"""Private helpers of the visualize module: the theme, and the drawing every figure shares.
+
+matplotlib is imported only when a figure is made.
+"""
 
 from __future__ import annotations
 
-from ..models.world_road_graph import WorldRoadGraph
-from .config import CONFIG
+from ...core.models.world_road_graph import WorldRoadGraph
+from ...core.utilities.config import CONFIG
 
 THEME = CONFIG.view
 

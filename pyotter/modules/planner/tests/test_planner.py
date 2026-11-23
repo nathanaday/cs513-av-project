@@ -6,12 +6,6 @@ from pyotter import Planner
 from pyotter.core import CenterlinePoint, RoadSegment, SegmentPosition, WorldHazardLibrary, WorldRoadGraph
 from pyotter.modules.planner import PlannerComputedWaypoints, PlannerConfig, PlanningError
 
-try:
-    import matplotlib
-    matplotlib.use("Agg")
-except ImportError:
-    matplotlib = None
-
 START, SHORTCUT, DETOUR, FINISH = "r1.s0.l-1", "r2.s0.l-1", "r3.s0.l-1", "r4.s0.l-1"
 
 
@@ -136,16 +130,6 @@ class Town10(unittest.TestCase):
             path = Path(folder) / "route.json.gz"
             route.save(path)
             self.assertEqual(PlannerComputedWaypoints.load(path), route)
-
-    @unittest.skipIf(matplotlib is None, "matplotlib is not installed")
-    def test_view_draws_one_map_per_route(self):
-        routes = [Planner.route(self.a, self.b, self.graph, mode=mode, risk_scale=2) for mode in ("naive", "cautious", "risk-aware")]
-        figure = Planner.view_routes(self.graph, routes)
-        maps = [axes for axes in figure.axes if axes.get_xlabel() == "x (m)"]
-        self.assertEqual([axes.get_title(loc="left") for axes in maps], ["naive", "cautious", "risk-aware, risk scale 2"])
-        self.assertEqual(len(Planner.view_routes(self.graph, routes[0]).axes), 3)
-        with self.assertRaises(PlanningError):
-            Planner.view_routes(tiny(), routes)
 
 
 if __name__ == "__main__":

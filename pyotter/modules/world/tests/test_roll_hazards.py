@@ -6,12 +6,6 @@ from pyotter import World
 from pyotter.core import RoadGraphError, WorldHazardLibrary, WorldRoadGraph
 from pyotter.modules.world import WorldHazardSpawns
 
-try:
-    import matplotlib
-    matplotlib.use("Agg")
-except ImportError:
-    matplotlib = None
-
 
 class RollHazards(unittest.TestCase):
     def setUp(self):
@@ -105,17 +99,6 @@ class RollHazards(unittest.TestCase):
         self.graph.get_segment("r296.s0.l-1").assign_hazard_probability([("wet_road", 0.1)])
         with self.assertRaises(RoadGraphError):
             self.roll()
-
-    @unittest.skipIf(matplotlib is None, "matplotlib is not installed")
-    def test_view_draws_one_dot_per_event_and_rejects_spawns_from_another_world(self):
-        spawns = self.roll()
-        figure = World.view_spawns(self.graph, self.hazards, spawns)
-        maps = [axes for axes in figure.axes if axes.get_xlabel() == "x (m)"]
-        self.assertEqual([axes.get_title(loc="left") for axes in maps], ["pedestrian", "low_visibility", "wet_road"])
-        self.assertEqual(len(maps[0].collections[0].get_offsets()), len(spawns.events))
-        self.graph.set_condition(self.hazards.wet_road, probability=0.2, severity="low")
-        with self.assertRaises(RoadGraphError):
-            World.view_spawns(self.graph, self.hazards, spawns)
 
 
 if __name__ == "__main__":

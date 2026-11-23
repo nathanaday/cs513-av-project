@@ -44,6 +44,23 @@ Driving module entities:
 - Driving safety evaluation (DSE) - evaluated score based on the safety critera 
 
 
+### Visualize module
+
+The visualize module draws every figure: the map, the forecast, a roll, planned routes, and driven runs. It reads the entities of the other modules, and none of them import it.
+
+```python
+from pyotter import Visualize
+
+Visualize.topology(graph)
+Visualize.hazards(graph, library)
+Visualize.spawns(graph, library, spawns)
+Visualize.routes(graph, routes)
+Visualize.telemetry(runs)
+```
+
+Labels, colors, layout, and plotting code belong here and nowhere else. The colors and sizes are the `view` section of `config.yaml`. matplotlib is optional (`pip install 'pyotter[view]'`) and is imported only when a figure is made.
+
+
 ## Concepts
 
 ### Hazards
@@ -81,9 +98,9 @@ CONFIG.safety.min_gap_m
 CONFIG.driver.controller.speed_gain
 ```
 
-- A model's default comes from the config (`min_gap_m: float = CONFIG.safety.min_gap_m`), so a value is tuned in one place
-- A scenario file stores the driver and planner values it was made with, so a saved run does not change when the config does
-- Names with a fixed set of values are enums built on `TextEnum` (`core/utilities/text_enum.py`), which read and write as plain text
+- A model's default comes from the config (`min_gap_m: float = CONFIG.safety.min_gap_m`)
+- A scenario file stores the driver and planner values
+- Names with a fixed set of values are enums
 
 ### Code Style
 
