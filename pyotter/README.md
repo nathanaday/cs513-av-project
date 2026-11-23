@@ -89,7 +89,9 @@ Each module should follow a template:
 
 ### Configuration
 
-`config.yaml` holds the library version, the schema version of every file pyotter writes, and every tunable value. Read it by attribute:
+`config.yaml` defined the library + schema version and all tunable value.
+
+Example
 
 ```python
 from pyotter.core.utilities.config import CONFIG
