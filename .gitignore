@@ -4,3 +4,4 @@ runs/
 __pycache__/
 .venv/
 carla-work/reinforcement-learning/models/
+CLAUDE.md
