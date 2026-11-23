@@ -11,6 +11,7 @@ dependencies = []
 
 [project.optional-dependencies]
 view = ["matplotlib>=3.8"]
+notebook = ["matplotlib>=3.8", "ipykernel"]
 
 [tool.setuptools.packages.find]
 include = ["pyotter*"]
