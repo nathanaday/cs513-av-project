@@ -2,11 +2,11 @@
   <img src="docs/assets/otter_static.jpg" alt="The OTTER mascot: an otter in driving goggles at the wheel of a small blue car" width="420">
 </p>
 
-# Demand Against Capability
+# Optimizing Travel Through Environmental Risk (OTTER)
 
 **Risk-Budgeted Route Planning and Adaptive Behavior for Autonomous Driving**
 
-A group project for CSCI 513 (USC), cluster C4 Autonomous Driving. Its library is [pyotter](pyotter/README.md), where OTTER stands for Optimizing Travel Through Environmental Risk.
+A group project for CSCI 513 (USC), cluster C4 Autonomous Driving. Its library is [pyotter](pyotter/README.md).
 
 Team: Nathan Aday, Illy Hoang, Yonsoo Kim, Rachel Lin, Tomohiko Uemura, Jeslyn Yang
 
@@ -18,7 +18,7 @@ This project builds a risk-aware route planner that sets its caution from the di
 
 We compare three drivers in the CARLA simulator on the same scenarios: a naive driver that takes the quickest route at the speed limit, an always-cautious driver that drives the same route slowly, and the risk-aware driver. We score each drive on travel time and on outcomes measured from the simulator, such as collisions, near-misses, and hard braking. The goal is to find out whether the risk-aware planner gets close to the safety of the cautious driver at close to the travel time of the naive one.
 
-## Where the Work Lives
+## Directory
 
 | Path | Role |
 |---|---|
@@ -27,7 +27,9 @@ We compare three drivers in the CARLA simulator on the same scenarios: a naive d
 | [`carla-work/`](carla-work/README.md) | Intermediate work: the first-pass experiments that showed what data the project needs and how CARLA behaves. Kept for reference |
 | [`docs/`](docs/) | The project plan, the team split, and the concepts |
 
-New work goes into `pyotter/` and `use-pyotter/`. `carla-work/` is where the team tried ideas before the library existed. Its sound parts were ported into pyotter, and nothing in pyotter depends on it.
+>[!note]
+> New work goes into `pyotter/` and `use-pyotter/`. 
+> `carla-work/` is where the team defined early contracts, services, and schemas; most of it has been ported to Pyotter
 
 ## Status
 
