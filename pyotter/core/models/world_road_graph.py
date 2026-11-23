@@ -1,8 +1,9 @@
 """World road graph: pyotter's one representation of a CARLA map's drivable lanes.
 
-A segment is one directed lane span between two branch points. Hazard
-probabilities live on the segment, so a graph with assignments is one world
-instance and a graph without them is a map template.
+A segment is one directed lane span between two branch points. Event
+probabilities live on the segments, and condition forecasts and the time of day
+live on the graph, so a graph with them is one world instance and a graph
+without them is a map template.
 """
 
 from __future__ import annotations
@@ -14,9 +15,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Iterable
 
-from .world_hazard_library import Hazard
+from .world_hazard_library import Hazard, HazardKind
 
 SCHEMA_VERSION = 1
+SEVERITY_LEVELS = {"low": 1 / 6, "mid": 1 / 2, "high": 5 / 6}
 TEMPLATES = Path(__file__).resolve().parents[2] / "templates"
 
 
@@ -43,12 +45,43 @@ class SegmentPosition:
     offset_m: float
 
 
+def severity_level(severity: float) -> str:
+    return "low" if severity < 1 / 3 else "mid" if severity < 2 / 3 else "high"
+
+
 @dataclass(frozen=True)
 class HazardProbability:
-    """A hazard's probability on one segment. Its meaning follows the hazard's kind; see HazardKind."""
+    """An event's probability on one segment: the chance per second that one starts."""
 
     hazard_id: str
     probability: float
+
+
+@dataclass(frozen=True)
+class ConditionForecast:
+    """What a condition may be in a run of this world. Every value is between 0 and 1.
+
+    `probability` is the chance that the condition is present. When it is, its
+    severity for the run is drawn evenly from `severity` plus or minus
+    `variability`, kept within 0 and 1.
+    """
+
+    hazard_id: str
+    probability: float
+    severity: float
+    variability: float = 0.0
+
+    def severity_range(self) -> tuple[float, float]:
+        return max(0.0, self.severity - self.variability), min(1.0, self.severity + self.variability)
+
+    def severity_at(self, draw: float) -> float:
+        """The severity for a draw between 0 and 1."""
+        return min(1.0, max(0.0, self.severity + (2.0 * draw - 1.0) * self.variability))
+
+    def expected_severity(self) -> float:
+        """Mean severity over runs, counting a run without the condition as 0."""
+        steps = 200
+        return self.probability * sum(self.severity_at((i + 0.5) / steps) for i in range(steps)) / steps
 
 
 @dataclass(frozen=True)
@@ -87,11 +120,13 @@ class RoadSegment:
         return self.junction_id is not None
 
     def assign_hazard_probability(self, assignments: Iterable[HazardProbability | tuple[Hazard | str, float]]) -> None:
-        """Set the probability of each given hazard, replacing an earlier value for the same hazard."""
+        """Set the probability of each given event, replacing an earlier value for the same event."""
         current = {item.hazard_id: item for item in self.hazard_probabilities}
         for item in assignments:
             if not isinstance(item, HazardProbability):
                 hazard, probability = item
+                if isinstance(hazard, Hazard) and hazard.kind is not HazardKind.EVENT:
+                    raise RoadGraphError(f"{hazard.id} is a condition; set it for the whole world with set_condition")
                 item = HazardProbability(_hazard_id(hazard), float(probability))
             _check_probability(self.id, item)
             current[item.hazard_id] = item
@@ -125,6 +160,8 @@ class WorldRoadGraph:
     segments: dict[str, RoadSegment]
     junctions: dict[int, Junction] = field(default_factory=dict)
     spawn_points: tuple[SegmentPosition, ...] = ()
+    conditions: dict[str, ConditionForecast] = field(default_factory=dict)
+    time_of_day_h: float | None = None
     schema_version: int = SCHEMA_VERSION
 
     def get_segments(self) -> list[RoadSegment]:
@@ -152,12 +189,37 @@ class WorldRoadGraph:
         self.get_junction(junction_id)
         return [segment for segment in self.segments.values() if segment.junction_id == junction_id]
 
-    def hazard_ids(self) -> set[str]:
+    def set_condition(self, hazard: Hazard | str, *, probability: float, severity: float | str,
+                      variability: float = 0.0) -> None:
+        """Forecast a condition for the whole world. `severity` is 0 to 1, or "low", "mid" or "high"."""
+        if isinstance(hazard, Hazard) and hazard.kind is not HazardKind.CONDITION:
+            raise RoadGraphError(f"{hazard.id} is an event; assign it to segments with assign_hazard_probability")
+        if isinstance(severity, str):
+            if severity not in SEVERITY_LEVELS:
+                raise RoadGraphError(f"unknown severity level: {severity}; use one of {', '.join(SEVERITY_LEVELS)}")
+            severity = SEVERITY_LEVELS[severity]
+        forecast = ConditionForecast(_hazard_id(hazard), float(probability), float(severity), float(variability))
+        _check_forecast(forecast)
+        self.conditions[forecast.hazard_id] = forecast
+
+    def get_condition(self, hazard: Hazard | str) -> ConditionForecast | None:
+        return self.conditions.get(_hazard_id(hazard))
+
+    def set_time_of_day(self, time_of_day_h: float | None) -> None:
+        """Hours from midnight, 0 up to 24, or None for a world with no sun model."""
+        _check_time(time_of_day_h)
+        self.time_of_day_h = time_of_day_h
+
+    def event_ids(self) -> set[str]:
         return {item.hazard_id for segment in self.segments.values() for item in segment.hazard_probabilities}
+
+    def hazard_ids(self) -> set[str]:
+        return self.event_ids() | set(self.conditions)
 
     def clear_hazard_probabilities(self) -> None:
         for segment in self.segments.values():
             segment.clear_hazard_probabilities()
+        self.conditions = {}
 
     def validate(self) -> None:
         if self.schema_version != SCHEMA_VERSION:
@@ -172,6 +234,11 @@ class WorldRoadGraph:
         for key, junction in self.junctions.items():
             if key != junction.id or key not in used:
                 raise RoadGraphError(f"junction {key}: key does not match its id, or no segment belongs to it")
+        for key, forecast in self.conditions.items():
+            if key != forecast.hazard_id:
+                raise RoadGraphError(f"condition {key}: key does not match its hazard id")
+            _check_forecast(forecast)
+        _check_time(self.time_of_day_h)
         for position in self.spawn_points:
             segment = self.get_segment(position.segment_id)
             if not 0.0 <= position.offset_m <= segment.length_m + 1e-6:
@@ -197,6 +264,7 @@ class WorldRoadGraph:
                 "segments": segments,
                 "junctions": {int(key): Junction(**raw) for key, raw in data.get("junctions", {}).items()},
                 "spawn_points": tuple(SegmentPosition(**point) for point in data.get("spawn_points", ())),
+                "conditions": {key: ConditionForecast(**raw) for key, raw in data.get("conditions", {}).items()},
             })
         except (KeyError, TypeError) as error:
             raise RoadGraphError(f"malformed road graph: {error}") from None
@@ -235,6 +303,18 @@ def _check_probability(sid: str, item: HazardProbability) -> None:
     p = item.probability
     if not isinstance(p, (int, float)) or not math.isfinite(p) or not 0.0 <= p <= 1.0:
         raise RoadGraphError(f"{sid}: probability of {item.hazard_id} must be between 0 and 1, got {p!r}")
+
+
+def _check_forecast(forecast: ConditionForecast) -> None:
+    for name in ("probability", "severity", "variability"):
+        value = getattr(forecast, name)
+        if not isinstance(value, (int, float)) or not math.isfinite(value) or not 0.0 <= value <= 1.0:
+            raise RoadGraphError(f"{forecast.hazard_id}: {name} must be between 0 and 1, got {value!r}")
+
+
+def _check_time(time_of_day_h: float | None) -> None:
+    if time_of_day_h is not None and not 0.0 <= time_of_day_h < 24.0:
+        raise RoadGraphError(f"time of day must be from 0 up to 24 hours, got {time_of_day_h!r}")
 
 
 def _check_segment(sid: str, segment: RoadSegment, segments: dict[str, RoadSegment]) -> None:

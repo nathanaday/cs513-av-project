@@ -2,7 +2,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pyotter.core import HazardKind, HazardProbability, RoadGraphError, WorldHazardLibrary, WorldRoadGraph
+from pyotter.core import (
+    ConditionForecast, HazardKind, HazardProbability, RoadGraphError, WorldHazardLibrary, WorldRoadGraph, severity_level,
+)
 
 
 class Town10Template(unittest.TestCase):
@@ -47,12 +49,48 @@ class Town10Template(unittest.TestCase):
 
     def test_assignment_replaces_the_same_hazard(self):
         segment = self.graph.get_segment("r296.s0.l-1")
-        segment.assign_hazard_probability([(self.hazards.pedestrian, 0.03), ("wet_road", 0.01)])
+        segment.assign_hazard_probability([(self.hazards.pedestrian, 0.03), ("cyclist", 0.01)])
         segment.assign_hazard_probability([HazardProbability("pedestrian", 0.05)])
         self.assertEqual(segment.hazard_probability(self.hazards.pedestrian), 0.05)
-        self.assertEqual(segment.hazard_probability("wet_road"), 0.01)
-        self.assertEqual(segment.hazard_probability("low_visibility"), 0.0)
-        self.assertEqual(self.graph.hazard_ids(), {"pedestrian", "wet_road"})
+        self.assertEqual(segment.hazard_probability("cyclist"), 0.01)
+        self.assertEqual(segment.hazard_probability("scooter"), 0.0)
+        self.assertEqual(self.graph.event_ids(), {"pedestrian", "cyclist"})
+
+    def test_conditions_belong_to_the_world_and_events_to_segments(self):
+        segment = self.graph.get_segment("r296.s0.l-1")
+        with self.assertRaises(RoadGraphError):
+            segment.assign_hazard_probability([(self.hazards.wet_road, 0.4)])
+        with self.assertRaises(RoadGraphError):
+            self.graph.set_condition(self.hazards.pedestrian, probability=0.5, severity=0.5)
+        self.graph.set_condition(self.hazards.wet_road, probability=0.9, severity="high", variability=0.1)
+        forecast = self.graph.get_condition(self.hazards.wet_road)
+        self.assertAlmostEqual(forecast.severity, 5 / 6)
+        self.assertEqual(self.graph.hazard_ids(), {"wet_road"})
+        self.assertIsNone(self.graph.get_condition("low_visibility"))
+        for bad in ({"probability": 1.5, "severity": 0.5}, {"probability": 0.5, "severity": "extreme"},
+                    {"probability": 0.5, "severity": 0.5, "variability": -0.1}):
+            with self.assertRaises(RoadGraphError):
+                self.graph.set_condition("wet_road", **bad)
+
+    def test_condition_severity_varies_around_its_center_within_bounds(self):
+        fixed = ConditionForecast("wet_road", 1.0, 0.9, 0.0)
+        self.assertEqual((fixed.severity_at(0.0), fixed.severity_at(1.0)), (0.9, 0.9))
+        wide = ConditionForecast("wet_road", 0.5, 0.5, 0.4)
+        self.assertAlmostEqual(wide.severity_at(0.0), 0.1)
+        self.assertAlmostEqual(wide.severity_at(1.0), 0.9)
+        self.assertAlmostEqual(wide.expected_severity(), 0.25)
+        clipped = ConditionForecast("wet_road", 1.0, 0.9, 0.3)
+        low, high = clipped.severity_range()
+        self.assertAlmostEqual(low, 0.6)
+        self.assertEqual(high, 1.0)
+        self.assertEqual(clipped.severity_at(1.0), 1.0)
+        self.assertEqual([severity_level(v) for v in (0.1, 0.5, 0.9)], ["low", "mid", "high"])
+
+    def test_time_of_day_is_checked(self):
+        self.graph.set_time_of_day(17.5)
+        self.assertEqual(self.graph.time_of_day_h, 17.5)
+        with self.assertRaises(RoadGraphError):
+            self.graph.set_time_of_day(24.0)
 
     def test_library_separates_conditions_from_events(self):
         self.assertEqual([h.id for h in self.hazards.of_kind(HazardKind.EVENT)], ["pedestrian"])
@@ -66,6 +104,8 @@ class Town10Template(unittest.TestCase):
 
     def test_save_and_load_keep_assignments(self):
         self.graph.get_segment("r296.s0.l-1").assign_hazard_probability([(self.hazards.pedestrian, 0.03)])
+        self.graph.set_condition(self.hazards.low_visibility, probability=0.5, severity="mid", variability=0.4)
+        self.graph.set_time_of_day(6.5)
         with tempfile.TemporaryDirectory() as folder:
             for name in ("world.json", "world.json.gz"):
                 path = Path(folder) / name

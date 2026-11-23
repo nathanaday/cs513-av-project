@@ -22,8 +22,9 @@ Global entities:
 The world module handles risk modelling and world generation.
 
 World module entities:
-- world hazard probability (WHP) - probability of each hazard on each segment in the CRG
-- world hazard spawns (WHS) - the actual hazard spawns based on the probabilities
+- world hazard spawns (WHS) - the hazards that occur in one run, rolled from the probabilities and a seed
+
+The forecast is stored on the WRG, not in a separate entity. Event probabilities are per segment. Condition forecasts (chance, severity, variability) and the time of day are per world.
 
 
 ### Planning module
@@ -41,6 +42,15 @@ The driving module runs ego actors in CARLA based on the provided entities and c
 Driving module entities:
 - Driving scenario telemetry (DST) - the telemetry (speed, acceleration, bounds) of a scenario run
 - Driving safety evaluation (DSE) - evaluated score based on the safety critera 
+
+
+## Concepts
+
+### Hazards
+
+- Events are modeled per segment using a probability vs. time distribution (e.g. probability of a pedestrian spawning on that segment at that second)
+- Conditions are modeled at the world level: one forecast per condition (chance, severity, how much severity can vary), and applies to the whole run
+- Sun is a time-of-day setting whose glare is computed per lane from the lane's heading, and scaled down by rain/fog.
 
 
 ## Guidelines

@@ -35,25 +35,32 @@ class ViewHazards(unittest.TestCase):
         self.graph = WorldRoadGraph.from_template("town10")
         self.hazards = WorldHazardLibrary()
 
-    def test_needs_assigned_hazards_from_the_library(self):
+    def maps(self, figure):
+        return [axes for axes in figure.axes if axes.get_xlabel() == "x (m)"]
+
+    def test_needs_a_forecast_from_the_library(self):
         with self.assertRaises(RoadGraphError):
             World.view_hazards(self.graph, self.hazards)
         self.graph.get_segment("r296.s0.l-1").assign_hazard_probability([("meteor", 0.1)])
         with self.assertRaises(RoadGraphError):
             World.view_hazards(self.graph, self.hazards)
 
-    def test_draws_one_map_per_assigned_hazard_in_library_order(self):
+    def test_draws_one_map_per_hazard_in_library_order(self):
         for segment in self.graph.segments_in_junction(189):
             segment.assign_hazard_probability([(self.hazards.pedestrian, 0.03)])
-        self.graph.get_segment("r20.s0.l-1").assign_hazard_probability([(self.hazards.wet_road, 0.6)])
+        self.graph.set_condition(self.hazards.wet_road, probability=0.9, severity="high")
         figure = World.view_hazards(self.graph, self.hazards)
-        maps = [axes for axes in figure.axes if axes.get_xlabel() == "x (m)"]
-        self.assertEqual([axes.get_title(loc="left") for axes in maps], ["pedestrian", "wet_road"])
-        for axes in maps:
+        self.assertEqual([axes.get_title(loc="left") for axes in self.maps(figure)], ["pedestrian", "wet_road"])
+        for axes in self.maps(figure):
             self.assertEqual(len(axes.lines), len(self.graph.segments))
             self.assertTrue(axes.yaxis_inverted())
         scales = [axes.get_xlabel() for axes in figure.axes if axes.get_xlabel() != "x (m)"]
-        self.assertEqual(scales, ["chance per second that one starts", "chance that it holds for the run"])
+        self.assertEqual(scales, ["chance per second that one starts", "expected severity (chance x severity)"])
+
+    def test_time_of_day_alone_brings_up_the_visibility_map(self):
+        self.graph.set_time_of_day(17.5)
+        figure = World.view_hazards(self.graph, self.hazards)
+        self.assertEqual([axes.get_title(loc="left") for axes in self.maps(figure)], ["low_visibility"])
 
 
 def _labels(axes):
