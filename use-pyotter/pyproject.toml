@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "otterlab"
+version = "0.1.0"
+description = "Run pyotter scenarios on CARLA: the scenario and telemetry libraries, and the CARC launcher"
+requires-python = ">=3.10"
+dependencies = [
+    "pyotter",
+    "huggingface_hub>=1.0",
+    "rich>=13",
+]
+
+[project.optional-dependencies]
+notebook = ["matplotlib>=3.8", "ipykernel"]
+
+[project.scripts]
+carla-server = "otterlab.cli:carla_server"
+otter-drive = "otterlab.cli:otter_drive"
+otter-scenarios = "otterlab.cli:otter_scenarios"
+otter-results = "otterlab.cli:otter_results"
+otter-check = "otterlab.cli:otter_check"
+
+[tool.uv.sources]
+pyotter = { path = "..", editable = true }
+
+[tool.setuptools.packages.find]
+include = ["otterlab*"]
+
+[tool.setuptools.package-data]
+otterlab = ["job.sbatch"]

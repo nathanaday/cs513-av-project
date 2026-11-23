@@ -5,7 +5,7 @@
 #   use-pyotter/carla/docker/run SCENARIO.json.gz [SCENARIO.json.gz ...]
 #
 # The scenario files must be in use-pyotter/runs/. Telemetry is written beside them.
-# Needs Docker with the NVIDIA container toolkit.
+# Needs Docker with the NVIDIA container toolkit. Both containers run the toolchain image.
 
 set -euo pipefail
 cd "$(dirname "$0")"

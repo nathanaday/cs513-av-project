@@ -12,7 +12,7 @@ from pathlib import Path
 
 from ....core.models.world_road_graph import RoadGraphError, WorldRoadGraph
 from ....core.utilities.config import CONFIG
-from ....core.utilities.json_file import read_json, write_json
+from ....core.utilities.json_file import file_fingerprint, read_json, write_json
 from ...planner.models.planner_computed_waypoints import PlannerComputedWaypoints
 from ...world.models.world_hazard_spawns import WorldHazardSpawns
 from .driver_model import DriverModel
@@ -29,6 +29,9 @@ class DrivingScenario:
         driver: What the driver can see and how it brakes.
         name: A label for the run, carried into its telemetry.
         delta_s: The length of one simulation tick.
+        fingerprint: The SHA-256 of the file the scenario was loaded from or
+            saved to, and empty before either. It identifies the scenario in
+            the telemetry of its runs. It is not part of the file.
     """
 
     graph: WorldRoadGraph
@@ -38,6 +41,7 @@ class DrivingScenario:
     name: str = ""
     delta_s: float = CONFIG.driver.tick_s
     schema_version: int = CONFIG.schema_version
+    fingerprint: str = field(default="", compare=False)
 
     def __post_init__(self) -> None:
         self.validate()
@@ -96,7 +100,10 @@ class DrivingScenario:
 
     def save(self, path: str | Path) -> None:
         write_json(path, self.to_dict())
+        self.fingerprint = file_fingerprint(path)
 
     @classmethod
     def load(cls, path: str | Path) -> DrivingScenario:
-        return cls.from_dict(read_json(path))
+        scenario = cls.from_dict(read_json(path))
+        scenario.fingerprint = file_fingerprint(path)
+        return scenario

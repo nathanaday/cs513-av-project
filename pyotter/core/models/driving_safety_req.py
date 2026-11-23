@@ -14,12 +14,15 @@ class DrivingSafetyReq:
     Attributes:
         min_gap_m: The least distance allowed between the car's body and any
             other road user.
+        min_gap_ahead_m: The least distance allowed along the route between
+            the car's center and a road user in its path.
         max_deceleration_mps2: The hardest braking allowed.
         max_acceleration_mps2: The hardest speeding up allowed.
         speed_tolerance_kmh: How far over a speed limit still counts as keeping it.
     """
 
     min_gap_m: float = CONFIG.safety.min_gap_m
+    min_gap_ahead_m: float = CONFIG.safety.min_gap_ahead_m
     max_deceleration_mps2: float = CONFIG.safety.max_deceleration_mps2
     max_acceleration_mps2: float = CONFIG.safety.max_acceleration_mps2
     speed_tolerance_kmh: float = CONFIG.safety.speed_tolerance_kmh

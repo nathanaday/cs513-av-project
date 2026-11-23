@@ -6,7 +6,7 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from ....core.utilities.stl import Formula
+from ....core.utilities.stl import Formula, Trace, always
 from .driving_scenario_telemetry import Outcome, Signal
 
 
@@ -19,6 +19,8 @@ class SafetyRequirement:
         limit: The size of the limit, for comparing margins across requirements.
         watched: The signal to report at the moment of least margin.
         condition: The formula that must always hold.
+        threshold: The value the condition compares against.
+        stay_above: Whether the condition holds at or above the threshold, or at or below it.
     """
 
     name: str
@@ -26,6 +28,27 @@ class SafetyRequirement:
     limit: float
     watched: Signal
     condition: Formula
+    threshold: float
+    stay_above: bool
+
+    @property
+    def formula(self) -> Formula:
+        """The requirement over a whole run: the condition, always."""
+        return always(self.condition)
+
+    def margins(self, trace: Trace) -> list[float]:
+        """The condition's robustness at each sample: positive is the room left to the threshold."""
+        return self.condition.robustness(trace)
+
+    def values(self, trace: Trace) -> list[float]:
+        """The quantity the condition compares against the threshold, at each sample.
+
+        It is the threshold plus or minus the margin. For a plain comparison
+        that is the watched signal itself. For a limit that must be exceeded
+        for a sustained time, it is the signal's mildest value over that time.
+        """
+        sign = 1.0 if self.stay_above else -1.0
+        return [self.threshold + sign * margin for margin in self.margins(trace)]
 
 
 @dataclass(frozen=True)
@@ -66,6 +89,7 @@ class DrivingSafetyEvaluation:
     distance_m: float
     collisions: int
     requirements: tuple[RequirementResult, ...]
+    scenario_fingerprint: str = ""
 
     @property
     def satisfied(self) -> bool:

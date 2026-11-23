@@ -6,3 +6,5 @@ __pycache__/
 carla-work/reinforcement-learning/models/
 CLAUDE.md
 *.egg-info/
+logs/
+.otter/

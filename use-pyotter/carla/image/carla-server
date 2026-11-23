@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Start the CARLA server of this image without a window. Arguments are passed on:
+#   carla-server -quality-level=Low -carla-rpc-port=2000
+
+cd /workspace || exit 1
+exec bash ./CarlaUE4.sh -RenderOffScreen -nosound "$@"

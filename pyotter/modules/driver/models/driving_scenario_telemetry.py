@@ -92,6 +92,8 @@ class DrivingScenarioTelemetry:
     """The record of one run.
 
     Attributes:
+        scenario_fingerprint: The fingerprint of the scenario file that was
+            driven, or empty for a scenario that was never saved.
         route_mode: The mode of the route that was driven.
         route_risk_scale: The risk scale of that route.
         driver: The driver the run was driven with.
@@ -114,6 +116,7 @@ class DrivingScenarioTelemetry:
     outcome: Outcome = Outcome.ERROR
     signals: dict[Signal, list[float]] = field(default_factory=_empty_signals)
     events: list[TelemetryEvent] = field(default_factory=list)
+    scenario_fingerprint: str = ""
     schema_version: int = CONFIG.schema_version
 
     def __post_init__(self) -> None:

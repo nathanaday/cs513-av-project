@@ -32,6 +32,7 @@ world:
 # Defaults of the driving safety requirements.
 safety:
   min_gap_m: 2.0
+  min_gap_ahead_m: 5.0          # along the route, from the car's center
   max_deceleration_mps2: 6.0
   max_acceleration_mps2: 3.0
   speed_tolerance_kmh: 3.0
@@ -129,7 +130,16 @@ view:
     - ["#c0b9ef", "#6250d6", "#2a2068"]
     - ["#f4b6b6", "#e34948", "#6f1a1a"]
   shaded_above: 0.005           # lanes with a value at or below this stay gray
-  gap_shown_m: 40.0             # top of the gap axis on the telemetry figure
+  telemetry:
+    width_in: 13
+    height_in: 4.8
+    dpi: 130
+    value_margin: 0.06          # room left above and below the values, as a share of their range
+  requirements:
+    # A value axis whose range is more than this many times the limit is drawn on a
+    # scale that is linear near the limit and logarithmic beyond it.
+    wide_range_ratio: 20.0
+    linear_limits: 5.0          # the linear part reaches this many times the limit
   topology:
     size_in: 10
     dpi: 100

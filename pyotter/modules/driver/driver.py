@@ -5,7 +5,7 @@ from __future__ import annotations
 from ...core.models.driving_safety_req import DrivingSafetyReq
 from ...core.models.world_road_graph import WorldRoadGraph
 from ...core.utilities.config import CONFIG
-from ...core.utilities.stl import always, eventually, signal
+from ...core.utilities.stl import eventually, signal
 from ..planner.models.planner_computed_waypoints import PlannerComputedWaypoints
 from ..world.models.world_hazard_spawns import WorldHazardSpawns
 from .models.driver_model import DriverModel
@@ -64,6 +64,8 @@ class Driver:
                 limit=COLLISION_THRESHOLD,
                 watched=Signal.COLLISION,
                 condition=signal(Signal.COLLISION) <= COLLISION_THRESHOLD,
+                threshold=COLLISION_THRESHOLD,
+                stay_above=False,
             ),
             SafetyRequirement(
                 name="min_gap",
@@ -71,6 +73,17 @@ class Driver:
                 limit=safety.min_gap_m,
                 watched=Signal.GAP_M,
                 condition=signal(Signal.GAP_M) >= safety.min_gap_m,
+                threshold=safety.min_gap_m,
+                stay_above=True,
+            ),
+            SafetyRequirement(
+                name="min_gap_ahead",
+                unit="m",
+                limit=safety.min_gap_ahead_m,
+                watched=Signal.GAP_AHEAD_M,
+                condition=signal(Signal.GAP_AHEAD_M) >= safety.min_gap_ahead_m,
+                threshold=safety.min_gap_ahead_m,
+                stay_above=True,
             ),
             SafetyRequirement(
                 name="braking",
@@ -78,6 +91,8 @@ class Driver:
                 limit=safety.max_deceleration_mps2,
                 watched=Signal.ACCELERATION_MPS2,
                 condition=eventually(acceleration >= -safety.max_deceleration_mps2, 0.0, sustained_s),
+                threshold=-safety.max_deceleration_mps2,
+                stay_above=True,
             ),
             SafetyRequirement(
                 name="acceleration",
@@ -85,6 +100,8 @@ class Driver:
                 limit=safety.max_acceleration_mps2,
                 watched=Signal.ACCELERATION_MPS2,
                 condition=eventually(acceleration <= safety.max_acceleration_mps2, 0.0, sustained_s),
+                threshold=safety.max_acceleration_mps2,
+                stay_above=False,
             ),
             SafetyRequirement(
                 name="speed_limit",
@@ -92,6 +109,8 @@ class Driver:
                 limit=max(tolerance_mps, settings.least_speed_scale_mps),
                 watched=Signal.SPEED_MPS,
                 condition=signal(Signal.SPEED_MPS) <= signal(Signal.SPEED_LIMIT_MPS) + tolerance_mps,
+                threshold=tolerance_mps,
+                stay_above=False,
             ),
         ]
 
@@ -122,15 +141,16 @@ class Driver:
             distance_m=telemetry.distance_m,
             collisions=len(telemetry.events_of(TelemetryEventKind.COLLISION)),
             requirements=tuple(results),
+            scenario_fingerprint=telemetry.scenario_fingerprint,
         )
 
 
 def _check(requirement: SafetyRequirement, telemetry: DrivingScenarioTelemetry) -> RequirementResult:
     """Check one requirement against a run, and find the sample where its margin was least."""
     trace = telemetry.signals
-    formula = always(requirement.condition)
+    formula = requirement.formula
     robustness = formula.robustness(trace)[0]
-    margins = requirement.condition.robustness(trace)
+    margins = requirement.margins(trace)
     worst = margins.index(min(margins))
     return RequirementResult(
         name=requirement.name,

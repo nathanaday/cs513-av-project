@@ -55,7 +55,10 @@ Visualize.topology(graph)
 Visualize.hazards(graph, library)
 Visualize.spawns(graph, library, spawns)
 Visualize.routes(graph, routes)
-Visualize.telemetry(runs)
+Visualize.speed(runs)
+Visualize.gap(runs)
+Visualize.acceleration(runs)
+Visualize.requirements(runs)   # one figure per safety requirement
 ```
 
 Labels, colors, layout, and plotting code belong here and nowhere else. The colors and sizes are the `view` section of `config.yaml`. matplotlib is optional (`pip install 'pyotter[view]'`) and is imported only when a figure is made.
@@ -103,6 +106,11 @@ CONFIG.driver.controller.speed_gain
 - A model's default comes from the config (`min_gap_m: float = CONFIG.safety.min_gap_m`)
 - A scenario file stores the driver and planner values
 - Names with a fixed set of values are enums
+
+### Files
+
+- Every entity saves to JSON, compressed when the path ends in `.gz`. The same entity always gives the same bytes
+- A scenario file's fingerprint is the SHA-256 of its bytes (`scenario.fingerprint`). Telemetry and evaluations record it as `scenario_fingerprint`, so a run names the exact scenario it drove
 
 ### Code Style
 

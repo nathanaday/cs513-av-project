@@ -233,6 +233,7 @@ class _ScenarioRun:
                 SUN_GLARE: spawns.sun.strength if spawns.sun else 0.0,
             },
             provenance=provenance,
+            scenario_fingerprint=scenario.fingerprint,
         )
         self.follower = RouteFollower(scenario.graph, scenario.route)
         self.speed_control = SpeedControl(scenario.driver, self.grip)

@@ -1,4 +1,4 @@
-"""Every figure pyotter draws: the map, the forecast, a roll, planned routes, and driven runs."""
+"""Every figure pyotter draws: the map, the forecast, a roll, planned routes, and the signals of driven runs."""
 
 from __future__ import annotations
 
@@ -6,13 +6,27 @@ from typing import TYPE_CHECKING, Iterable
 
 from ...core.models.world_hazard_library import LOW_VISIBILITY, HazardKind, WorldHazardLibrary
 from ...core.models.world_road_graph import RoadGraphError, WorldRoadGraph
-from ..driver.models.driving_scenario_telemetry import DrivingScenarioTelemetry
+from ...core.models.driving_safety_req import DrivingSafetyReq
+from ..driver.driver import Driver
+from ..driver.models.driving_scenario_telemetry import DrivingScenarioTelemetry, Signal
 from ..planner.models.planner_computed_waypoints import PlannerComputedWaypoints
 from ..planner.planner import PlanningError
 from ..world.models.world_hazard_spawns import WorldHazardSpawns
-from .driver_drawing import draw_limits, draw_run
+from .driver_drawing import (
+    checked_runs,
+    collision_times,
+    draw_legend,
+    draw_limit,
+    draw_requirement,
+    draw_series,
+    fit_values,
+    gaps_m,
+    speed_limits_kmh,
+    speeds_kmh,
+    time_chart,
+)
 from .planner_drawing import draw_event_key, draw_route_map, draw_speed_profiles
-from .utilities import THEME, draw_lanes, hue_ramp, matplotlib_tools, scale_bar, style_chart, style_map
+from .utilities import THEME, draw_lanes, hue_ramp, matplotlib_tools, scale_bar, series_color, style_map
 from .world_drawing import (
     draw_condition,
     draw_event_starts,
@@ -203,10 +217,8 @@ class Visualize:
         return figure
 
     @staticmethod
-    def telemetry(telemetry: DrivingScenarioTelemetry | Iterable[DrivingScenarioTelemetry]) -> Figure:
-        """Draw runs over time: speed, the gap to the nearest other road user, and acceleration.
-
-        Dashed lines are the safety limits of the first run. A cross marks a collision.
+    def speed(telemetry: DrivingScenarioTelemetry | Iterable[DrivingScenarioTelemetry]) -> Figure:
+        """Draw the speed of runs over time. The dashed line is the speed limit along the first run.
 
         Args:
             telemetry: One run, or several to compare.
@@ -217,32 +229,106 @@ class Visualize:
         Raises:
             ValueError: If there is no run, or a run has no samples.
         """
-        pyplot, _ = matplotlib_tools("Visualize.telemetry")
-        runs = [telemetry] if isinstance(telemetry, DrivingScenarioTelemetry) else list(telemetry)
-        if not runs or not all(len(run) for run in runs):
-            raise ValueError("every run needs at least one sample")
-        figure, (speed_axes, gap_axes, force_axes) = pyplot.subplots(
-            3, 1, figsize=(13, 9), dpi=130, sharex=True, facecolor=THEME.surface, layout="constrained",
-        )
-        for index, run in enumerate(runs):
-            draw_run(speed_axes, gap_axes, force_axes, run, index)
-        draw_limits(speed_axes, gap_axes, force_axes, runs[0])
-
-        gap_shown_m = THEME.gap_shown_m
-        labels = {
-            speed_axes: "speed (km/h)",
-            gap_axes: f"gap to nearest road user (m), up to {gap_shown_m:g}",
-            force_axes: "acceleration (m/s2)",
-        }
-        for axes, label in labels.items():
-            style_chart(axes)
-            axes.set_ylabel(label, color=THEME.ink_secondary, fontsize=9.5)
-        safety = runs[0].driver.safety
-        speed_axes.set_ylim(0.0, None)
-        gap_axes.set_ylim(0.0, gap_shown_m)
-        force_axes.set_ylim(-safety.max_deceleration_mps2 * 1.3, safety.max_acceleration_mps2 * 1.6)
-        force_axes.set_xlabel("simulation time (s)", color=THEME.ink_secondary)
-        speed_axes.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncols=len(runs) + 1, frameon=False,
-                          fontsize=9, labelcolor=THEME.ink_secondary)
-        figure.suptitle("Driving telemetry", x=0.02, ha="left", fontsize=14, color=THEME.ink)
+        pyplot, _ = matplotlib_tools("Visualize.speed")
+        runs = checked_runs(telemetry)
+        figure, axes = time_chart(pyplot, runs, "Speed", "speed (km/h)")
+        draw_series(axes, runs, speeds_kmh)
+        limits = speed_limits_kmh(runs[0])
+        axes.plot(runs[0].signals[Signal.TIME_S], limits, color=THEME.ink_muted, linewidth=1.0, linestyle="--",
+                  label="speed limit")
+        shown = list(limits)
+        for run in runs:
+            shown += speeds_kmh(run)
+        fit_values(axes, shown, from_zero=True)
+        draw_legend(axes, len(runs) + 1)
         return figure
+
+    @staticmethod
+    def gap(telemetry: DrivingScenarioTelemetry | Iterable[DrivingScenarioTelemetry]) -> Figure:
+        """Draw the gap to the nearest other road user over time, at its full range.
+
+        A line breaks where no other road user is present. The dashed line is
+        the minimum gap of the first run. A cross marks a collision.
+
+        Args:
+            telemetry: One run, or several to compare.
+
+        Returns:
+            The figure.
+
+        Raises:
+            ValueError: If there is no run, or a run has no samples.
+        """
+        pyplot, _ = matplotlib_tools("Visualize.gap")
+        runs = checked_runs(telemetry)
+        figure, axes = time_chart(pyplot, runs, "Gap to the nearest road user", "gap (m)")
+        draw_series(axes, runs, gaps_m)
+        min_gap_m = runs[0].driver.safety.min_gap_m
+        shown = [min_gap_m]
+        for index, run in enumerate(runs):
+            shown += gaps_m(run)
+            hits = collision_times(run)
+            axes.scatter(hits, [0.0] * len(hits), marker="x", s=70, color=series_color(index), linewidths=2.0,
+                         zorder=5, clip_on=False)
+        fit_values(axes, shown, from_zero=True)
+        draw_limit(axes, min_gap_m, f"minimum gap {min_gap_m:g} m")
+        draw_legend(axes, len(runs))
+        return figure
+
+    @staticmethod
+    def acceleration(telemetry: DrivingScenarioTelemetry | Iterable[DrivingScenarioTelemetry]) -> Figure:
+        """Draw the acceleration of runs over time. Dashed lines are the limits of the first run.
+
+        Args:
+            telemetry: One run, or several to compare.
+
+        Returns:
+            The figure.
+
+        Raises:
+            ValueError: If there is no run, or a run has no samples.
+        """
+        pyplot, _ = matplotlib_tools("Visualize.acceleration")
+        runs = checked_runs(telemetry)
+        figure, axes = time_chart(pyplot, runs, "Acceleration", "acceleration (m/s2)")
+        draw_series(axes, runs, lambda run: run.signals[Signal.ACCELERATION_MPS2], linewidth=1.2)
+        safety = runs[0].driver.safety
+        shown = [safety.max_acceleration_mps2, -safety.max_deceleration_mps2]
+        for run in runs:
+            shown += run.signals[Signal.ACCELERATION_MPS2]
+        fit_values(axes, shown)
+        draw_limit(axes, safety.max_acceleration_mps2, f"acceleration limit {safety.max_acceleration_mps2:g} m/s2")
+        draw_limit(axes, -safety.max_deceleration_mps2, f"braking limit {safety.max_deceleration_mps2:g} m/s2")
+        draw_legend(axes, len(runs))
+        return figure
+
+    @staticmethod
+    def requirements(telemetry: DrivingScenarioTelemetry | Iterable[DrivingScenarioTelemetry],
+                     safety: DrivingSafetyReq | None = None) -> dict[str, Figure]:
+        """Draw one figure per safety requirement: the value it limits over time, against its threshold.
+
+        The dashed line is the threshold. On each run, an arrow from the
+        threshold marks the moment of least margin and carries that margin:
+        positive is the room that was left, and negative is how far past the
+        threshold the run went. The legend gives each run's verdict.
+
+        Args:
+            telemetry: One run, or several to compare.
+            safety: The limits to draw. Defaults to those the first run was driven with.
+
+        Returns:
+            The figures, by requirement name, in the order the requirements are checked.
+
+        Raises:
+            ValueError: If there is no run, or a run has no samples.
+        """
+        pyplot, _ = matplotlib_tools("Visualize.requirements")
+        runs = checked_runs(telemetry)
+        safety = safety or runs[0].driver.safety
+        figures = {}
+        for requirement in Driver.requirements(safety):
+            label = f"f(t) ({requirement.unit})" if requirement.unit else "f(t)"
+            figure, axes = time_chart(pyplot, runs, f"{requirement.name}: {requirement.formula}", label)
+            draw_requirement(axes, runs, requirement)
+            figures[requirement.name] = figure
+        return figures

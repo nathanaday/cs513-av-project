@@ -28,7 +28,7 @@ def telemetry(samples=200, **changes):
     for tick in range(samples):
         sample = {signal.value: 0.0 for signal in Signal}
         sample.update(time_s=tick * 0.05, speed_mps=8.0, speed_limit_mps=8.33, target_speed_mps=8.0,
-                      allowed_speed_mps=8.0, progress_m=tick * 0.4, gap_m=NO_GAP_M, detection_range_m=60.0)
+                      allowed_speed_mps=8.0, progress_m=tick * 0.4, gap_m=NO_GAP_M, gap_ahead_m=NO_GAP_M, detection_range_m=60.0)
         sample.update({name: values[tick] for name, values in changes.items()})
         record.add_sample(**sample)
     return record
@@ -51,6 +51,22 @@ class Scenario(unittest.TestCase):
         self.assertEqual((loaded.spawns, loaded.route, loaded.driver, loaded.name), (self.spawns, self.route, driver, "demo"))
         self.assertEqual(loaded.graph, self.graph)
         self.assertEqual(loaded.duration_s, 120.0)
+
+    def test_a_scenario_file_has_one_fingerprint_however_often_it_is_written(self):
+        scenario = Driver.scenario(self.graph, self.spawns, self.route, name="demo")
+        self.assertEqual(scenario.fingerprint, "")
+        with tempfile.TemporaryDirectory() as folder:
+            first, second = Path(folder) / "first.json.gz", Path(folder) / "second.json.gz"
+            scenario.save(first)
+            saved = scenario.fingerprint
+            DrivingScenario.load(first).save(second)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            self.assertEqual(DrivingScenario.load(second).fingerprint, saved)
+        self.assertEqual(len(saved), 64)
+        other = Driver.scenario(self.graph, self.spawns, self.route, name="other")
+        with tempfile.TemporaryDirectory() as folder:
+            other.save(Path(folder) / "other.json.gz")
+        self.assertNotEqual(other.fingerprint, saved)
 
     def test_scenario_rejects_parts_that_do_not_belong_together(self):
         other = WorldRoadGraph.from_template("town10")
@@ -141,7 +157,7 @@ class Evaluation(unittest.TestCase):
     def test_an_uneventful_drive_keeps_every_requirement(self):
         result = Driver.evaluate(telemetry())
         self.assertTrue(result.satisfied)
-        self.assertEqual([r.name for r in result.requirements], ["no_collision", "min_gap", "braking", "acceleration", "speed_limit"])
+        self.assertEqual([r.name for r in result.requirements], ["no_collision", "min_gap", "min_gap_ahead", "braking", "acceleration", "speed_limit"])
         self.assertEqual(result.get("braking").robustness, 6.0)
         self.assertAlmostEqual(result.get("speed_limit").robustness, 8.33 + 3 / 3.6 - 8.0)
         self.assertEqual(result.get("min_gap").formula, "always (gap_m >= 2)")
@@ -181,6 +197,31 @@ class Evaluation(unittest.TestCase):
         self.assertEqual(result.get("braking").robustness, 6.0)
         self.assertEqual(result.get("acceleration").formula, "always (eventually[0,0.5] (acceleration_mps2 <= 3))")
 
+    def test_gap_ahead_is_checked_along_the_route_against_its_own_limit(self):
+        ahead = [NO_GAP_M] * 200
+        ahead[60:63] = [9.0, 6.5, 8.0]
+        result = Driver.evaluate(telemetry(gap_ahead_m=ahead))
+        self.assertTrue(result.satisfied)
+        self.assertEqual(result.get("min_gap_ahead").formula, "always (gap_ahead_m >= 5)")
+        self.assertAlmostEqual(result.get("min_gap_ahead").robustness, 1.5)
+        self.assertAlmostEqual(result.get("min_gap_ahead").worst_time_s, 61 * 0.05)
+        strict = Driver.evaluate(telemetry(gap_ahead_m=ahead), DrivingSafetyReq(min_gap_ahead_m=8.0))
+        self.assertEqual([r.name for r in strict.breached], ["min_gap_ahead"])
+
+    def test_a_requirement_gives_the_value_it_compares_against_its_threshold(self):
+        slow = [0.0] * 200
+        slow[100:120] = [-4.0] * 20      # 1 s of braking, longer than the sustained time
+        slow[150] = -9.0                 # one tick, which the sustained time ignores
+        trace = telemetry(acceleration_mps2=slow).signals
+        by_name = {requirement.name: requirement for requirement in Driver.requirements(DrivingSafetyReq())}
+        braking = by_name["braking"]
+        self.assertEqual((braking.threshold, braking.stay_above), (-6.0, True))
+        self.assertEqual(min(braking.values(trace)), -4.0)
+        self.assertEqual(min(braking.margins(trace)), 2.0)
+        speed = by_name["speed_limit"]
+        self.assertAlmostEqual(speed.values(trace)[0], 8.0 - 8.33)
+        self.assertEqual(by_name["min_gap"].values(trace), trace[Signal.GAP_M])
+
     def test_other_requirements_can_be_applied_to_the_same_run(self):
         gaps = [4.0] * 200
         self.assertTrue(Driver.evaluate(telemetry(gap_m=gaps)).satisfied)
@@ -189,12 +230,14 @@ class Evaluation(unittest.TestCase):
 
     def test_telemetry_survives_a_save_and_an_empty_one_is_refused(self):
         record = telemetry()
+        record.scenario_fingerprint = "ab" * 32
         record.add_event(1.0, "hazard_started", hazard_id="pedestrian")
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "telemetry.json.gz"
             record.save(path)
             loaded = DrivingScenarioTelemetry.load(path)
         self.assertEqual(loaded, record)
+        self.assertEqual(Driver.evaluate(loaded).scenario_fingerprint, "ab" * 32)
         self.assertAlmostEqual(loaded.duration_s, 199 * 0.05)
         self.assertTrue(math.isclose(loaded.distance_m, 199 * 0.4))
         with self.assertRaises(ValueError):
