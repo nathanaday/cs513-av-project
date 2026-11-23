@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../docs/assets/otter_static.jpg" alt="The OTTER mascot: an otter in driving goggles at the wheel of a small blue car" width="360">
+</p>
+
 # pyotter
 
 

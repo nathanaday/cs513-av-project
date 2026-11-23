@@ -1,6 +1,6 @@
 # use-pyotter
 
-The lab around pyotter: notebooks that build scenarios, a scenario library and a telemetry library on Hugging Face, and commands that drive scenarios on CARLA 0.9.16. The reader is a teammate who wants telemetry for a scenario and has a CARC Discovery account.
+This folder is the lab around pyotter: notebooks that build scenarios, a scenario library and a telemetry library on Hugging Face, and commands that drive scenarios on CARLA 0.9.16. It is written for a teammate who wants telemetry for a scenario and has a CARC Discovery account.
 
 ## Drive a Scenario on CARC
 
@@ -30,7 +30,7 @@ job    scenario                     fingerprint
   Library  https://huggingface.co/datasets/nadayusc/otter-telemetry
 ```
 
-A `SCENARIO` is a name from the library, the first characters of a fingerprint, or a scenario file. A file is added to the library before it is driven.
+`SCENARIO` is a name from the library, the first characters of a fingerprint, or a scenario file. A file is added to the library before it is driven.
 
 ### First Time on CARC
 
@@ -57,7 +57,7 @@ Ctrl-C during the wait stops the watching and leaves the job in the queue. One s
 
 ## The Scenario Library
 
-Every scenario file is kept in the Hugging Face dataset named by `scenarios_repo` in `otter.yaml`. A scenario's fingerprint is the SHA-256 of its `.json.gz` file. pyotter writes the same scenario to the same bytes every time, so the fingerprint identifies the scenario's content, and two files with the same bytes are stored once.
+Every scenario file is kept in the Hugging Face dataset named by `scenarios_repo` in `otter.yaml`. A scenario's fingerprint is the SHA-256 of its `.json.gz` file. Because pyotter writes the same scenario to the same bytes every time, the fingerprint identifies the scenario's content. Two files with the same bytes are stored once.
 
 ```bash
 uv run otter-scenarios                        # list
@@ -70,7 +70,7 @@ Build scenario files with `drive_scenario.ipynb`. A file is stored as `scenarios
 
 ## The Telemetry Library
 
-Every run is kept in the dataset named by `results_repo`, as `telemetry/NAME.SHORT/RUN-telemetry.json.gz` with `RUN-evaluation.json` beside it. RUN is the UTC time the drive started and the Slurm job that drove it. The telemetry file also records the full fingerprint of its scenario (`scenario_fingerprint`), so any run can be traced to the exact file that produced it and driven again with `otter-drive FINGERPRINT`.
+Every run is kept in the dataset named by `results_repo`, as `telemetry/NAME.SHORT/RUN-telemetry.json.gz` with `RUN-evaluation.json` beside it. RUN is the UTC time the drive started and the Slurm job that drove it. The telemetry file also records the full fingerprint of its scenario as `scenario_fingerprint`. Any run can therefore be traced to the exact file that produced it, and driven again with `otter-drive FINGERPRINT`.
 
 ```bash
 uv run otter-results                      # list every run
@@ -86,7 +86,7 @@ A drive job uploads its own result. If that upload fails, the job ends with stat
 
 `carla-server` submits a GPU job that runs CARLA from the toolchain image under Apptainer and writes its node and port to `.otter/`. `otter-drive` submits one small CPU job per scenario. Each waits for the server, runs `python -m pyotter drive` in the same image against the server's node, evaluates the telemetry, and uploads it. The drive jobs of one server share a job name and the `singleton` dependency, which is how Slurm is told to run them one at a time.
 
-The toolchain image (`carla/image/`) holds the CARLA server and a Python 3.10 with the CARLA client. The client runs in the image because its wheel needs glibc 2.31, which Discovery's own system lacks. pyotter is imported from this checkout, so a change to pyotter takes effect on the next drive without a new image.
+The toolchain image (`carla/image/`) holds the CARLA server and a Python 3.10 with the CARLA client. Its client runs there because the client's wheel needs glibc 2.31, which we expect Discovery's own system to lack (not yet checked on the cluster). Imports of pyotter come from this checkout, so a change to pyotter takes effect on the next drive without a new image.
 
 | Path | Holds |
 |---|---|
@@ -96,11 +96,11 @@ The toolchain image (`carla/image/`) holds the CARLA server and a Python 3.10 wi
 | `runs/` | Scenario files and telemetry, not in git |
 | `logs/` | One log per job, not in git |
 
-Set `OTTER_HOME` to keep the converted image somewhere other than the `storage` folder in `otter.yaml`. It needs about 15 GB.
+Set `OTTER_HOME` to keep the converted image somewhere other than the `storage` folder in `otter.yaml`. Allow about 15 GB: the base image alone is 8.6 GB compressed.
 
 ## Status
 
-On November 22, 2026 the commands were run from end to end against stand-ins for Slurm, Apptainer, and Hugging Face, and the image's Python layer was built and ran pyotter with the CARLA client. Nothing has run on Discovery yet. These points rest on assumptions and are the first to check there:
+On November 22, 2026 the commands ran from end to end against stand-ins for Slurm, Apptainer, and Hugging Face. The image's Python layer was built that day and ran pyotter with the CARLA client. Nothing has run on Discovery yet. These points rest on assumptions and are the first to check there:
 
 - A drive job on the `main` partition can reach CARLA's port on a `gpu` node. If it cannot, add `--nodelist` for the server's node to `slurm.drive.options`.
 - Compute nodes can reach `ghcr.io` and `huggingface.co`.
@@ -109,7 +109,7 @@ On November 22, 2026 the commands were run from end to end against stand-ins for
 
 ## Maintainer Setup
 
-These steps are done once for the team.
+Do these steps once for the team.
 
 1. Merge `.github/workflows/toolchain-image.yml` to `main`. It builds the image and pushes it under the name in `otter.yaml`. To publish a changed image, raise the tag in `otter.yaml` in the same change.
 2. Make the package public in its settings on GitHub, since the repository is private. Otherwise each user exports `APPTAINER_DOCKER_USERNAME` and `APPTAINER_DOCKER_PASSWORD` (a token with `read:packages`) before the first `carla-server`.
@@ -120,7 +120,7 @@ These steps are done once for the team.
    uv run hf repos create nadayusc/otter-telemetry --repo-type dataset
    ```
 
-   Hugging Face grants write access per organization, not per dataset of a user. For teammates to upload, create the datasets under a shared organization and set the two names in `otter.yaml`, or share a write token through `HF_TOKEN`.
+   As far as we know, a dataset under a personal account has one writer, and shared write access needs an organization. For teammates to upload, create the datasets under a shared organization and set the two names in `otter.yaml`, or share a write token through `HF_TOKEN`.
 
 ## Tests
 
