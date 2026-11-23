@@ -1,0 +1,40 @@
+# Settings of the lab commands (carla-server, otter-drive, otter-scenarios,
+# otter-results, otter-check). Read through SETTINGS in otterlab/settings.py.
+
+# Hugging Face datasets: every scenario file, and the telemetry of every run.
+scenarios_repo: nadayusc/otter-scenarios
+results_repo: nadayusc/otter-telemetry
+
+# The toolchain image: the CARLA server and a Python with the CARLA client.
+# .github/workflows/toolchain-image.yml builds and pushes exactly this name.
+image: ghcr.io/nathanaday/cs513-av-project/carla-toolchain:0.9.16-1
+
+# Where the converted image is kept on the cluster. {user} is your login name.
+# The OTTER_HOME environment variable overrides it.
+storage: /project2/jdeshmuk_786/{user}/otter
+
+slurm:
+  account: jdeshmuk_786
+  modules: [apptainer]
+  server:
+    partition: gpu
+    time: "02:00:00"
+    cpus: 8
+    memory: 32G
+    options: ["--gres=gpu:1"]   # any further sbatch options
+  drive:
+    partition: main
+    time: "00:30:00"
+    cpus: 2
+    memory: 8G
+    options: []
+
+carla:
+  port: 2000                    # first port tried; the server moves up if it is taken
+  port_step: 10
+  port_attempts: 50
+  arguments: ["-RenderOffScreen", "-nosound", "-quality-level=Low"]
+  start_timeout_s: 600          # from launch until the server must answer
+
+watch:
+  poll_s: 3.0                   # how often carla-server asks Slurm for news

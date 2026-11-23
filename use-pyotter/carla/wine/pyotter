@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Run pyotter's command line with the wrapper's Windows Python, which has the CARLA client.
+#
+# Usage:
+#   use-pyotter/carla/wine/pyotter drive use-pyotter/runs/scenario.json.gz
+#   use-pyotter/carla/wine/pyotter wait
+#
+# File arguments may be macOS paths; they are converted for Windows.
+
+set -euo pipefail
+source "$(dirname "$0")/env.sh"
+[[ -n "$WINDOWS_PYTHON" ]] || { echo "no Windows Python under C:\\Program Files in $APP" >&2; exit 2; }
+export PYTHONPATH="$(to_windows "$REPO")${PYTHONPATH:+;$PYTHONPATH}"
+
+args=()
+for a in "$@"; do
+  if [[ "$a" != -* && ( -e "$a" || -d "$(dirname "$a")" && "$a" == */* ) ]]; then
+    args+=("$(to_windows "$a")")
+  else
+    args+=("$a")
+  fi
+done
+exec wine "$(to_windows "$WINDOWS_PYTHON")" -u -m pyotter ${args[@]+"${args[@]}"}

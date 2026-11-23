@@ -1,0 +1,30 @@
+# A CARLA server and the pyotter client on one Linux machine with an NVIDIA GPU.
+# Both run the toolchain image (../image), named as in use-pyotter/otter.yaml.
+# Use the run script beside this file, or:
+#   docker compose up -d carla
+#   docker compose run --rm otter wait --host carla
+#   docker compose run --rm otter drive /runs/SCENARIO.json.gz --host carla
+#   docker compose down
+services:
+  carla:
+    image: ghcr.io/nathanaday/cs513-av-project/carla-toolchain:0.9.16-1
+    build: ../image
+    command: carla-server -quality-level=Low
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  otter:
+    image: ghcr.io/nathanaday/cs513-av-project/carla-toolchain:0.9.16-1
+    build: ../image
+    user: root
+    entrypoint: ["python", "-m", "pyotter"]
+    environment:
+      PYTHONPATH: /otter
+    volumes:
+      - ../../..:/otter:ro
+      - ../../runs:/runs
