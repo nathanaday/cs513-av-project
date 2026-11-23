@@ -1,0 +1,7 @@
+# Code owners of the pyotter modules. A pull request that changes a module
+# needs an approval from one of its owners. Paths not listed here (core,
+# visualize, docs, notebooks, use-pyotter) can be approved by any contributor.
+
+/pyotter/modules/driver/   @nathanaday @ikimyonsoo
+/pyotter/modules/world/    @jeslynyang1121 @rachelhlin
+/pyotter/modules/planner/  @2017cjx @illydh
