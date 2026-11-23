@@ -72,7 +72,7 @@ class Scenarios(Lab):
         fingerprint = DrivingScenario.load(path).fingerprint
         self.assertTrue(added)
         self.assertEqual((entry.name, entry.short), ("town10-naive", fingerprint[:12]))
-        self.assertEqual(list(self.hub.files), [f"scenarios/town10-naive.{fingerprint[:12]}.json.gz"])
+        self.assertEqual(list(self.hub.files), [f"{library.PARTITION}/scenarios/town10-naive.{fingerprint[:12]}.json.gz"])
         self.assertEqual(self.scenarios.entries(), [ScenarioEntry("town10-naive", fingerprint[:12], "", path.stat().st_size)])
 
     def test_the_same_bytes_are_stored_once_whatever_the_file_is_called(self):
@@ -111,6 +111,14 @@ class Scenarios(Lab):
             self.scenarios.push(path)
         self.assertEqual(self.hub.files, {})
 
+    def test_a_scenario_of_another_schema_version_is_refused(self):
+        path = scenario_file(self.folder, "town10-naive")
+        with mock.patch.object(library.CONFIG, "schema_version", library.CONFIG.schema_version + 1):
+            with self.assertRaises(LabError) as raised:
+                self.scenarios.push(path)
+        self.assertIn("schema version", str(raised.exception))
+        self.assertEqual(self.hub.files, {})
+
     def test_fetch_uses_the_local_copy_and_refuses_one_with_other_bytes(self):
         entry, _ = self.scenarios.push(scenario_file(self.folder, "town10-naive"))
         self.assertEqual(self.scenarios.fetch(entry), entry.local)
@@ -131,6 +139,7 @@ class Results(Lab):
             path.write_bytes(b"telemetry")
         address = results.upload([first], "one")
         self.assertIn("team/telemetry", address)
+        self.assertEqual(list(self.hub.files), [f"{library.PARTITION}/telemetry/town10.abc123abc123/{first.name}"])
         self.assertEqual(results.pending(), [second])
         runs = results.runs("town10")
         self.assertEqual([(run.scenario, run.run_id) for run in runs], [("town10.abc123abc123", "20261122T000000Z-1")])

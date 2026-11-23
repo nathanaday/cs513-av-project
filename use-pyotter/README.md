@@ -13,7 +13,7 @@ uv run otter-drive town10-seed1227-naive    # queues the drive, prints its job i
 tail -f logs/JOB.log
 ```
 
-When the drive ends, its telemetry and evaluation are in `runs/telemetry/` and in the telemetry library. Nothing else needs to be installed, copied, or downloaded by hand.
+When the drive ends, its telemetry and evaluation are in `runs/v1/telemetry/` and in the telemetry library. Nothing else needs to be installed, copied, or downloaded by hand.
 
 ```
 $ uv run otter-drive town10-seed1227-naive runs/town10-seed1227-risk-aware.json.gz
@@ -26,7 +26,7 @@ job    scenario                     fingerprint
 
   Watch    tail -f logs/4102.log
   Queue    squeue --me
-  Results  runs/telemetry/town10-seed1227-naive.f6d948589e74/
+  Results  runs/v1/telemetry/town10-seed1227-naive.f6d948589e74/
   Library  https://huggingface.co/datasets/otter-usc/otter-telemetry
 ```
 
@@ -55,6 +55,10 @@ The token must belong to a member of the `otter-usc` organization on Hugging Fac
 
 Ctrl-C during the wait stops the watching and leaves the job in the queue. One server drives one scenario at a time, so drives queued on it run in order. Stop the server when the queue is empty: it holds a GPU until its time runs out.
 
+## Schema Versions
+
+Both libraries are partitioned by pyotter's schema version (`schema_version` in `pyotter/config.yaml`, 1 today). Every path in a dataset starts with `vN/`, and the local `runs/` folder has the same layout. The commands read and write only the partition of the checkout they run from, and they refuse a file whose own `schema_version` differs. When the schema changes, version 2 files go to `v2/` and the `v1/` files stay as they are. The paths below show `v1`.
+
 ## The Scenario Library
 
 Every scenario file is kept in the Hugging Face dataset named by `scenarios_repo` in `otter.yaml`. A scenario's fingerprint is the SHA-256 of its `.json.gz` file. Because pyotter writes the same scenario to the same bytes every time, the fingerprint identifies the scenario's content. Two files with the same bytes are stored once.
@@ -63,24 +67,24 @@ Every scenario file is kept in the Hugging Face dataset named by `scenarios_repo
 uv run otter-scenarios                        # list
 uv run otter-scenarios push runs/*.json.gz    # add files
 uv run otter-scenarios show f6d9              # map, seed, route, conditions, events
-uv run otter-scenarios pull f6d9              # download to runs/scenarios/
+uv run otter-scenarios pull f6d9              # download to runs/v1/scenarios/
 ```
 
-Build scenario files with `drive_scenario.ipynb`. A file is stored as `scenarios/NAME.SHORT.json.gz`, where NAME is the file's name and SHORT is the first 12 characters of its fingerprint. When two scenarios share a name, refer to them by fingerprint.
+Build scenario files with `drive_scenario.ipynb`. A file is stored as `v1/scenarios/NAME.SHORT.json.gz`, where NAME is the file's name and SHORT is the first 12 characters of its fingerprint. When two scenarios share a name, refer to them by fingerprint.
 
 ## The Telemetry Library
 
-Every run is kept in the dataset named by `results_repo`, as `telemetry/NAME.SHORT/RUN-telemetry.json.gz` with `RUN-evaluation.json` beside it. RUN is the UTC time the drive started and the Slurm job that drove it. The telemetry file also records the full fingerprint of its scenario as `scenario_fingerprint`. Any run can therefore be traced to the exact file that produced it, and driven again with `otter-drive FINGERPRINT`.
+Every run is kept in the dataset named by `results_repo`, as `v1/telemetry/NAME.SHORT/RUN-telemetry.json.gz` with `RUN-evaluation.json` beside it. RUN is the UTC time the drive started and the Slurm job that drove it. The telemetry file also records the full fingerprint of its scenario as `scenario_fingerprint`. Any run can therefore be traced to the exact file that produced it, and driven again with `otter-drive FINGERPRINT`.
 
 ```bash
 uv run otter-results                      # list every run
 uv run otter-results list f6d9            # the runs of one scenario
-uv run otter-results pull                 # download to runs/telemetry/
+uv run otter-results pull                 # download to runs/v1/telemetry/
 uv run otter-results sync                 # upload local results the library lacks
 uv run otter-results push FILE-telemetry.json.gz    # add a run driven outside the cluster
 ```
 
-A drive job uploads its own result. If that upload fails, the job ends with status 3, the files stay in `runs/telemetry/`, and `otter-results sync` uploads them later. The library commands need no cluster, so they also work on a laptop.
+A drive job uploads its own result. If that upload fails, the job ends with status 3, the files stay in `runs/v1/telemetry/`, and `otter-results sync` uploads them later. The library commands need no cluster, so they also work on a laptop.
 
 ## How It Works
 

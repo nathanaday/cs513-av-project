@@ -1,9 +1,11 @@
 """The two libraries on Hugging Face: scenario files, and the telemetry of their runs.
 
-A scenario is stored as `scenarios/NAME.SHORT.json.gz`, where SHORT is the
-first 12 characters of its fingerprint. The runs of a scenario are stored as
-`telemetry/NAME.SHORT/RUN-telemetry.json.gz`, each with its evaluation beside
-it. The `runs/` folder of the lab mirrors both layouts.
+Both are partitioned by pyotter's schema version: every path starts with
+`vN/`, where N is the `schema_version` of the files under it. A scenario is
+stored as `vN/scenarios/NAME.SHORT.json.gz`, where SHORT is the first 12
+characters of its fingerprint. The runs of a scenario are stored as
+`vN/telemetry/NAME.SHORT/RUN-telemetry.json.gz`, each with its evaluation
+beside it. The `runs/` folder of the lab mirrors both layouts.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ from huggingface_hub import HfApi, hf_hub_download, snapshot_download
 from huggingface_hub.errors import EntryNotFoundError, HfHubHTTPError, RepositoryNotFoundError
 
 from pyotter import Driver
+from pyotter.core.utilities.config import CONFIG
 from pyotter.core.utilities.json_file import file_fingerprint
 from pyotter.modules.driver import DrivingScenario, DrivingScenarioTelemetry
 
@@ -27,8 +30,9 @@ from .console import LabError
 from .settings import RUNS, SETTINGS
 
 DATASET = "dataset"
-SCENARIOS = "scenarios"
-TELEMETRY = "telemetry"
+PARTITION = f"v{CONFIG.schema_version}"
+SCENARIOS = f"{PARTITION}/scenarios"
+TELEMETRY = f"{PARTITION}/telemetry"
 SCENARIO_SUFFIX = ".json.gz"
 TELEMETRY_SUFFIX = "-telemetry.json.gz"
 EVALUATION_SUFFIX = "-evaluation.json"
@@ -103,6 +107,20 @@ def clean_name(text: str) -> str:
     return name or "scenario"
 
 
+def require_current_schema(schema_version: int, path: Path) -> None:
+    """Refuse a file of another schema version, which belongs in another partition.
+
+    Raises:
+        LabError: If the file's schema version is not the one this checkout of pyotter writes.
+    """
+    if schema_version != CONFIG.schema_version:
+        raise LabError(
+            f"{path} has schema version {schema_version}, and this checkout of pyotter writes "
+            f"version {CONFIG.schema_version}.",
+            f"Build the file again with this checkout, or use a checkout at version {schema_version}.",
+        )
+
+
 def _is_fingerprint_prefix(text: str) -> bool:
     return len(text) >= SHORTEST_PREFIX and all(character in string.hexdigits for character in text)
 
@@ -165,6 +183,7 @@ class ScenarioLibrary:
             scenario = DrivingScenario.load(path)
         except Exception as error:
             raise LabError(f"{path} is not a scenario file ({error}).") from error
+        require_current_schema(scenario.schema_version, path)
         for entry in self.entries():
             if scenario.fingerprint.startswith(entry.short):
                 return entry, False
@@ -180,7 +199,7 @@ class ScenarioLibrary:
         return entry, True
 
     def fetch(self, entry: ScenarioEntry) -> Path:
-        """The scenario's file in `runs/scenarios/`, downloaded unless it is already there.
+        """The scenario's file under `runs/`, downloaded unless it is already there.
 
         Raises:
             LabError: If the download fails, or the file does not have the entry's fingerprint.
@@ -269,7 +288,7 @@ class ResultsLibrary:
         """Add result files to the library in one commit and return the commit's address.
 
         Args:
-            files: Files under `runs/telemetry/`.
+            files: Files under the telemetry folder of `runs/`.
 
         Raises:
             LabError: If the upload fails. The files stay where they are.
@@ -296,9 +315,9 @@ class ResultsLibrary:
             except EntryNotFoundError:
                 files = []
         for file in files:
-            parts = file.path.split("/")
-            if len(parts) == 3 and parts[2].endswith(TELEMETRY_SUFFIX):
-                runs.append(RunEntry(parts[1], parts[2].removesuffix(TELEMETRY_SUFFIX), getattr(file, "size", 0) or 0))
+            parts = file.path.removeprefix(f"{TELEMETRY}/").split("/")
+            if len(parts) == 2 and parts[1].endswith(TELEMETRY_SUFFIX):
+                runs.append(RunEntry(parts[0], parts[1].removesuffix(TELEMETRY_SUFFIX), getattr(file, "size", 0) or 0))
         return sorted(runs, key=lambda run: (run.scenario, run.run_id))
 
 
