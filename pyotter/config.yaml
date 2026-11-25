@@ -61,6 +61,9 @@ driver:
     sustained_s: 0.5
     # Margins on the speed limit are compared against the tolerance, or this if larger.
     least_speed_scale_mps: 1.0
+    # A contact counts as a collision only when the car moves faster than this.
+    # Below it the car was standing still, and a walker walked into it.
+    least_impact_speed_mps: 0.5
   controller:
     speed_gain: 1.2
     speed_memory_gain: 0.4

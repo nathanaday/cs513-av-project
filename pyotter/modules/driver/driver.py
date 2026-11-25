@@ -55,16 +55,19 @@ class Driver:
         """
         settings = CONFIG.driver.evaluation
         sustained_s = settings.sustained_s
+        impact_mps = settings.least_impact_speed_mps
         tolerance_mps = safety.speed_tolerance_kmh / KMH_PER_MPS
         acceleration = signal(Signal.ACCELERATION_MPS2)
         return [
+            # A contact while the car stands still is a walker walking into it, not a collision.
             SafetyRequirement(
                 name="no_collision",
-                unit="",
-                limit=COLLISION_THRESHOLD,
-                watched=Signal.COLLISION,
-                condition=signal(Signal.COLLISION) <= COLLISION_THRESHOLD,
-                threshold=COLLISION_THRESHOLD,
+                unit="m/s",
+                limit=impact_mps,
+                watched=Signal.SPEED_MPS,
+                condition=(signal(Signal.COLLISION) >= COLLISION_THRESHOLD).implies(
+                    signal(Signal.SPEED_MPS) <= impact_mps),
+                threshold=impact_mps,
                 stay_above=False,
             ),
             SafetyRequirement(
@@ -139,7 +142,7 @@ class Driver:
             outcome=telemetry.outcome,
             duration_s=telemetry.duration_s,
             distance_m=telemetry.distance_m,
-            collisions=len(telemetry.events_of(TelemetryEventKind.COLLISION)),
+            collisions=len(_moving_collisions(telemetry)),
             requirements=tuple(results),
             scenario_fingerprint=telemetry.scenario_fingerprint,
         )
@@ -162,3 +165,17 @@ def _check(requirement: SafetyRequirement, telemetry: DrivingScenarioTelemetry) 
         worst_time_s=trace[Signal.TIME_S][worst],
         worst_value=trace[requirement.watched][worst],
     )
+
+
+def _moving_collisions(telemetry: DrivingScenarioTelemetry) -> list:
+    """The collision events at which the car was moving faster than the least impact speed."""
+    least_mps = CONFIG.driver.evaluation.least_impact_speed_mps
+    events = telemetry.events_of(TelemetryEventKind.COLLISION)
+    return [event for event in events if _speed_at(telemetry, event.time_s) > least_mps]
+
+
+def _speed_at(telemetry: DrivingScenarioTelemetry, time_s: float) -> float:
+    """The car's speed at the tick nearest to a moment of the run."""
+    times = telemetry.signals[Signal.TIME_S]
+    index = min(range(len(times)), key=lambda i: abs(times[i] - time_s))
+    return abs(telemetry.signals[Signal.SPEED_MPS][index])
