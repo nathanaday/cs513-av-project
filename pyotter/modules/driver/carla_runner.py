@@ -25,7 +25,7 @@ from ...core.utilities.config import CONFIG
 from ...core.utilities.sun import facing_factor
 from ..world.models.world_hazard_spawns import EventSpawn, SunGlare
 from .controller import (
-    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward,
+    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward, walker_step,
 )
 from .models.driving_scenario import DrivingScenario
 from .models.driving_scenario_telemetry import NO_GAP_M, DrivingScenarioTelemetry, Outcome, TelemetryEventKind
@@ -145,8 +145,20 @@ class _Walkers:
         blueprints = world.get_blueprint_library().filter("walker.pedestrian.*")
         self.blueprints = sorted(blueprints, key=lambda blueprint: blueprint.id)
 
-    def update(self, now_s: float) -> None:
-        """Start the events that are due, keep the walkers walking, and remove those that have crossed."""
+    def update(self, now_s: float, car: tuple[float, float, float, float], half_length: float,
+               half_width: float) -> None:
+        """Start the events that are due, keep the walkers walking, and remove those that have crossed.
+
+        A walker never walks into the car: it waits while the car moves, and
+        steps around it while the car stands still.
+
+        Args:
+            now_s: Seconds since the run started.
+            car: The car as (x, y, yaw_deg, speed_mps).
+            half_length: Half the car's length.
+            half_width: Half the car's width.
+        """
+        settings = SETTINGS.walker
         while self.pending and self.pending[0].start_s <= now_s:
             self._start(self.pending.pop(0), now_s)
         for walker in list(self.walking):
@@ -154,8 +166,15 @@ class _Walkers:
                 walker.actor.destroy()
                 self.walking.remove(walker)
                 self.telemetry.add_event(now_s, TelemetryEventKind.HAZARD_ENDED, **walker.detail)
-            else:
-                walker.actor.apply_control(walker.control)
+                continue
+            location = walker.actor.get_location()
+            crossing = walker.control.direction
+            dx, dy, walking = walker_step(location.x, location.y, settings.radius_m, (crossing.x, crossing.y), car,
+                                          half_length, half_width, settings.yield_clearance_m,
+                                          settings.car_stopped_below_mps)
+            speed = walker.control.speed if walking else 0.0
+            walker.actor.apply_control(self.carla.WalkerControl(direction=self.carla.Vector3D(dx, dy, 0.0),
+                                                                speed=speed))
 
     def _start(self, event: EventSpawn, now_s: float) -> None:
         """Place a walker to the right of the lane, facing across it, and set it walking."""
@@ -354,8 +373,8 @@ class _ScenarioRun:
         """
         driver = self.scenario.driver
         sun = self.scenario.spawns.sun
-        self.walkers.update(now_s)
         car = self._car_state()
+        self.walkers.update(now_s, (car.x, car.y, car.yaw_deg, car.speed_mps), self.half_length, self.half_width)
         self.progress_m = self.follower.locate(car.x, car.y, self.progress_m)
         target_mps, limit_mps, _ = self.follower.plan_at(self.progress_m)
         remaining_m = self.follower.length_m - self.progress_m
