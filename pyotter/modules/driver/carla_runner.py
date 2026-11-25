@@ -24,7 +24,9 @@ from ...core.models.world_road_graph import WorldRoadGraph
 from ...core.utilities.config import CONFIG
 from ...core.utilities.sun import facing_factor
 from ..world.models.world_hazard_spawns import EventSpawn, SunGlare
-from .controller import RouteFollower, SpeedControl, allowed_speed, box_gap, lookahead_m, steer_toward
+from .controller import (
+    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward,
+)
 from .models.driving_scenario import DrivingScenario
 from .models.driving_scenario_telemetry import NO_GAP_M, DrivingScenarioTelemetry, Outcome, TelemetryEventKind
 
@@ -194,6 +196,15 @@ class _Walkers:
             circles.append((location.x, location.y, SETTINGS.walker.radius_m))
         return circles
 
+    def motions(self) -> list[tuple[float, float, float, float, float]]:
+        """Each walker now, as (x, y, radius, vx, vy). A walker keeps walking straight at its set speed."""
+        motions = []
+        for walker in self.walking:
+            location = walker.actor.get_location()
+            direction, speed = walker.control.direction, walker.control.speed
+            motions.append((location.x, location.y, SETTINGS.walker.radius_m, direction.x * speed, direction.y * speed))
+        return motions
+
     def actor_ids(self) -> list[int]:
         return [walker.actor.id for walker in self.walking]
 
@@ -357,11 +368,19 @@ class _ScenarioRun:
         reach_m = driver.detection_range(min(1.0, self.fog + glare))
         ahead_m = self.follower.gap_ahead(self.progress_m, others, reach_m)
 
-        # Stop for the destination, or short of a road user in the path, whichever is nearer.
+        # Pedestrians the driver can see, and where they will walk over the next few seconds.
+        # Only the driving uses this; the recorded gap ahead stays the road user in the path now.
+        seen = [motion for motion in self.walkers.motions()
+                if math.hypot(motion[0] - car.x, motion[1] - car.y) <= reach_m]
+        coming = anticipated(seen, driver.anticipation_s, SETTINGS.anticipation_step_s)
+        coming_m = self.follower.gap_ahead(self.progress_m, coming, reach_m)
+        nearest_m = min((gap for gap in (ahead_m, coming_m) if gap is not None), default=None)
+
+        # Stop for the destination, or short of a road user in the path or about to enter it, whichever is nearer.
         room_m = remaining_m
         blocked_m = None
-        if ahead_m is not None:
-            blocked_m = ahead_m - self.half_length - driver.safety.min_gap_m - SETTINGS.stop_margin_m
+        if nearest_m is not None:
+            blocked_m = nearest_m - self.half_length - driver.safety.min_gap_m - SETTINGS.stop_margin_m
             room_m = min(room_m, blocked_m)
         wanted_mps = allowed_speed(target_mps, room_m, self.deceleration_mps2)
         throttle, brake = self.speed_control.command(car.speed_mps, wanted_mps, self.scenario.delta_s, blocked_m)

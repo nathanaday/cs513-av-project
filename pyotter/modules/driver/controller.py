@@ -168,6 +168,23 @@ class RouteFollower:
         return nearest
 
 
+def anticipated(movers: list[tuple[float, float, float, float, float]], horizon_s: float,
+                step_s: float) -> list[tuple[float, float, float]]:
+    """Where each road user will be over the next `horizon_s` seconds, if it keeps its velocity.
+
+    Args:
+        movers: Each road user now, as (x, y, radius, vx, vy).
+        horizon_s: How far ahead to predict. 0 gives only where they are now.
+        step_s: The time between predicted positions.
+
+    Returns:
+        Each road user as (x, y, radius), now and at every step up to the horizon.
+    """
+    steps = int(horizon_s / step_s + 1e-9) if horizon_s > 0 else 0
+    return [(x + vx * k * step_s, y + vy * k * step_s, radius)
+            for x, y, radius, vx, vy in movers for k in range(steps + 1)]
+
+
 def _project(start: RoutePoint, end: RoutePoint, x: float, y: float) -> tuple[float, float]:
     """Find the point on one straight piece of the line nearest to (x, y).
 

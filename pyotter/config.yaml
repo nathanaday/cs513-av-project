@@ -55,6 +55,9 @@ driver:
     min_detection_range_m: 5.0
     comfortable_deceleration_mps2: 3.0
     wet_braking_loss: 0.5
+    # How far ahead in time the driver predicts where a pedestrian it sees will walk.
+    # 0 turns it off: the driver then reacts only to pedestrians already in its path.
+    anticipation_s: 3.0
     vehicle_blueprint: vehicle.tesla.model3
   evaluation:
     # An acceleration limit is breached only when exceeded for this long.
@@ -89,6 +92,7 @@ driver:
   runner:
     wet_friction_loss: 0.6      # share of tire friction lost at full wetness
     stop_margin_m: 1.0
+    anticipation_step_s: 0.25   # time between a pedestrian's predicted positions
     settle_ticks: 20            # ticks held still after spawning the car
     contact_gap_s: 1.0          # contacts closer than this are one collision
     report_every_s: 10.0

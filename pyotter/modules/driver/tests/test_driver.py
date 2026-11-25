@@ -9,7 +9,7 @@ from pyotter.modules.driver import (
     NO_GAP_M, DriverModel, DrivingScenario, DrivingScenarioTelemetry, Outcome, Signal, TelemetryEventKind,
 )
 from pyotter.modules.driver.controller import (
-    RouteFollower, SpeedControl, allowed_speed, box_gap, lookahead_m, steer_toward,
+    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward,
 )
 
 
@@ -111,6 +111,26 @@ class Control(unittest.TestCase):
         self.assertIsNone(self.follower.gap_ahead(10.0, [(x, y, 0.4)], 20.0))
         self.assertIsNone(self.follower.gap_ahead(50.0, [(x, y, 0.4)], 60.0))
         self.assertIsNone(self.follower.gap_ahead(10.0, [(x + 30.0, y + 30.0, 0.4)], 60.0))
+
+    def _left_of_route(self, along_m):
+        """The unit vector pointing to the left of the route at a distance along it."""
+        x0, y0 = self.follower.point_at(along_m)
+        x1, y1 = self.follower.point_at(along_m + 1.0)
+        length = math.hypot(x1 - x0, y1 - y0)
+        return -(y1 - y0) / length, (x1 - x0) / length
+
+    def test_anticipation_sees_a_walker_heading_into_the_path(self):
+        x, y = self.follower.point_at(40.0)
+        nx, ny = self._left_of_route(40.0)
+        start = (x + 6.0 * nx, y + 6.0 * ny)                # 6 m beside the route, outside the path
+        walker = (*start, 0.4, -1.4 * nx, -1.4 * ny)        # walking toward it at 1.4 m/s
+        self.assertIsNone(self.follower.gap_ahead(10.0, [(*start, 0.4)], 60.0))
+        coming = anticipated([walker], 3.0, 0.25)
+        self.assertAlmostEqual(self.follower.gap_ahead(10.0, coming, 60.0), 29.6, delta=0.5)
+
+    def test_no_anticipation_is_only_where_they_are_now(self):
+        self.assertEqual(anticipated([(1.0, 2.0, 0.4, 1.4, 0.0)], 0.0, 0.25), [(1.0, 2.0, 0.4)])
+        self.assertEqual(len(anticipated([(1.0, 2.0, 0.4, 1.4, 0.0)], 3.0, 0.25)), 13)
 
     def test_steering_turns_toward_the_target(self):
         self.assertEqual(steer_toward(0, 0, 0, (10.0, 0.0), 2.9, 70.0), 0.0)
