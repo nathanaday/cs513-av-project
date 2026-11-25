@@ -100,8 +100,10 @@ driver:
     wheelbase_per_half_length: 1.2
     walker:
       speed_mps: 1.4
-      walk_m: 9.0
-      start_off_m: 2.75         # to the right of the lane center
+      # A walker starts off the road, outside the driver's path (path_half_width_m + radius_m),
+      # so the driver sees it walk in. It ends 6.25 m left of the lane center.
+      walk_m: 12.25
+      start_off_m: 6.0          # to the right of the lane center
       radius_m: 0.4
       spawn_lift_m: 1.0
     # CARLA weather values, in percent, at full severity.

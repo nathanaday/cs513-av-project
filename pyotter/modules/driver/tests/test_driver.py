@@ -5,6 +5,7 @@ from pathlib import Path
 
 from pyotter import Driver, Planner, World
 from pyotter.core import DrivingSafetyReq, RoadGraphError, WorldHazardLibrary, WorldRoadGraph
+from pyotter.core.utilities.config import CONFIG
 from pyotter.modules.driver import (
     NO_GAP_M, DriverModel, DrivingScenario, DrivingScenarioTelemetry, Outcome, Signal, TelemetryEventKind,
 )
@@ -127,6 +128,11 @@ class Control(unittest.TestCase):
         self.assertIsNone(self.follower.gap_ahead(10.0, [(*start, 0.4)], 60.0))
         coming = anticipated([walker], 3.0, 0.25)
         self.assertAlmostEqual(self.follower.gap_ahead(10.0, coming, 60.0), 29.6, delta=0.5)
+
+    def test_a_walker_starts_outside_the_path_and_crosses_all_of_it(self):
+        walker, path_half_width = CONFIG.driver.runner.walker, CONFIG.driver.controller.path_half_width_m
+        self.assertGreater(walker.start_off_m, path_half_width + walker.radius_m)
+        self.assertGreater(walker.walk_m - walker.start_off_m, path_half_width + walker.radius_m)
 
     def test_no_anticipation_is_only_where_they_are_now(self):
         self.assertEqual(anticipated([(1.0, 2.0, 0.4, 1.4, 0.0)], 0.0, 0.25), [(1.0, 2.0, 0.4)])
