@@ -102,9 +102,8 @@ driver:
     wet_friction_loss: 0.6      # share of tire friction lost at full wetness
     stop_margin_m: 1.0
     anticipation_step_s: 0.25   # time between a pedestrian's predicted positions
-    # The car stops while a walker is, or within walker_lookahead_s will be, this close
-    # to its body, and drives on once the walker has moved away.
-    walker_clearance_m: 1.0
+    # The car stops while a walker is, or within this time will be, closer to its body
+    # than the safety requirement's min_gap_m, and drives on once the walker has moved away.
     walker_lookahead_s: 1.0
     settle_ticks: 20            # ticks held still after spawning the car
     contact_gap_s: 1.0          # contacts closer than this are one collision

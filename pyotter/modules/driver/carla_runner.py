@@ -382,10 +382,10 @@ class _ScenarioRun:
         if nearest_m is not None:
             blocked_m = nearest_m - self.half_length - driver.safety.min_gap_m - SETTINGS.stop_margin_m
             room_m = min(room_m, blocked_m)
-        # A walker at, or about to come within, arm's length of the car's body from any side:
+        # A walker at, or about to come within, the minimum gap of the car's body from any side:
         # stop as hard as the braking limit allows, and drive on once it has moved away.
         if walker_too_close((car.x, car.y, car.yaw_deg), self.half_length, self.half_width, motions,
-                            SETTINGS.walker_lookahead_s, SETTINGS.walker_clearance_m):
+                            SETTINGS.walker_lookahead_s, driver.safety.min_gap_m):
             room_m, blocked_m = 0.0, 0.0
         wanted_mps = allowed_speed(target_mps, room_m, self.deceleration_mps2)
         throttle, brake = self.speed_control.command(car.speed_mps, wanted_mps, self.scenario.delta_s, blocked_m)
