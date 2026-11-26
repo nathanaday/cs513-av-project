@@ -394,13 +394,15 @@ class _ScenarioRun:
                             SETTINGS.walker_lookahead_s, driver.safety.min_gap_m):
             room_m, blocked_m = 0.0, 0.0
         wanted_mps = allowed_speed(target_mps, room_m, self.deceleration_mps2)
-        throttle, brake = self.speed_control.command(car.speed_mps, wanted_mps, self.scenario.delta_s, blocked_m)
+        measured_mps2 = None
+        if len(self.telemetry):
+            measured_mps2 = (car.speed_mps - self.last_speed_mps) / self.scenario.delta_s
+        throttle, brake = self.speed_control.command(car.speed_mps, wanted_mps, self.scenario.delta_s, blocked_m,
+                                                     measured_mps2)
         aim = self.follower.point_at(self.progress_m + lookahead_m(car.speed_mps))
         steer = steer_toward(car.x, car.y, car.yaw_deg, aim, self.wheelbase_m, self.max_steer_deg)
 
-        acceleration = 0.0
-        if len(self.telemetry):
-            acceleration = (car.speed_mps - self.last_speed_mps) / self.scenario.delta_s
+        acceleration = 0.0 if measured_mps2 is None else measured_mps2
         self.telemetry.add_sample(
             time_s=now_s,
             x=car.x,

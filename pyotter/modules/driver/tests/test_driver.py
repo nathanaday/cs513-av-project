@@ -191,6 +191,21 @@ class Control(unittest.TestCase):
         self.assertAlmostEqual(slippery, 2 * firm)
         self.assertEqual(SpeedControl(DriverModel()).command(0.1, 0.0, 0.05), (0.0, 0.6))
 
+    def test_the_brake_presses_harder_until_the_car_slows_as_asked(self):
+        # A brake as weak as CARLA's at part pedal: little more than coasting until 0.7, then steep.
+        def deceleration(brake):
+            return 2.3 + 1.5 * brake if brake < 0.7 else 3.35 + 30.0 * (brake - 0.7)
+        control, speed, measured, achieved = SpeedControl(DriverModel()), 8.0, None, []
+        for _ in range(30):
+            _, brake = control.command(speed, 0.0, 0.05, stop_within_m=0.5, measured_mps2=measured)
+            measured = -deceleration(brake)
+            speed += measured * 0.05
+            achieved.append(-measured)
+        self.assertLess(achieved[0], 4.0)                    # the pedal model alone: too weak
+        self.assertTrue(all(5.5 < a < 7.0 for a in achieved[5:19]))   # within 0.25 s: near the 6 m/s2 asked
+        control.command(speed, 8.0, 0.05, measured_mps2=measured)
+        self.assertEqual(control.brake_trim, 0.0)            # dropped once the car speeds up again
+
     def test_box_gap_is_measured_from_the_body(self):
         self.assertAlmostEqual(box_gap(0, 0, 0, 2.4, 1.0, 10.0, 0.0, 0.4), 7.2)
         self.assertAlmostEqual(box_gap(0, 0, 0, 2.4, 1.0, 0.0, 3.0, 0.4), 1.6)

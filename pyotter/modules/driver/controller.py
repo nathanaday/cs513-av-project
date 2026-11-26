@@ -275,15 +275,20 @@ class SpeedControl:
     Attributes:
         grip: The share of dry-road braking the tires still give, from 0 to 1.
         memory: The accumulated speed error, which removes a steady offset.
+        brake_trim: Brake pedal added to the pedal model while braking. It grows while the car
+            decelerates less than asked, since the real brake is weaker than the model at
+            part pedal, and is dropped once the car stops braking.
     """
 
     def __init__(self, driver: DriverModel, grip: float = 1.0):
         self.driver = driver
         self.grip = grip
         self.memory = 0.0
+        self.brake_trim = 0.0
+        self.asked_mps2: float | None = None   # the braking asked for on the last tick, if it braked
 
     def command(self, speed_mps: float, wanted_mps: float, delta_s: float,
-                stop_within_m: float | None = None) -> tuple[float, float]:
+                stop_within_m: float | None = None, measured_mps2: float | None = None) -> tuple[float, float]:
         """Choose the pedals for one tick.
 
         Args:
@@ -292,6 +297,8 @@ class SpeedControl:
             delta_s: The length of the tick.
             stop_within_m: Room to an obstacle, if there is one. The car then
                 brakes at least hard enough to stop in that room.
+            measured_mps2: The car's acceleration over the last tick, if known. While
+                braking, the brake is pressed harder until it matches what was asked.
 
         Returns:
             Throttle and brake, each from 0 to 1.
@@ -300,6 +307,13 @@ class SpeedControl:
         if abs(error) < SETTINGS.speed_memory_band_mps:
             memory = self.memory + error * delta_s
             self.memory = max(-SETTINGS.speed_memory_limit, min(SETTINGS.speed_memory_limit, memory))
+        if self.asked_mps2 is not None and measured_mps2 is not None:
+            # Single-tick physics spikes are clipped, so that they do not wind the trim down.
+            measured = max(-self.driver.safety.max_deceleration_mps2 - SETTINGS.brake_trim_clip_mps2,
+                           min(SETTINGS.brake_trim_clip_mps2, measured_mps2))
+            trim = self.brake_trim + SETTINGS.brake_trim_gain * (measured - self.asked_mps2) * delta_s
+            self.brake_trim = max(0.0, min(1.0, trim))
+        self.asked_mps2 = None
         if wanted_mps < SETTINGS.stop_wanted_below_mps:
             self.memory = 0.0
             if speed_mps < SETTINGS.hold_below_mps:
@@ -317,6 +331,8 @@ class SpeedControl:
         """Turn a wanted acceleration into throttle and brake, from the car's rough pedal response."""
         pedal = acceleration_mps2 / SETTINGS.full_throttle_mps2 + SETTINGS.cruise_throttle_per_mps * speed_mps
         if pedal >= 0.0:
+            self.brake_trim = 0.0
             return min(1.0, pedal), 0.0
         full_brake = SETTINGS.full_brake_mps2 * max(self.grip, SETTINGS.least_grip)
-        return 0.0, min(1.0, -pedal * SETTINGS.full_throttle_mps2 / full_brake)
+        self.asked_mps2 = acceleration_mps2
+        return 0.0, min(1.0, -pedal * SETTINGS.full_throttle_mps2 / full_brake + self.brake_trim)

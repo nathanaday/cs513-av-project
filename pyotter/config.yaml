@@ -84,6 +84,11 @@ driver:
     # Rough pedal response of the car.
     full_throttle_mps2: 9.0
     full_brake_mps2: 8.0
+    # The real brake is weaker than this model at part pedal (pedal 0.55 gave 3.4 m/s2 when
+    # 6 was asked). While braking, pedal is added at this rate per m/s2 short per second,
+    # with the measured acceleration clipped to this much beyond the limits.
+    brake_trim_gain: 0.5
+    brake_trim_clip_mps2: 2.0
     cruise_throttle_per_mps: 0.037
     least_grip: 0.1
     # Holding still: brake this hard once a stop is wanted and the car is slow.
