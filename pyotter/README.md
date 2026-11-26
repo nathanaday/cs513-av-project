@@ -75,6 +75,8 @@ Labels, colors, layout, and plotting code belong here and nowhere else. The colo
 - Events are modeled per segment using a probability vs. time distribution (e.g. probability of a pedestrian spawning on that segment at that second)
 - Conditions are modeled at the world level: one forecast per condition (chance, severity, how much severity can vary), and applies to the whole run
 - Sun is a time-of-day setting whose glare is computed per lane from the lane's heading, and scaled down by rain/fog.
+- Night is the same time-of-day setting: once the sun is below the horizon, visibility drops everywhere (`world.sun.night_visibility_loss`).
+- Named forecasts in `config.yaml` (`world.forecasts`) make the scenario set, from `clear-noon` to `storm-crowds`. `World.forecast(graph, "heavy-rain")` puts one on a map, and `uv run otter-build` in use-pyotter rolls seeds of each for all three route modes.
 
 
 ## Guidelines

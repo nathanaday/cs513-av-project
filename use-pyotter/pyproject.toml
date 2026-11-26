@@ -22,6 +22,7 @@ otter-drive = "otterlab.cli:otter_drive"
 otter-scenarios = "otterlab.cli:otter_scenarios"
 otter-results = "otterlab.cli:otter_results"
 otter-check = "otterlab.cli:otter_check"
+otter-build = "otterlab.cli:otter_build"
 
 [tool.uv.sources]
 pyotter = { path = "..", editable = true }

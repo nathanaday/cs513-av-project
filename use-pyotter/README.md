@@ -70,7 +70,20 @@ uv run otter-scenarios show f6d9              # map, seed, route, conditions, ev
 uv run otter-scenarios pull f6d9              # download to runs/v1/scenarios/
 ```
 
-Build scenario files with `drive_scenario.ipynb`. A file is stored as `v1/scenarios/NAME.SHORT.json.gz`, where NAME is the file's name and SHORT is the first 12 characters of its fingerprint. When two scenarios share a name, refer to them by fingerprint.
+Build one scenario file with `drive_scenario.ipynb`, or the whole scenario set with `otter-build`. A file is stored as `v1/scenarios/NAME.SHORT.json.gz`, where NAME is the file's name and SHORT is the first 12 characters of its fingerprint. When two scenarios share a name, refer to them by fingerprint.
+
+### The Scenario Set
+
+The comparison drives the same trip under each named forecast in pyotter's `config.yaml` (`world.forecasts`, from `clear-noon` to `storm-crowds`). `otter-build` rolls each forecast with each seed and plans the route three ways, so the naive, cautious and risk-aware scenarios of one forecast and seed share their hazards. The trip, the planner weights and the seeds are under `build` in `otter.yaml`.
+
+```bash
+uv run otter-build                                    # every forecast, seeds 1 to 5: 90 files
+uv run otter-build heavy-rain --seeds 1 2             # just these
+uv run otter-scenarios push runs/scenario-set/*.json.gz
+uv run otter-drive runs/scenario-set/*.json.gz
+```
+
+Files are named `town10-FORECAST-seedN-MODE.json.gz`. The same forecast and seed always give the same bytes.
 
 ## The Telemetry Library
 

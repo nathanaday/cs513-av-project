@@ -3,7 +3,7 @@
 What each rolled hazard does in the simulator:
 
 - wet_road lowers the car's tire friction.
-- low_visibility and the sun's glare shorten how far ahead the driver notices other road users.
+- low_visibility, the dark at night and the sun's glare shorten how far ahead the driver notices other road users.
 - a pedestrian event puts a walker at the roadside at its start time and walks it across the lane.
 
 The weather is also set to match, but that changes only what a camera would see.
@@ -354,7 +354,8 @@ class _ScenarioRun:
         for other in others:
             gap_m = min(gap_m, box_gap(car.x, car.y, car.yaw_deg, self.half_length, self.half_width, *other))
         glare = sun.strength * facing_factor(car.yaw_deg, sun.azimuth_deg) if sun else 0.0
-        reach_m = driver.detection_range(min(1.0, self.fog + glare))
+        night = sun.night_loss if sun else 0.0
+        reach_m = driver.detection_range(min(1.0, self.fog + (1.0 - self.fog) * night + glare))
         ahead_m = self.follower.gap_ahead(self.progress_m, others, reach_m)
 
         # Stop for the destination, or short of a road user in the path, whichever is nearer.

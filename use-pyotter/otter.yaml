@@ -1,5 +1,5 @@
 # Settings of the lab commands (carla-server, otter-drive, otter-scenarios,
-# otter-results, otter-check). Read through SETTINGS in otterlab/settings.py.
+# otter-results, otter-check, otter-build). Read through SETTINGS in otterlab/settings.py.
 
 # Hugging Face datasets: every scenario file, and the telemetry of every run.
 scenarios_repo: otter-usc/otter-scenarios
@@ -38,3 +38,13 @@ carla:
 
 watch:
   poll_s: 3.0                   # how often carla-server asks Slurm for news
+
+# otter-build: the scenario set. The trip and weights are those of drive_scenario.ipynb.
+build:
+  template: town10
+  start_spawn: 18               # spawn point indexes of the trip
+  end_spawn: 127
+  risk_scale: 2.0
+  hazard_weights: {pedestrian: 20.0}
+  duration_s: 150.0             # seconds of hazards to roll
+  seeds: [1, 2, 3, 4, 5]

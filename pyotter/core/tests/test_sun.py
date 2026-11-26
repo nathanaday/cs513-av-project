@@ -2,7 +2,7 @@ import unittest
 
 from pyotter.core import WorldRoadGraph
 from pyotter.core.utilities.sun import (
-    facing_factor, glare_strength, low_sun_factor, segment_sun_exposure, sun_position,
+    darkness, facing_factor, glare_strength, low_sun_factor, night_loss_at, segment_sun_exposure, sun_position,
 )
 
 
@@ -17,6 +17,12 @@ class Sun(unittest.TestCase):
 
     def test_low_sun_factor_is_full_at_the_horizon_and_zero_when_high_or_down(self):
         self.assertEqual([low_sun_factor(a) for a in (-5.0, 0.0, 5.0, 15.0, 25.0, 60.0)], [0.0, 1.0, 1.0, 0.5, 0.0, 0.0])
+
+    def test_darkness_starts_at_sunset_and_is_full_a_little_after(self):
+        self.assertEqual([darkness(a) for a in (30.0, 0.0, -3.0, -6.0, -40.0)], [0.0, 0.0, 0.5, 1.0, 1.0])
+        self.assertEqual(night_loss_at(12.0), 0.0)
+        self.assertEqual(night_loss_at(None), 0.0)
+        self.assertGreater(night_loss_at(23.0), 0.0)
 
     def test_facing_factor_falls_off_with_the_angle_from_the_sun(self):
         self.assertAlmostEqual(facing_factor(180.0, 180.0), 1.0)

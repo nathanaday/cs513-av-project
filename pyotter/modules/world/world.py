@@ -1,15 +1,40 @@
-"""The world: check a forecast, and roll the hazards of one run from it."""
+"""The world: forecast a map, check the forecast, and roll the hazards of one run from it."""
 
 from __future__ import annotations
 
 from ...core.models.world_hazard_library import WorldHazardLibrary
 from ...core.models.world_road_graph import RoadGraphError, WorldRoadGraph
 from ...core.utilities.config import CONFIG
+from .models.world_hazard_probability import WorldHazardProbability
 from .models.world_hazard_spawns import WorldHazardSpawns
 from .utilities import check_forecast, roll_conditions, roll_events, sun_glare
 
 
 class World:
+    @staticmethod
+    def forecast_names() -> list[str]:
+        """The named forecasts in `config.yaml`, from least risk to most."""
+        return WorldHazardProbability.names()
+
+    @staticmethod
+    def forecast(graph: WorldRoadGraph, forecast: WorldHazardProbability | str) -> WorldHazardProbability:
+        """Put a forecast on a graph, replacing whatever forecast it had.
+
+        Args:
+            graph: The map to forecast, usually a template.
+            forecast: A forecast, or the name of one in `config.yaml`.
+
+        Returns:
+            The forecast that was applied.
+
+        Raises:
+            RoadGraphError: If the name is unknown, or the forecast does not fit the map.
+        """
+        if isinstance(forecast, str):
+            forecast = WorldHazardProbability.from_config(forecast)
+        forecast.apply(graph)
+        return forecast
+
     @staticmethod
     def check_forecast(graph: WorldRoadGraph, library: WorldHazardLibrary) -> None:
         """Check that the graph has a forecast, and that it agrees with the library.
