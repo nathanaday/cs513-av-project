@@ -58,6 +58,9 @@ driver:
     # How far ahead in time the driver predicts where a pedestrian it sees will walk.
     # 0 turns it off: the driver then reacts only to pedestrians already in its path.
     anticipation_s: 3.0
+    # Drive no faster than the car can stop, at its planned braking, min_gap_m short of a
+    # road user that appears at the edge of its sight. false drives at the planned speed.
+    drive_within_sight: true
     vehicle_blueprint: vehicle.tesla.model3
   evaluation:
     # An acceleration limit is breached only when exceeded for this long.

@@ -261,6 +261,14 @@ def allowed_speed(target_mps: float, stop_within_m: float | None, deceleration_m
     return min(target_mps, stoppable)
 
 
+def sight_speed(reach_m: float, half_length_m: float, min_gap_m: float, deceleration_mps2: float) -> float:
+    """The fastest speed at which the car can still stop min_gap_m short of a road user that
+    appears at the edge of its sight, braking at deceleration_mps2. Never quite 0, so that the
+    car still creeps forward when it sees almost nothing."""
+    room_m = max(reach_m - half_length_m - min_gap_m, SETTINGS.least_stopping_room_m)
+    return math.sqrt(2.0 * deceleration_mps2 * room_m)
+
+
 class SpeedControl:
     """Throttle and brake that hold a speed, within the driver's acceleration and braking limits.
 

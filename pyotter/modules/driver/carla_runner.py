@@ -25,7 +25,8 @@ from ...core.utilities.config import CONFIG
 from ...core.utilities.sun import facing_factor
 from ..world.models.world_hazard_spawns import EventSpawn, SunGlare
 from .controller import (
-    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward, walker_too_close,
+    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, sight_speed, steer_toward,
+    walker_too_close,
 )
 from .models.driving_scenario import DrivingScenario
 from .models.driving_scenario_telemetry import NO_GAP_M, DrivingScenarioTelemetry, Outcome, TelemetryEventKind
@@ -358,6 +359,7 @@ class _ScenarioRun:
         car = self._car_state()
         self.progress_m = self.follower.locate(car.x, car.y, self.progress_m)
         target_mps, limit_mps, _ = self.follower.plan_at(self.progress_m)
+        planned_mps = target_mps
         remaining_m = self.follower.length_m - self.progress_m
 
         others = self.walkers.circles()
@@ -367,6 +369,10 @@ class _ScenarioRun:
         glare = sun.strength * facing_factor(car.yaw_deg, sun.azimuth_deg) if sun else 0.0
         reach_m = driver.detection_range(min(1.0, self.fog + glare))
         ahead_m = self.follower.gap_ahead(self.progress_m, others, reach_m)
+        # Drive no faster than the car can stop for a road user that appears at the edge of its sight.
+        if driver.drive_within_sight:
+            target_mps = min(target_mps, sight_speed(reach_m, self.half_length, driver.safety.min_gap_m,
+                                                     self.deceleration_mps2))
 
         # Pedestrians the driver can see, and where they will walk over the next few seconds.
         # Only the driving uses this; the recorded gap ahead stays the road user in the path now.
@@ -403,7 +409,7 @@ class _ScenarioRun:
             yaw_deg=car.yaw_deg,
             speed_mps=car.speed_mps,
             acceleration_mps2=acceleration,
-            target_speed_mps=target_mps,
+            target_speed_mps=planned_mps,
             speed_limit_mps=limit_mps,
             allowed_speed_mps=wanted_mps,
             throttle=throttle,
