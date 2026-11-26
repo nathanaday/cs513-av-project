@@ -28,6 +28,51 @@ world:
     full_glare_below_deg: 5.0   # sun altitude at or below which glare is total
     no_glare_above_deg: 25.0    # sun altitude at or above which there is none
     no_glare_beyond_deg: 60.0   # angle off the heading past which there is none
+    full_dark_below_deg: 6.0    # sun this far below the horizon or more: full night
+    night_visibility_loss: 0.5  # visibility lost at full night, with headlights on
+
+  # Named forecasts for the scenario set, from least risk to most.
+  forecasts:
+    clear-noon:
+      time_of_day_h: 12.0
+      pedestrians_per_km_s: 0.02    # pedestrians starting per second on each km of lane
+      junction_factor: 2.0          # how many times busier lanes in junctions are
+    drizzle:
+      time_of_day_h: 14.0
+      pedestrians_per_km_s: 0.08
+      junction_factor: 3.0
+      conditions:
+        wet_road: {probability: 0.7, severity: low, variability: 0.1}
+        low_visibility: {probability: 0.3, severity: low, variability: 0.1}
+    rush-hour-sunset:
+      time_of_day_h: 17.5
+      pedestrians_per_km_s: 0.15
+      junction_factor: 3.0
+      hotspots: {189: 3.0, 841: 2.0}   # junctions busier still, multiplying junction_factor
+      conditions:
+        low_visibility: {probability: 0.2, severity: low, variability: 0.1}
+    heavy-rain:
+      time_of_day_h: 15.0
+      pedestrians_per_km_s: 0.06
+      junction_factor: 3.0
+      conditions:
+        wet_road: {probability: 1.0, severity: high, variability: 0.1}
+        low_visibility: {probability: 0.9, severity: mid, variability: 0.2}
+    foggy-night:
+      time_of_day_h: 22.0
+      pedestrians_per_km_s: 0.04
+      junction_factor: 3.0
+      conditions:
+        wet_road: {probability: 0.6, severity: mid, variability: 0.2}
+        low_visibility: {probability: 1.0, severity: high, variability: 0.1}
+    storm-crowds:
+      time_of_day_h: 19.0
+      pedestrians_per_km_s: 0.15
+      junction_factor: 3.0
+      hotspots: {189: 3.0, 841: 2.0}
+      conditions:
+        wet_road: {probability: 1.0, severity: high, variability: 0.05}
+        low_visibility: {probability: 1.0, severity: high, variability: 0.1}
 
 # Defaults of the driving safety requirements.
 safety:

@@ -9,7 +9,7 @@ from pyotter import Driver, Planner, World
 from pyotter.core import WorldHazardLibrary, WorldRoadGraph
 from pyotter.modules.driver import DrivingScenario
 
-from otterlab import container, drive, library, server, slurm
+from otterlab import build, container, drive, library, server, slurm
 from otterlab.console import LabError
 from otterlab.library import ResultsLibrary, ScenarioEntry, ScenarioLibrary
 from otterlab.settings import REPO, SETTINGS
@@ -127,6 +127,27 @@ class Scenarios(Lab):
             with self.assertRaises(LabError):
                 self.scenarios.fetch(entry)
         download.assert_called_once()
+
+
+class Build(Lab):
+    def test_each_forecast_and_seed_gives_one_scenario_per_route_mode_sharing_its_hazards(self):
+        built = build.build(["clear-noon", "foggy-night"], [1, 2], self.folder / "set")
+        self.assertEqual(len(built), 12)
+        self.assertEqual(built[0].path.name, "town10-clear-noon-seed1-risk-aware.json.gz")
+        first = [DrivingScenario.load(item.path) for item in built[:3]]
+        self.assertEqual({scenario.spawns for scenario in first}, {first[0].spawns})
+        self.assertEqual({scenario.route.mode for scenario in first}, {item.mode for item in built})
+
+    def test_the_same_forecast_and_seed_give_the_same_bytes(self):
+        once = build.build(["drizzle"], [3], self.folder / "a")
+        again = build.build(["drizzle"], [3], self.folder / "b")
+        self.assertEqual([item.fingerprint for item in once], [item.fingerprint for item in again])
+
+    def test_unknown_forecasts_and_repeated_seeds_are_refused(self):
+        with self.assertRaises(LabError):
+            build.build(["sunny-mars"], [1], self.folder)
+        with self.assertRaises(LabError):
+            build.build(["clear-noon"], [1, 1], self.folder)
 
 
 class Results(Lab):

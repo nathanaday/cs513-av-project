@@ -5,6 +5,7 @@
     otter-scenarios [list|push|show|pull] the scenario library
     otter-results [list|pull|sync|push]   the telemetry library
     otter-check                           what is set up, and what is missing
+    otter-build [FORECAST ...]            write the scenario set to runs/scenario-set/
 """
 
 from __future__ import annotations
@@ -20,7 +21,9 @@ from huggingface_hub import HfApi
 
 from pyotter.modules.driver import DrivingScenario, DrivingScenarioTelemetry
 
-from . import container, drive, server, slurm
+from pyotter import World
+
+from . import build, container, drive, server, slurm
 from .console import FAIL, NOTE, OK, LabError, console, next_steps, show_error, size_text, table
 from .library import (
     SCENARIOS, TELEMETRY, TELEMETRY_SUFFIX, ResultsLibrary, ScenarioEntry, ScenarioLibrary,
@@ -344,6 +347,37 @@ def _scenario_of(telemetry: DrivingScenarioTelemetry, entries: list[ScenarioEntr
         f"The scenario of {path} ({fingerprint[:12]}) is not in the library.",
         "Add it first with `uv run otter-scenarios push FILE.json.gz`.",
     )
+
+
+# otter-build
+
+@command
+def otter_build(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="otter-build",
+        description="Write the scenario set: each forecast, rolled with each seed, for every way of choosing a route. "
+                    "The trip and weights are in otter.yaml.",
+    )
+    parser.add_argument("forecasts", nargs="*", metavar="FORECAST",
+                        help=f"forecasts from pyotter's config.yaml (default all: {', '.join(World.forecast_names())})")
+    parser.add_argument("--seeds", nargs="+", type=int, metavar="SEED",
+                        help=f"seeds to roll with (default {' '.join(str(seed) for seed in SETTINGS.build.seeds)})")
+    parser.add_argument("--output", type=Path, default=build.BUILT,
+                        help=f"folder to write to (default {relative(build.BUILT)})")
+    args = parser.parse_args(argv)
+    forecasts = args.forecasts or World.forecast_names()
+    seeds = args.seeds or list(SETTINGS.build.seeds)
+    with console.status("building"):
+        built = build.build(forecasts, seeds, args.output)
+    listing = table("scenario", "planned", "events", "fingerprint")
+    for item in built:
+        listing.add_row(item.path.name.removesuffix(".json.gz"), f"{item.planned_s:.0f} s", str(item.events),
+                        item.fingerprint[:12])
+    console.print(listing)
+    console.print(f"{OK} Wrote {len(built)} scenarios to {relative(args.output)}/")
+    files = f"{relative(args.output)}/*.json.gz"
+    next_steps([("Add them", f"uv run otter-scenarios push {files}"), ("Drive them", f"uv run otter-drive {files}")])
+    return 0
 
 
 # otter-check

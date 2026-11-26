@@ -33,12 +33,15 @@ class SunGlare:
 
     Attributes:
         strength: The visibility lost, from 0 to 1, when facing straight at the sun.
+        night_loss: The visibility lost to the dark, from 0 to 1, in every direction.
+            0 by day, so spawns saved before night existed still load.
     """
 
     time_of_day_h: float
     altitude_deg: float
     azimuth_deg: float
     strength: float
+    night_loss: float = 0.0
 
 
 @dataclass(frozen=True)

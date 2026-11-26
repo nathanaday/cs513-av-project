@@ -1,4 +1,4 @@
-"""Low-sun glare: how much facing a low sun degrades visibility, as a scalar from 0 to 1.
+"""Low-sun glare and night: how much the sun, or its absence, degrades visibility, as a scalar from 0 to 1.
 
 Angles are in the map frame, like a CARLA yaw: 0 points along +x and 90 along
 +y. East is taken as +x and south as +y.
@@ -44,6 +44,21 @@ def low_sun_factor_at(time_of_day_h: float | None) -> float:
     return low_sun_factor(altitude)
 
 
+def darkness(altitude_deg: float) -> float:
+    """0 while the sun is up, rising to 1 once it is far enough below the horizon."""
+    if altitude_deg >= 0.0:
+        return 0.0
+    return min(1.0, -altitude_deg / SUN.full_dark_below_deg)
+
+
+def night_loss_at(time_of_day_h: float | None) -> float:
+    """Visibility lost to the dark at a time of day, the same in every direction. 0 with no sun model."""
+    if time_of_day_h is None:
+        return 0.0
+    altitude, _ = sun_position(time_of_day_h)
+    return SUN.night_visibility_loss * darkness(altitude)
+
+
 def facing_factor(heading_deg: float, azimuth_deg: float) -> float:
     """1 when driving straight at the sun, falling to 0 once it is far enough off the heading."""
     off = math.cos(math.radians(heading_deg - azimuth_deg))
@@ -67,7 +82,7 @@ def segment_sun_exposure(segment: RoadSegment, azimuth_deg: float) -> float:
 
 
 def visibility_loss_by_segment(graph: WorldRoadGraph, fog: float, low_sun: float) -> dict[str, float]:
-    """Visibility loss on each lane: the rain or fog everywhere, plus the low sun on what they leave clear.
+    """Visibility loss on each lane: the rain or fog and the dark everywhere, plus the low sun on what they leave clear.
 
     Args:
         graph: The world, whose time of day places the sun.
@@ -77,13 +92,14 @@ def visibility_loss_by_segment(graph: WorldRoadGraph, fog: float, low_sun: float
     Returns:
         The loss, from 0 to 1, by segment id.
     """
+    everywhere = fog + (1.0 - fog) * night_loss_at(graph.time_of_day_h)
     if graph.time_of_day_h is None or low_sun <= 0.0:
-        return dict.fromkeys(graph.segments, fog)
+        return dict.fromkeys(graph.segments, everywhere)
     _, azimuth = sun_position(graph.time_of_day_h)
     losses = {}
     for sid, segment in graph.segments.items():
         exposure = segment_sun_exposure(segment, azimuth)
-        losses[sid] = fog + (1.0 - fog) * low_sun * exposure
+        losses[sid] = everywhere + (1.0 - everywhere) * low_sun * exposure
     return losses
 
 

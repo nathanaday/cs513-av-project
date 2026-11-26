@@ -8,7 +8,7 @@ import random
 
 from ...core.models.world_hazard_library import LOW_VISIBILITY, HazardKind, WorldHazardLibrary
 from ...core.models.world_road_graph import RoadGraphError, SegmentPosition, WorldRoadGraph
-from ...core.utilities.sun import glare_strength, sun_position
+from ...core.utilities.sun import glare_strength, night_loss_at, sun_position
 from .models.world_hazard_spawns import ConditionSpawn, EventSpawn, SunGlare
 
 WORLD_SCOPE = "*"
@@ -81,7 +81,7 @@ def roll_events(graph: WorldRoadGraph, seed: int, duration_s: float) -> list[Eve
 
 
 def sun_glare(graph: WorldRoadGraph, conditions: list[ConditionSpawn]) -> SunGlare | None:
-    """The sun for a run, dimmed by the rain or fog that was rolled. None with no time of day."""
+    """The sun for a run, dimmed by the rain or fog that was rolled, and the dark at night. None with no time of day."""
     if graph.time_of_day_h is None:
         return None
     fog = 0.0
@@ -89,4 +89,5 @@ def sun_glare(graph: WorldRoadGraph, conditions: list[ConditionSpawn]) -> SunGla
         if spawn.hazard_id == LOW_VISIBILITY:
             fog = spawn.severity
     altitude, azimuth = sun_position(graph.time_of_day_h)
-    return SunGlare(graph.time_of_day_h, altitude, azimuth, glare_strength(graph.time_of_day_h, fog))
+    strength = glare_strength(graph.time_of_day_h, fog)
+    return SunGlare(graph.time_of_day_h, altitude, azimuth, strength, night_loss_at(graph.time_of_day_h))
