@@ -185,42 +185,6 @@ def anticipated(movers: list[tuple[float, float, float, float, float]], horizon_
             for x, y, radius, vx, vy in movers for k in range(steps + 1)]
 
 
-def walker_step(x: float, y: float, radius: float, direction: tuple[float, float],
-                car: tuple[float, float, float, float], half_length: float, half_width: float,
-                clearance_m: float, car_stopped_below_mps: float) -> tuple[float, float, bool]:
-    """Which way a crossing walker goes this tick, so that it never walks into the car.
-
-    A walker walks on while its way is clear. If the car's body is within
-    `clearance_m` of its next steps, it waits while the car moves, and steps
-    around the car, away from the car's center line, while the car stands still.
-
-    Args:
-        x: The walker's position.
-        y: The walker's position.
-        radius: The walker's size.
-        direction: The unit vector of the walker's crossing.
-        car: The car as (x, y, yaw_deg, speed_mps).
-        half_length: Half the car's length.
-        half_width: Half the car's width.
-        clearance_m: How far ahead the walker looks for the car.
-        car_stopped_below_mps: Below this speed the car counts as standing still.
-
-    Returns:
-        The direction to walk this tick, as (x, y), and whether to walk at all.
-    """
-    car_x, car_y, yaw_deg, speed_mps = car
-    ahead_x, ahead_y = x + direction[0] * clearance_m, y + direction[1] * clearance_m
-    if box_gap(car_x, car_y, yaw_deg, half_length, half_width, ahead_x, ahead_y, radius) > 0.0:
-        return direction[0], direction[1], True
-    if abs(speed_mps) >= car_stopped_below_mps:
-        return direction[0], direction[1], False
-    yaw = math.radians(yaw_deg)
-    side_x, side_y = -math.sin(yaw), math.cos(yaw)
-    sideways = (x - car_x) * side_x + (y - car_y) * side_y
-    sign = 1.0 if sideways >= 0.0 else -1.0
-    return sign * side_x, sign * side_y, True
-
-
 def _project(start: RoutePoint, end: RoutePoint, x: float, y: float) -> tuple[float, float]:
     """Find the point on one straight piece of the line nearest to (x, y).
 

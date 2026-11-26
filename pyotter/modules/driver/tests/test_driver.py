@@ -10,7 +10,7 @@ from pyotter.modules.driver import (
     NO_GAP_M, DriverModel, DrivingScenario, DrivingScenarioTelemetry, Outcome, Signal, TelemetryEventKind,
 )
 from pyotter.modules.driver.controller import (
-    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward, walker_step,
+    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward,
 )
 
 
@@ -133,27 +133,6 @@ class Control(unittest.TestCase):
         walker, path_half_width = CONFIG.driver.runner.walker, CONFIG.driver.controller.path_half_width_m
         self.assertGreater(walker.start_off_m, path_half_width + walker.radius_m)
         self.assertGreater(walker.walk_m - walker.start_off_m, path_half_width + walker.radius_m)
-
-    def test_a_walker_waits_for_a_moving_car_and_steps_around_a_stopped_one(self):
-        # The car at the origin faces +x; the walker walks toward its front.
-        def step(x, y, speed_mps):
-            return walker_step(x, y, 0.4, (-1.0, 0.0), (0.0, 0.0, 0.0, speed_mps), 2.4, 1.0, 1.0, 0.3)
-
-        self.assertEqual(step(3.5, 5.0, 5.0), (-1.0, 0.0, True))     # well beside the car: walks on
-        self.assertEqual(step(3.5, 0.5, 5.0), (-1.0, 0.0, False))    # the car moves toward it: waits
-        dx, dy, walking = step(3.5, 0.5, 0.0)                        # the car stands still: steps aside
-        self.assertTrue(walking)
-        self.assertAlmostEqual(dx, 0.0)
-        self.assertAlmostEqual(dy, 1.0)                              # away from the car's center line
-
-    def test_a_walker_gets_past_a_stopped_car_without_touching_it(self):
-        x, y, tick_m = 3.5, 0.5, 1.4 * 0.05
-        for _ in range(400):
-            dx, dy, walking = walker_step(x, y, 0.4, (-1.0, 0.0), (0.0, 0.0, 0.0, 0.0), 2.4, 1.0, 1.0, 0.3)
-            if walking:
-                x, y = x + dx * tick_m, y + dy * tick_m
-            self.assertGreater(box_gap(0.0, 0.0, 0.0, 2.4, 1.0, x, y, 0.4), 0.0)
-        self.assertLess(x, -2.4)                                     # it walked past the car
 
     def test_no_anticipation_is_only_where_they_are_now(self):
         self.assertEqual(anticipated([(1.0, 2.0, 0.4, 1.4, 0.0)], 0.0, 0.25), [(1.0, 2.0, 0.4)])
