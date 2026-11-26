@@ -30,10 +30,10 @@ slurm:
     options: []
 
 carla:
-  port: 2000                    # first port tried; the server moves up if it is taken
+  port: 2370                    # first port tried; the server moves up if it is taken
   port_step: 10
   port_attempts: 50
-  arguments: ["-RenderOffScreen", "-nosound", "-quality-level=Low"]
+  arguments: ["-nullrhi", "-nosound"]
   start_timeout_s: 600          # from launch until the server must answer
 
 watch:
