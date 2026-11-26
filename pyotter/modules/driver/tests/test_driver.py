@@ -226,6 +226,16 @@ class Evaluation(unittest.TestCase):
         self.assertEqual(result.closest.name, "no_collision")
         self.assertIn("BREACHED", result.summary())
 
+    def test_a_walker_walking_into_a_stopped_car_is_not_a_collision(self):
+        speeds, hits = [8.0] * 200, [0.0] * 200
+        speeds[140:] = [0.0] * 60   # the car has stopped
+        hits[150] = 1.0             # and a walker walks into it
+        record = telemetry(speed_mps=speeds, collision=hits)
+        record.add_event(7.5, "collision", other="walker.pedestrian.0001")
+        result = Driver.evaluate(record)
+        self.assertTrue(result.get("no_collision").satisfied)
+        self.assertEqual(result.collisions, 0)
+
     def test_one_tick_of_acceleration_past_the_limit_is_not_a_breach(self):
         spike = [0.0] * 200
         spike[20], spike[90] = 11.0, -9.0

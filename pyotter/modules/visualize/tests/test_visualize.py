@@ -175,7 +175,7 @@ class Requirements(FigureTest):
         self.assertIn("threshold -6 m/s2", _labels(axes))
         self.assertEqual(figures["braking"].get_suptitle(),
                          "braking: always (eventually[0,0.5] (acceleration_mps2 >= -6))")
-        self.assertEqual(figures["no_collision"].axes[0].get_ylabel(), "f(t)")
+        self.assertEqual(figures["no_collision"].axes[0].get_ylabel(), "f(t) (m/s)")
 
     def test_each_run_carries_its_least_margin_and_verdict(self):
         figures = Visualize.requirements([self.close_call(), steady_run("clear", samples=200)])
