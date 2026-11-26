@@ -10,7 +10,8 @@ from pyotter.modules.driver import (
     NO_GAP_M, DriverModel, DrivingScenario, DrivingScenarioTelemetry, Outcome, Signal, TelemetryEventKind,
 )
 from pyotter.modules.driver.controller import (
-    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward, walker_too_close,
+    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, sight_speed, steer_toward,
+    walker_too_close,
 )
 
 
@@ -161,6 +162,13 @@ class Control(unittest.TestCase):
         self.assertAlmostEqual(allowed_speed(8.0, 6.0, 3.0), 6.0)
         self.assertEqual(allowed_speed(8.0, -1.0, 3.0), 0.0)
         self.assertEqual(allowed_speed(8.0, 100.0, 3.0), 8.0)
+
+    def test_the_car_drives_no_faster_than_it_can_stop_within_its_sight(self):
+        # 8 m of sight, a 2.4 m half-length and a 2 m gap leave 3.6 m to stop in at 3 m/s2.
+        self.assertAlmostEqual(sight_speed(8.0, 2.4, 2.0, 3.0), (2 * 3.0 * 3.6) ** 0.5)
+        self.assertGreater(sight_speed(60.0, 2.4, 2.0, 3.0), 50 / 3.6)   # clear sight: no cap in town
+        self.assertGreater(sight_speed(3.0, 2.4, 2.0, 3.0), 0.0)         # sees almost nothing: still creeps
+        self.assertTrue(DriverModel().drive_within_sight)
 
     def test_speed_control_stays_inside_the_safety_limits(self):
         throttle, brake = SpeedControl(DriverModel()).command(0.0, 8.0, 0.05)

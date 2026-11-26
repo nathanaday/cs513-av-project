@@ -23,6 +23,8 @@ class DriverModel:
             on a fully wet road.
         anticipation_s: How many seconds ahead the driver predicts where a
             pedestrian it sees will walk. 0 turns it off.
+        drive_within_sight: Whether the driver keeps its speed low enough to stop,
+            at its planned braking, short of a road user that appears at the edge of its sight.
         vehicle_blueprint: The CARLA blueprint of the car.
     """
 
@@ -32,6 +34,7 @@ class DriverModel:
     min_detection_range_m: float = SETTINGS.min_detection_range_m
     wet_braking_loss: float = SETTINGS.wet_braking_loss
     anticipation_s: float = SETTINGS.anticipation_s
+    drive_within_sight: bool = SETTINGS.drive_within_sight
     vehicle_blueprint: str = SETTINGS.vehicle_blueprint
 
     def detection_range(self, visibility_loss: float) -> float:

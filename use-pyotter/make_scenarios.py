@@ -20,7 +20,7 @@ from pyotter.modules.planner import PlannerConfig
 
 OUTPUT = Path("runs")
 ORIGIN, DESTINATION = 35, 2
-DURATION_S = 150.0
+DURATION_S = 300.0             # long enough for a car that crawls through thick fog
 MODES = ("naive", "cautious", "risk-aware")
 RISK_SCALE = 2
 PEDESTRIAN_WEIGHT = 20.0
