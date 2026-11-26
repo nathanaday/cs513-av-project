@@ -10,7 +10,7 @@ from pyotter.modules.driver import (
     NO_GAP_M, DriverModel, DrivingScenario, DrivingScenarioTelemetry, Outcome, Signal, TelemetryEventKind,
 )
 from pyotter.modules.driver.controller import (
-    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward,
+    RouteFollower, SpeedControl, allowed_speed, anticipated, box_gap, lookahead_m, steer_toward, walker_too_close,
 )
 
 
@@ -133,6 +133,17 @@ class Control(unittest.TestCase):
         walker, path_half_width = CONFIG.driver.runner.walker, CONFIG.driver.controller.path_half_width_m
         self.assertGreater(walker.start_off_m, path_half_width + walker.radius_m)
         self.assertGreater(walker.walk_m - walker.start_off_m, path_half_width + walker.radius_m)
+
+    def test_the_car_stops_for_a_walker_at_or_coming_to_arms_length_from_any_side(self):
+        # The car at the origin faces +x, 4.8 m long and 2 m wide; clearance 1 m, looking 1 s ahead.
+        def close(x, y, vx, vy):
+            return walker_too_close((0.0, 0.0, 0.0), 2.4, 1.0, [(x, y, 0.4, vx, vy)], 1.0, 1.0)
+
+        self.assertFalse(close(0.0, 2.9, 0.0, 0.0))     # standing 1.5 m beside the car
+        self.assertTrue(close(0.0, 2.0, 0.0, 0.0))      # 0.6 m beside it, not in front
+        self.assertTrue(close(0.0, 3.5, 0.0, -1.4))     # 2.1 m away, walking toward it
+        self.assertFalse(close(0.0, 3.5, 0.0, 1.4))     # 2.1 m away, walking off
+        self.assertFalse(walker_too_close((0.0, 0.0, 0.0), 2.4, 1.0, [], 1.0, 1.0))
 
     def test_no_anticipation_is_only_where_they_are_now(self):
         self.assertEqual(anticipated([(1.0, 2.0, 0.4, 1.4, 0.0)], 0.0, 0.25), [(1.0, 2.0, 0.4)])

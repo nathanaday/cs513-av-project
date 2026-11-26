@@ -185,6 +185,29 @@ def anticipated(movers: list[tuple[float, float, float, float, float]], horizon_
             for x, y, radius, vx, vy in movers for k in range(steps + 1)]
 
 
+def walker_too_close(car: tuple[float, float, float], half_length: float, half_width: float,
+                     movers: list[tuple[float, float, float, float, float]], lookahead_s: float,
+                     clearance_m: float) -> bool:
+    """Whether any walker is, or soon will be, within arm's length of the car's body, in any direction.
+
+    Args:
+        car: The car as (x, y, yaw_deg).
+        half_length: Half the car's length.
+        half_width: Half the car's width.
+        movers: Each walker now, as (x, y, radius, vx, vy).
+        lookahead_s: How far ahead to look along each walker's walk.
+        clearance_m: The least room allowed between the car's body and a walker.
+    """
+    x, y, yaw_deg = car
+    for walker_x, walker_y, radius, vx, vy in movers:
+        for after_s in (0.0, lookahead_s):
+            gap = box_gap(x, y, yaw_deg, half_length, half_width,
+                          walker_x + vx * after_s, walker_y + vy * after_s, radius)
+            if gap < clearance_m:
+                return True
+    return False
+
+
 def _project(start: RoutePoint, end: RoutePoint, x: float, y: float) -> tuple[float, float]:
     """Find the point on one straight piece of the line nearest to (x, y).
 
