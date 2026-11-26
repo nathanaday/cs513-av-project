@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Iterable
 
+from ...core.utilities.config import CONFIG
 from ..driver.models.driving_safety_evaluation import SafetyRequirement
 from ..driver.models.driving_scenario_telemetry import NO_GAP_M, DrivingScenarioTelemetry, Signal, TelemetryEventKind
 from .utilities import THEME, series_color, style_chart
@@ -89,8 +90,18 @@ def fit_values(axes, values: list[float], *, from_zero: bool = False) -> None:
 
 
 def requirement_values(requirement: SafetyRequirement, run: DrivingScenarioTelemetry) -> list[float]:
-    """The value a requirement compares against its threshold. A sample with no road user is NaN."""
-    return [value if value < NO_GAP_M else float("nan") for value in requirement.values(run.signals)]
+    """The value a requirement compares against its threshold, as the evaluation sees it.
+
+    A gap sample with no road user to measure, or taken while the car stood
+    still, reads as the cap in the evaluation and is drawn as NaN.
+    """
+    from ..driver.driver import Driver
+
+    values = requirement.values(Driver.trace(run))
+    if requirement.watched not in (Signal.GAP_M, Signal.GAP_AHEAD_M):
+        return values
+    cap_m = CONFIG.driver.evaluation.gap_cap_m
+    return [value if value < min(cap_m, NO_GAP_M) else float("nan") for value in values]
 
 
 def draw_requirement(axes, runs: list[DrivingScenarioTelemetry], requirement: SafetyRequirement) -> None:
@@ -99,12 +110,14 @@ def draw_requirement(axes, runs: list[DrivingScenarioTelemetry], requirement: Sa
     An arrow runs from the threshold to the value at the moment a run came
     closest to it, or went furthest past it, and carries the margin.
     """
+    from ..driver.driver import Driver
+
     unit = f" {requirement.unit}" if requirement.unit else ""
     shown = [requirement.threshold]
     for index, run in enumerate(runs):
         times = run.signals[Signal.TIME_S]
         values = requirement_values(requirement, run)
-        margins = requirement.margins(run.signals)
+        margins = requirement.margins(Driver.trace(run))
         worst = margins.index(min(margins))
         margin = margins[worst]
         measured = values[worst] == values[worst]

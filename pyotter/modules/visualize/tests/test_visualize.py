@@ -184,8 +184,7 @@ class Requirements(FigureTest):
         self.assertEqual(legend, ["close: breached, -0.50 m", "clear: kept, no road user to measure"])
         self.assertIn("-0.50", _labels(axes))
         low, high = axes.get_ylim()
-        self.assertTrue(low < 1.5 and high > 150.0)
-        self.assertEqual(axes.get_yscale(), "symlog")
+        self.assertTrue(low < 1.5 and high < 60.0)   # the 150 m and 90 m gaps are beyond the cap, not drawn
         ahead = figures["min_gap_ahead"].axes[0]
         self.assertIn("+1.00", _labels(ahead))
         self.assertEqual(ahead.get_yscale(), "linear")

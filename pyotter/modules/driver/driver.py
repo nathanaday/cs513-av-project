@@ -136,7 +136,8 @@ class Driver:
         if not len(telemetry):
             raise ValueError("the telemetry has no samples")
         safety = safety or telemetry.driver.safety
-        results = [_check(requirement, telemetry) for requirement in Driver.requirements(safety)]
+        trace = Driver.trace(telemetry)
+        results = [_check(requirement, trace) for requirement in Driver.requirements(safety)]
         return DrivingSafetyEvaluation(
             scenario_name=telemetry.scenario_name,
             outcome=telemetry.outcome,
@@ -147,10 +148,31 @@ class Driver:
             scenario_fingerprint=telemetry.scenario_fingerprint,
         )
 
+    @staticmethod
+    def trace(telemetry: DrivingScenarioTelemetry) -> dict:
+        """The run's signals as the requirements see them.
 
-def _check(requirement: SafetyRequirement, telemetry: DrivingScenarioTelemetry) -> RequirementResult:
-    """Check one requirement against a run, and find the sample where its margin was least."""
-    trace = telemetry.signals
+        The two gap signals change in two ways, and every other signal is as recorded:
+
+        - A gap is capped at `gap_cap_m`, so that no road user at all reads as
+          "at least that far" instead of the recorded placeholder `NO_GAP_M`.
+        - While the car stands still, a gap reads as the cap. A road user that
+          comes close to a stopped car is not a gap the driver left.
+        """
+        settings = CONFIG.driver.evaluation
+        cap_m = settings.gap_cap_m
+        speeds = telemetry.signals[Signal.SPEED_MPS]
+        trace = dict(telemetry.signals)
+        for gap_signal in (Signal.GAP_M, Signal.GAP_AHEAD_M):
+            trace[gap_signal] = [
+                min(gap, cap_m) if abs(speed) >= settings.moving_above_mps else cap_m
+                for gap, speed in zip(telemetry.signals[gap_signal], speeds)
+            ]
+        return trace
+
+
+def _check(requirement: SafetyRequirement, trace: dict) -> RequirementResult:
+    """Check one requirement against a run's trace, and find the sample where its margin was least."""
     formula = requirement.formula
     robustness = formula.robustness(trace)[0]
     margins = requirement.margins(trace)

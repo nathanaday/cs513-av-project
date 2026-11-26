@@ -67,6 +67,12 @@ driver:
     # A contact counts as a collision only when the car moves faster than this.
     # Below it the car was standing still, and a walker walked into it.
     least_impact_speed_mps: 0.5
+    # The gap limits apply only while the car moves faster than this: a road user that
+    # comes close to a stopped car is not a gap the driver left.
+    moving_above_mps: 0.5
+    # Gaps are capped here, so that "no road user" reads as "at least this far" (the
+    # driver's clear-weather sight) instead of the 1000 m placeholder.
+    gap_cap_m: 60.0
   controller:
     speed_gain: 1.2
     speed_memory_gain: 0.4

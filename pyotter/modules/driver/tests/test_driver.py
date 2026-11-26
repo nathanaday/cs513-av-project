@@ -236,6 +236,21 @@ class Evaluation(unittest.TestCase):
         self.assertTrue(result.get("no_collision").satisfied)
         self.assertEqual(result.collisions, 0)
 
+    def test_a_walker_close_to_a_stopped_car_is_not_a_gap_breach(self):
+        speeds, gaps = [8.0] * 200, [NO_GAP_M] * 200
+        speeds[100:] = [0.0] * 100        # the car has stopped
+        gaps[60], gaps[150] = 3.0, 0.5    # 3 m while moving, then 0.5 m while stopped
+        result = Driver.evaluate(telemetry(speed_mps=speeds, gap_m=gaps, gap_ahead_m=gaps))
+        self.assertTrue(result.get("min_gap").satisfied)
+        self.assertAlmostEqual(result.get("min_gap").robustness, 1.0)   # from the 3 m while moving
+        self.assertAlmostEqual(result.get("min_gap").worst_time_s, 60 * 0.05)
+
+    def test_no_road_user_reads_as_the_cap_not_the_placeholder(self):
+        cap_m = CONFIG.driver.evaluation.gap_cap_m
+        result = Driver.evaluate(telemetry())
+        self.assertAlmostEqual(result.get("min_gap").robustness, cap_m - 2.0)
+        self.assertAlmostEqual(result.get("min_gap_ahead").robustness, cap_m - 5.0)
+
     def test_one_tick_of_acceleration_past_the_limit_is_not_a_breach(self):
         spike = [0.0] * 200
         spike[20], spike[90] = 11.0, -9.0
